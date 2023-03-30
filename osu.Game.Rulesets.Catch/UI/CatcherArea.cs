@@ -2,7 +2,6 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
-using System.Linq;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Input.Bindings;
@@ -42,11 +41,11 @@ namespace osu.Game.Rulesets.Catch.UI
 
         private readonly CatchComboDisplay comboDisplay;
 
-        private readonly CatchComboDisplay? comboDisplayTwin;
+        private readonly CatchComboDisplay comboDisplayTwin;
 
         private readonly CatcherTrailDisplay catcherTrails;
 
-        private readonly CatcherTrailDisplay? twinTrails;
+        private readonly CatcherTrailDisplay twinTrails;
 
         private Catcher catcher = null!;
 
@@ -57,12 +56,10 @@ namespace osu.Game.Rulesets.Catch.UI
         /// <c>1</c> when only right button is pressed.
         /// <c>0</c> when none or both left and right buttons are pressed.
         /// </summary>
-        private int currentDirection;
-
-        private int currentDirectionTwin;
+        private int currentDirection, currentDirectionTwin;
 
         // TODO: support replay rewind
-        private bool lastHyperDashState;
+        private bool lastHyperDashState, lastHyperDashStateTwin;
 
         /// <remarks>
         /// <see cref="Catcher"/> must be set before loading.
@@ -70,46 +67,45 @@ namespace osu.Game.Rulesets.Catch.UI
         public CatcherArea()
         {
             Size = new Vector2(CatchPlayfield.WIDTH, Catcher.BASE_SIZE);
+
             Children = new Drawable[]
             {
                 catcherContainer = new Container<Catcher> { RelativeSizeAxes = Axes.Both },
-                twinContainer = new Container<Catcher>{RelativeSizeAxes = Axes.Both },
                 catcherTrails = new CatcherTrailDisplay(),
-                comboDisplay = new CatchComboDisplay
-                {
-                    RelativeSizeAxes = Axes.None,
-                    AutoSizeAxes = Axes.Both,
-                    Anchor = Anchor.TopLeft,
-                    Origin = Anchor.Centre,
-                    Margin = new MarginPadding { Bottom = 350f },
-                    X = CatchPlayfield.CENTER_X
-                }
+                comboDisplay = SetNewCatchComboDisplay(),
+
+                twinContainer = new Container<Catcher> { RelativeSizeAxes = Axes.Both },
+                twinTrails = new CatcherTrailDisplay(),
+                comboDisplayTwin = SetNewCatchComboDisplay(),
             };
-            if (TwinCatchersApplies)
-            {
-                Children.Append(twinTrails = new CatcherTrailDisplay());
-                Children.Append(comboDisplayTwin = new CatchComboDisplay
-                {
-                    RelativeSizeAxes = Axes.None,
-                    AutoSizeAxes = Axes.Both,
-                    Anchor = Anchor.TopLeft,
-                    Origin = Anchor.Centre,
-                    Margin = new MarginPadding { Bottom = 350f },
-                    X = CatchPlayfield.CENTER_X
-                });
-            }
+
         }
 
         public void OnNewResult(DrawableCatchHitObject hitObject, JudgementResult result)
         {
+
             Catcher.OnNewResult(hitObject, result);
-            comboDisplay.OnNewResult(hitObject, result);
+            GetCatchComboDisplay(Catcher).OnNewResult(hitObject, result);
+            Catcher.CanCatchObj = false;
+
+            if (TwinCatchersApplies)
+            {
+                Twin.OnNewResult(hitObject, result);
+                GetCatchComboDisplay(Twin).OnNewResult(hitObject, result);
+                Twin.CanCatchObj = false;
+            }
         }
 
         public void OnRevertResult(JudgementResult result)
         {
-            comboDisplay.OnRevertResult(result);
+
+            GetCatchComboDisplay(Catcher).OnRevertResult(result);
             Catcher.OnRevertResult(result);
+            if (TwinCatchersApplies)
+            {
+                GetCatchComboDisplay(Twin).OnRevertResult(result);
+                Twin.OnRevertResult(result);
+            }
         }
 
         protected override void Update()
@@ -132,13 +128,15 @@ namespace osu.Game.Rulesets.Catch.UI
         {
             base.UpdateAfterChildren();
 
-            comboDisplay.X = Catcher.X;
+            GetCatchComboDisplay(Catcher).X = Catcher.X;
+            if (TwinCatchersApplies) GetCatchComboDisplay(Twin).X = Twin.X;
 
             if (Time.Elapsed <= 0)
             {
                 // This is probably a wrong value, but currently the true value is not recorded.
                 // Setting `true` will prevent generation of false-positive after-images (with more false-negatives).
                 lastHyperDashState = true;
+                if (TwinCatchersApplies) lastHyperDashStateTwin = true;
                 return;
             }
 
@@ -154,6 +152,24 @@ namespace osu.Game.Rulesets.Catch.UI
             }
 
             lastHyperDashState = Catcher.HyperDashing;
+
+            if (TwinCatchersApplies)
+            {
+
+                if (!lastHyperDashStateTwin && Twin.HyperDashing)
+                    displayCatcherTrail(CatcherTrailAnimation.HyperDashAfterImage, Twin, twinTrails);
+
+                if (Twin.Dashing || Twin.HyperDashing)
+                {
+                    double generationInterval = Twin.HyperDashing ? 25 : 50;
+
+                    if (Time.Current - twinTrails.LastDashTrailTime >= generationInterval)
+                        displayCatcherTrail(Twin.HyperDashing ? CatcherTrailAnimation.HyperDashing : CatcherTrailAnimation.Dashing, Twin, twinTrails);
+                }
+
+                lastHyperDashStateTwin = Twin.HyperDashing;
+
+            }
         }
 
         public void SetCatcherPosition(float x, Catcher currCatcher)
@@ -163,8 +179,8 @@ namespace osu.Game.Rulesets.Catch.UI
             if (TwinCatchersApplies)
             {
                 //Replaces newPosition limits, when the Twin Catchers mod is applied
-                if (currCatcher == catcher) newPosition = Math.Clamp(x, 0, (CatchPlayfield.WIDTH / 2) - (catcher.CatchWidth / 2));
-                else if (currCatcher == twin) newPosition = Math.Clamp(x, (CatchPlayfield.WIDTH / 2) + (twin.CatchWidth / 2), CatchPlayfield.WIDTH);
+                if (currCatcher == Catcher) newPosition = Math.Clamp(x, 0, (CatchPlayfield.WIDTH / 2) - (Catcher.CatchWidth / 2));
+                else if (currCatcher == Twin) newPosition = Math.Clamp(x, (CatchPlayfield.WIDTH / 2) + (Twin.CatchWidth / 2), CatchPlayfield.WIDTH);
             }
             currCatcher.X = newPosition;
 
@@ -249,9 +265,39 @@ namespace osu.Game.Rulesets.Catch.UI
         //Replacement of CheckIfWeCanCatch from CatchPlayfield, to be more generic
         public bool CheckIfWeCanCatch(CatchHitObject obj)
         {
-            if (TwinCatchersApplies) return Catcher.CanCatch(obj) || Twin.CanCatch(obj);
-            return Catcher.CanCatch(obj);
+            bool catcherCanCatchObj = Catcher.CanCatch(obj);
+            Catcher.CanCatchObj = catcherCanCatchObj;
 
+            if (TwinCatchersApplies)
+            {
+                bool twinCanCatchObj = Twin.CanCatch(obj);
+                Twin.CanCatchObj = twinCanCatchObj;
+                return catcherCanCatchObj || twinCanCatchObj;
+            };
+            return catcherCanCatchObj;
+
+        }
+
+        public CatchComboDisplay GetCatchComboDisplay(Catcher currCatcher)
+        {
+            if (TwinCatchersApplies)
+            {
+                if (currCatcher == Twin) return comboDisplayTwin;
+            }
+            return comboDisplay;
+        }
+
+        public CatchComboDisplay SetNewCatchComboDisplay()
+        {
+            return new CatchComboDisplay
+            {
+                RelativeSizeAxes = Axes.None,
+                AutoSizeAxes = Axes.Both,
+                Anchor = Anchor.TopLeft,
+                Origin = Anchor.Centre,
+                Margin = new MarginPadding { Bottom = 350f },
+                X = CatchPlayfield.CENTER_X
+            };
         }
 
         private void displayCatcherTrail(CatcherTrailAnimation animation, Catcher currCatcher, CatcherTrailDisplay trails) => trails.Add(new CatcherTrailEntry(Time.Current, currCatcher.CurrentState, currCatcher.X, currCatcher.BodyScale, animation));

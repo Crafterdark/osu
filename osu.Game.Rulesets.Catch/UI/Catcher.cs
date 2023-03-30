@@ -93,6 +93,11 @@ namespace osu.Game.Rulesets.Catch.UI
         }
 
         /// <summary>
+        /// Whether the catcher can catch something.
+        /// </summary>
+        public bool CanCatchObj { get; set; }
+
+        /// <summary>
         /// Whether the catcher is currently dashing.
         /// </summary>
         public bool Dashing { get; set; }
@@ -215,7 +220,7 @@ namespace osu.Game.Rulesets.Catch.UI
 
             var hitObject = palpableObject.HitObject;
 
-            if (result.IsHit)
+            if (result.IsHit && CanCatchObj)
             {
                 var positionInStack = computePositionInStack(new Vector2(palpableObject.X - X, 0), palpableObject.DisplaySize.X);
 
@@ -229,7 +234,7 @@ namespace osu.Game.Rulesets.Catch.UI
             // droplet doesn't affect the catcher state
             if (hitObject is TinyDroplet) return;
 
-            if (result.IsHit && hitObject.HyperDashTarget is CatchHitObject target)
+            if (result.IsHit && CanCatchObj && hitObject.HyperDashTarget is CatchHitObject target)
             {
                 double timeDifference = target.StartTime - hitObject.StartTime;
                 double positionDifference = target.EffectiveX - X;
@@ -240,7 +245,7 @@ namespace osu.Game.Rulesets.Catch.UI
             else
                 SetHyperDashState();
 
-            if (result.IsHit)
+            if (result.IsHit && CanCatchObj)
                 CurrentState = hitObject.Kiai ? CatcherAnimationState.Kiai : CatcherAnimationState.Idle;
             else if (!(hitObject is Banana))
                 CurrentState = CatcherAnimationState.Fail;
