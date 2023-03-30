@@ -52,6 +52,12 @@ namespace osu.Game.Rulesets.Catch
             new KeyBinding(InputKey.Right, CatchAction.MoveRight),
             new KeyBinding(InputKey.Shift, CatchAction.Dash),
             new KeyBinding(InputKey.Shift, CatchAction.Dash),
+
+            //Only applies to Twin Catchers
+
+            new KeyBinding(InputKey.B, CatchAction.MoveLeftTwin),
+            new KeyBinding(InputKey.M, CatchAction.MoveRightTwin),
+            new KeyBinding(InputKey.N, CatchAction.DashTwin),
         };
 
         public override IEnumerable<Mod> ConvertFromLegacyMods(LegacyMods mods)

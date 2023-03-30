@@ -102,10 +102,12 @@ namespace osu.Game.Rulesets.Catch.UI
 
         protected override void OnNewDrawableHitObject(DrawableHitObject d)
         {
-            ((DrawableCatchHitObject)d).CheckPosition = checkIfWeCanCatch;
+            ((DrawableCatchHitObject)d).CheckPosition = CatcherArea.CheckIfWeCanCatch;
         }
 
-        private bool checkIfWeCanCatch(CatchHitObject obj) => Catcher.CanCatch(obj);
+        //Moved this on CatcherArea (Looks better...?)
+
+        //private bool checkIfWeCanCatch(CatchHitObject obj) => Catcher.CanCatch(obj);
 
         private void onNewResult(DrawableHitObject judgedObject, JudgementResult result)
             => CatcherArea.OnNewResult((DrawableCatchHitObject)judgedObject, result);

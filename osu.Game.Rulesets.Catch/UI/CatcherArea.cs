@@ -7,6 +7,7 @@ using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Input.Bindings;
 using osu.Framework.Input.Events;
+using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.Objects.Drawables;
 using osu.Game.Rulesets.Catch.Replays;
 using osu.Game.Rulesets.Judgements;
@@ -58,7 +59,7 @@ namespace osu.Game.Rulesets.Catch.UI
         /// </summary>
         private int currentDirection;
 
-        private int? currentDirectionTwin;
+        private int currentDirectionTwin;
 
         // TODO: support replay rewind
         private bool lastHyperDashState;
@@ -86,7 +87,6 @@ namespace osu.Game.Rulesets.Catch.UI
             };
             if (TwinCatchersApplies)
             {
-                currentDirectionTwin = 0;
                 Children.Append(twinTrails = new CatcherTrailDisplay());
                 Children.Append(comboDisplayTwin = new CatchComboDisplay
                 {
@@ -120,7 +120,12 @@ namespace osu.Game.Rulesets.Catch.UI
 
             SetCatcherPosition(
                 replayState?.CatcherX ??
-                (float)(Catcher.X + Catcher.Speed * currentDirection * Clock.ElapsedFrameTime));
+                (float)(Catcher.X + Catcher.Speed * currentDirection * Clock.ElapsedFrameTime), Catcher);
+
+            if (TwinCatchersApplies) SetCatcherPosition(
+                replayState?.CatcherX ??
+                (float)(Twin.X + Twin.Speed * currentDirectionTwin * Clock.ElapsedFrameTime), Twin);
+
         }
 
         protected override void UpdateAfterChildren()
@@ -151,17 +156,22 @@ namespace osu.Game.Rulesets.Catch.UI
             lastHyperDashState = Catcher.HyperDashing;
         }
 
-        public void SetCatcherPosition(float x)
+        public void SetCatcherPosition(float x, Catcher currCatcher)
         {
-            float lastPosition = Catcher.X;
+            float lastPosition = currCatcher.X;
             float newPosition = Math.Clamp(x, 0, CatchPlayfield.WIDTH);
-
-            Catcher.X = newPosition;
+            if (TwinCatchersApplies)
+            {
+                //Replaces newPosition limits, when the Twin Catchers mod is applied
+                if (currCatcher == catcher) newPosition = Math.Clamp(x, 0, (CatchPlayfield.WIDTH / 2) - (catcher.CatchWidth / 2));
+                else if (currCatcher == twin) newPosition = Math.Clamp(x, (CatchPlayfield.WIDTH / 2) + (twin.CatchWidth / 2), CatchPlayfield.WIDTH);
+            }
+            currCatcher.X = newPosition;
 
             if (lastPosition < newPosition)
-                Catcher.VisualDirection = Direction.Right;
+                currCatcher.VisualDirection = Direction.Right;
             else if (lastPosition > newPosition)
-                Catcher.VisualDirection = Direction.Left;
+                currCatcher.VisualDirection = Direction.Left;
         }
 
         public bool OnPressed(KeyBindingPressEvent<CatchAction> e)
@@ -234,6 +244,14 @@ namespace osu.Game.Rulesets.Catch.UI
                         break;
                 }
             }
+        }
+
+        //Replacement of CheckIfWeCanCatch from CatchPlayfield, to be more generic
+        public bool CheckIfWeCanCatch(CatchHitObject obj)
+        {
+            if (TwinCatchersApplies) return Catcher.CanCatch(obj) || Twin.CanCatch(obj);
+            return Catcher.CanCatch(obj);
+
         }
 
         private void displayCatcherTrail(CatcherTrailAnimation animation, Catcher currCatcher, CatcherTrailDisplay trails) => trails.Add(new CatcherTrailEntry(Time.Current, currCatcher.CurrentState, currCatcher.X, currCatcher.BodyScale, animation));

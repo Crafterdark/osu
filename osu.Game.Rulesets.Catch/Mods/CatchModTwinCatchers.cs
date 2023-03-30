@@ -24,9 +24,20 @@ namespace osu.Game.Rulesets.Catch.Mods
             var drawableCatchRuleset = (DrawableCatchRuleset)drawableRuleset;
             var catchPlayfield = (CatchPlayfield)drawableCatchRuleset.Playfield;
 
+            //The edge of the Catcher field, near the the middle of the screen
+            float leftEdgeFromMiddle = (CatchPlayfield.WIDTH / 2) - (catchPlayfield.CatcherArea.Catcher.CatchWidth / 2);
+
+            //The edge of the Twin catcher field, near the the middle of the screen
+            float rightEdgeFromMiddle = (CatchPlayfield.WIDTH / 2) + (catchPlayfield.CatcherArea.Twin.CatchWidth / 2);
+
+            catchPlayfield.CatcherArea.Catcher.X = leftEdgeFromMiddle / 2;
+            catchPlayfield.CatcherArea.Catcher.VisualDirection = Direction.Right;
+            catchPlayfield.CatcherArea.Twin.X = CatchPlayfield.WIDTH - rightEdgeFromMiddle + (rightEdgeFromMiddle / 2);
+            catchPlayfield.CatcherArea.Twin.VisualDirection = Direction.Left;
+            catchPlayfield.CatcherArea.Twin = catchPlayfield.Twin;
+
             catchPlayfield.CatcherArea.TwinCatchersApplies = true;
 
-            catchPlayfield.CatcherArea.Add(catchPlayfield.Twin);
         }
 
     }
