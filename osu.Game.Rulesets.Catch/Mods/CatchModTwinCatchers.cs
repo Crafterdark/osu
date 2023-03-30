@@ -3,6 +3,8 @@
 
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
+using osu.Game.Beatmaps;
+using osu.Game.Rulesets.Catch.Beatmaps;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Mods;
@@ -10,7 +12,7 @@ using osu.Game.Rulesets.UI;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
-    public class CatchModTwinCatchers : Mod, IApplicableToDrawableRuleset<CatchHitObject>
+    public class CatchModTwinCatchers : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IApplicableToBeatmapProcessor
     {
         public override string Name => "Twin Catchers";
         public override string Acronym => "TC";
@@ -45,6 +47,12 @@ namespace osu.Game.Rulesets.Catch.Mods
             catchPlayfield.CatcherArea.Twin.X = CatchPlayfield.WIDTH - ((CatchPlayfield.WIDTH - RightEdgeFromMiddle) / 2);
             catchPlayfield.CatcherArea.Twin.VisualDirection = Direction.Left;
 
+        }
+
+        public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
+        {
+            var catchProcessor = (CatchBeatmapProcessor)beatmapProcessor;
+            catchProcessor.TwinCatchersOffsets = true;
         }
 
     }

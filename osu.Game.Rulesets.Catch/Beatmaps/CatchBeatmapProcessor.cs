@@ -18,6 +18,11 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         public bool HardRockOffsets { get; set; }
 
+        public bool TwinCatchersOffsets { get; set; }
+
+        //Used to generate a symmetrical pattern when objects fall in the middle of the Playfield
+        public static bool TwinCatchersInvertGen;
+
         public CatchBeatmapProcessor(IBeatmap beatmap)
             : base(beatmap)
         {
@@ -60,12 +65,16 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                     case Fruit fruit:
                         if (HardRockOffsets)
                             applyHardRockOffset(fruit, ref lastPosition, ref lastStartTime, rng);
+                        if (TwinCatchersOffsets)
+                            applyTwinCatchersOffset(fruit, beatmap);
                         break;
 
                     case BananaShower bananaShower:
                         foreach (var banana in bananaShower.NestedHitObjects.OfType<Banana>())
                         {
                             banana.XOffset = (float)(rng.NextDouble() * CatchPlayfield.WIDTH);
+                            if (TwinCatchersOffsets)
+                                applyTwinCatchersOffset(banana, beatmap);
                             rng.Next(); // osu!stable retrieved a random banana type
                             rng.Next(); // osu!stable retrieved a random banana rotation
                             rng.Next(); // osu!stable retrieved a random banana colour
@@ -89,6 +98,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                                 catchObject.XOffset = Math.Clamp(rng.Next(-20, 20), -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
                             else if (catchObject is Droplet)
                                 rng.Next(); // osu!stable retrieved a random droplet rotation
+
+                            if (TwinCatchersOffsets)
+                                applyTwinCatchersOffset(catchObject, beatmap);
                         }
 
                         break;
@@ -138,6 +150,79 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
             lastPosition = offsetPosition;
             lastStartTime = startTime;
+        }
+
+        private static void applyTwinCatchersOffset(CatchHitObject hitObject, IBeatmap beatmap)
+        {
+
+            //Taken from Hyperdash calculations
+            float initialOffset = Catcher.CalculateCatchWidth(beatmap.Difficulty) / 2;
+
+            float rightSideFromMiddle = (CatchPlayfield.WIDTH / 2) + initialOffset;
+
+            float leftSideFromMiddle = (CatchPlayfield.WIDTH / 2) - initialOffset;
+
+            float minMapSide = 0;
+
+            float maxMapSide = CatchPlayfield.WIDTH;
+
+            if (hitObject is Banana)
+            {
+                if (hitObject.XOffset < rightSideFromMiddle && hitObject.XOffset > leftSideFromMiddle)
+                {
+
+                    if (hitObject.XOffset < CatchPlayfield.WIDTH / 2) hitObject.XOffset = Math.Clamp(hitObject.XOffset, minMapSide, leftSideFromMiddle);
+
+                    else if (hitObject.XOffset == CatchPlayfield.WIDTH / 2)
+                    {
+                        TwinCatchersInvertGen = !TwinCatchersInvertGen; //Invert
+
+                        if (TwinCatchersInvertGen)
+                        {
+                            hitObject.XOffset = Math.Clamp(hitObject.XOffset, minMapSide, leftSideFromMiddle);
+                        }
+                        else
+                        {
+                            hitObject.XOffset = Math.Clamp(hitObject.XOffset, rightSideFromMiddle, maxMapSide);
+                        }
+                    }
+
+                    else hitObject.XOffset = Math.Clamp(hitObject.XOffset, rightSideFromMiddle, maxMapSide);
+                }
+
+                return;
+
+            }
+            if (hitObject is TinyDroplet)
+            {
+                initialOffset += hitObject.XOffset;
+            }
+
+            float currentObjectComparedX = hitObject.OriginalX;
+
+            float currentObjectComparisonX = CatchPlayfield.WIDTH / 2;
+
+            if (currentObjectComparedX < rightSideFromMiddle && currentObjectComparedX > leftSideFromMiddle)
+            {
+
+                if (currentObjectComparedX > currentObjectComparisonX) hitObject.XOffset = Math.Clamp(currentObjectComparedX + initialOffset, rightSideFromMiddle, maxMapSide) - currentObjectComparedX;
+
+                else if (currentObjectComparedX == currentObjectComparisonX)
+                {
+                    TwinCatchersInvertGen = !TwinCatchersInvertGen; //Invert
+                    if (TwinCatchersInvertGen)
+                    {
+                        hitObject.XOffset = Math.Clamp(currentObjectComparedX + initialOffset, rightSideFromMiddle, maxMapSide) - currentObjectComparedX;
+                    }
+                    else
+                    {
+                        hitObject.XOffset = Math.Clamp(currentObjectComparedX - initialOffset, minMapSide, leftSideFromMiddle) - currentObjectComparedX;
+                    }
+
+                }
+
+                else hitObject.XOffset = Math.Clamp(currentObjectComparedX - initialOffset, minMapSide, leftSideFromMiddle) - currentObjectComparedX;
+            }
         }
 
         /// <summary>
