@@ -38,6 +38,7 @@ namespace osu.Game.Rulesets.Catch.UI
             base.ReceivePositionalInputAt(new Vector2(screenSpacePos.X, ScreenSpaceDrawQuad.Centre.Y));
 
         internal Catcher Catcher { get; private set; } = null!;
+        internal Catcher Twin { get; private set; } = null!;
 
         internal CatcherArea CatcherArea { get; private set; } = null!;
 
@@ -60,10 +61,16 @@ namespace osu.Game.Rulesets.Catch.UI
                 X = CENTER_X
             };
 
+            Twin = new Catcher(droppedObjectContainer, difficulty)
+            {
+                X = CENTER_X
+            };
+
             AddRangeInternal(new[]
             {
                 droppedObjectContainer,
                 Catcher.CreateProxiedContent(),
+                Twin.CreateProxiedContent(),
                 HitObjectContainer.CreateProxy(),
                 // This ordering (`CatcherArea` before `HitObjectContainer`) is important to
                 // make sure the up-to-date catcher position is used for the catcher catching logic of hit objects.

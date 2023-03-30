@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
+using System.Linq;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Input.Bindings;
@@ -26,14 +27,29 @@ namespace osu.Game.Rulesets.Catch.UI
             get => catcher;
             set => catcherContainer.Child = catcher = value;
         }
+        public Catcher Twin
+        {
+            get => twin;
+            set => twinContainer.Child = twin = value;
+        }
+
+        public bool TwinCatchersApplies { get; set; } = false!;
 
         private readonly Container<Catcher> catcherContainer;
 
+        private readonly Container<Catcher> twinContainer;
+
         private readonly CatchComboDisplay comboDisplay;
+
+        private readonly CatchComboDisplay? comboDisplayTwin;
 
         private readonly CatcherTrailDisplay catcherTrails;
 
+        private readonly CatcherTrailDisplay? twinTrails;
+
         private Catcher catcher = null!;
+
+        private Catcher twin = null!;
 
         /// <summary>
         /// <c>-1</c> when only left button is pressed.
@@ -41,6 +57,8 @@ namespace osu.Game.Rulesets.Catch.UI
         /// <c>0</c> when none or both left and right buttons are pressed.
         /// </summary>
         private int currentDirection;
+
+        private int? currentDirectionTwin;
 
         // TODO: support replay rewind
         private bool lastHyperDashState;
@@ -54,6 +72,7 @@ namespace osu.Game.Rulesets.Catch.UI
             Children = new Drawable[]
             {
                 catcherContainer = new Container<Catcher> { RelativeSizeAxes = Axes.Both },
+                twinContainer = new Container<Catcher>{RelativeSizeAxes = Axes.Both },
                 catcherTrails = new CatcherTrailDisplay(),
                 comboDisplay = new CatchComboDisplay
                 {
@@ -65,6 +84,20 @@ namespace osu.Game.Rulesets.Catch.UI
                     X = CatchPlayfield.CENTER_X
                 }
             };
+            if (TwinCatchersApplies)
+            {
+                currentDirectionTwin = 0;
+                Children.Append(twinTrails = new CatcherTrailDisplay());
+                Children.Append(comboDisplayTwin = new CatchComboDisplay
+                {
+                    RelativeSizeAxes = Axes.None,
+                    AutoSizeAxes = Axes.Both,
+                    Anchor = Anchor.TopLeft,
+                    Origin = Anchor.Centre,
+                    Margin = new MarginPadding { Bottom = 350f },
+                    X = CatchPlayfield.CENTER_X
+                });
+            }
         }
 
         public void OnNewResult(DrawableCatchHitObject hitObject, JudgementResult result)
@@ -105,14 +138,14 @@ namespace osu.Game.Rulesets.Catch.UI
             }
 
             if (!lastHyperDashState && Catcher.HyperDashing)
-                displayCatcherTrail(CatcherTrailAnimation.HyperDashAfterImage);
+                displayCatcherTrail(CatcherTrailAnimation.HyperDashAfterImage, Catcher, catcherTrails);
 
             if (Catcher.Dashing || Catcher.HyperDashing)
             {
                 double generationInterval = Catcher.HyperDashing ? 25 : 50;
 
                 if (Time.Current - catcherTrails.LastDashTrailTime >= generationInterval)
-                    displayCatcherTrail(Catcher.HyperDashing ? CatcherTrailAnimation.HyperDashing : CatcherTrailAnimation.Dashing);
+                    displayCatcherTrail(Catcher.HyperDashing ? CatcherTrailAnimation.HyperDashing : CatcherTrailAnimation.Dashing, Catcher, catcherTrails);
             }
 
             lastHyperDashState = Catcher.HyperDashing;
@@ -148,6 +181,23 @@ namespace osu.Game.Rulesets.Catch.UI
                     return true;
             }
 
+            if (TwinCatchersApplies)
+            {
+                switch (e.Action)
+                {
+                    case CatchAction.MoveLeftTwin:
+                        currentDirectionTwin--;
+                        return true;
+
+                    case CatchAction.MoveRightTwin:
+                        currentDirectionTwin++;
+                        return true;
+
+                    case CatchAction.DashTwin:
+                        Twin.Dashing = true;
+                        return true;
+                }
+            }
             return false;
         }
 
@@ -167,8 +217,25 @@ namespace osu.Game.Rulesets.Catch.UI
                     Catcher.Dashing = false;
                     break;
             }
+            if (TwinCatchersApplies)
+            {
+                switch (e.Action)
+                {
+                    case CatchAction.MoveLeftTwin:
+                        currentDirectionTwin++;
+                        break;
+
+                    case CatchAction.MoveRightTwin:
+                        currentDirectionTwin--;
+                        break;
+
+                    case CatchAction.DashTwin:
+                        Twin.Dashing = false;
+                        break;
+                }
+            }
         }
 
-        private void displayCatcherTrail(CatcherTrailAnimation animation) => catcherTrails.Add(new CatcherTrailEntry(Time.Current, Catcher.CurrentState, Catcher.X, Catcher.BodyScale, animation));
+        private void displayCatcherTrail(CatcherTrailAnimation animation, Catcher currCatcher, CatcherTrailDisplay trails) => trails.Add(new CatcherTrailEntry(Time.Current, currCatcher.CurrentState, currCatcher.X, currCatcher.BodyScale, animation));
     }
 }

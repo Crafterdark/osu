@@ -27,5 +27,16 @@ namespace osu.Game.Rulesets.Catch
 
         [Description("Engage dash")]
         Dash,
+
+        //These only apply when using the Twin Catchers mod
+
+        [Description("Move left (twin)")]
+        MoveLeftTwin,
+
+        [Description("Move right (twin)")]
+        MoveRightTwin,
+
+        [Description("Engage dash (twin)")]
+        DashTwin,
     }
 }

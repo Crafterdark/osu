@@ -122,7 +122,7 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModDifficultyAdjust(),
                         new CatchModClassic(),
                         new CatchModMirror(),
-                        new CatchModTwinsCatchers(),
+                        new CatchModTwinCatchers(),
                     };
 
                 case ModType.Automation:
