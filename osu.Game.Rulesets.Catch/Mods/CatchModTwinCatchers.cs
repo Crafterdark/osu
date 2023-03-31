@@ -1,9 +1,12 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using osu.Framework.Bindables;
+using System.Linq;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
 using osu.Game.Beatmaps;
+using osu.Game.Configuration;
 using osu.Game.Rulesets.Catch.Beatmaps;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.UI;
@@ -21,11 +24,28 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override IconUsage? Icon => FontAwesome.Solid.Moon; //Placeholder
         public override ModType Type => ModType.Conversion;
 
-        //The edge of the Catcher field, near the the middle of the screen
+        //The edge of the Catcher field, near the middle of the screen
         public float LeftEdgeFromMiddle;
 
-        //The edge of the Twin catcher field, near the the middle of the screen
+        //The edge of the Twin catcher field, near the middle of the screen
         public float RightEdgeFromMiddle;
+
+        [SettingSource("Enhanced Generation", "Patterns don't show up near the center of the Playfield.")]
+        public BindableBool TwinCatchersOffsets { get; } = new BindableBool(true);
+
+        public override string SettingDescription
+        {
+            get
+            {
+                string twinCatchersPatterns = TwinCatchersOffsets.IsDefault ? string.Empty : string.Empty;
+
+                return string.Join(", ", new[]
+                {
+                    base.SettingDescription,
+                    twinCatchersPatterns,
+                }.Where(s => !string.IsNullOrEmpty(s)));
+            }
+        }
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {
@@ -52,7 +72,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
         {
             var catchProcessor = (CatchBeatmapProcessor)beatmapProcessor;
-            catchProcessor.TwinCatchersOffsets = true;
+            catchProcessor.TwinCatchersOffsets = TwinCatchersOffsets.Value;
         }
 
     }
