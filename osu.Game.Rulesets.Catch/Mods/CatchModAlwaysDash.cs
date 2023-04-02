@@ -22,13 +22,21 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override string Acronym => "AD";
         public override LocalisableString Description => "The catcher won't stop dashing.";
         public override double ScoreMultiplier => 1;
-        public override IconUsage? Icon => FontAwesome.Solid.Moon; //Placeholder
         public override ModType Type => ModType.Fun;
 
         public override Type[] IncompatibleMods => new[] { typeof(CatchModNoDash) };
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {
+            var drawableCatchRuleset = (DrawableCatchRuleset)drawableRuleset;
+            var catchPlayfield = (CatchPlayfield)drawableCatchRuleset.Playfield;
+            catchPlayfield.CatcherArea.AlwaysDash = true;
+            var theCatcherOnArea = catchPlayfield.CatcherArea.Catcher;
+            theCatcherOnArea.Dashing = true;
+            if (catchPlayfield.CatcherArea.TwinCatchersApplies) {
+                var theTwinOnArea = catchPlayfield.CatcherArea.Twin;
+                theTwinOnArea.Dashing = true;
+            }
         }
 
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)

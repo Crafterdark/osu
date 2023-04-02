@@ -36,6 +36,7 @@ namespace osu.Game.Rulesets.Catch.UI
         public bool TwinCatchersApplies { get; set; } = false!;
 
         public bool TwinCatchersInvert { get; set; } = false!;
+        public bool AlwaysDash { get; set; } = false!;
 
         private readonly Container<Catcher> catcherContainer;
 
@@ -253,7 +254,7 @@ namespace osu.Game.Rulesets.Catch.UI
                     break;
 
                 case CatchAction.Dash:
-                    Catcher.Dashing = false;
+                    if (!AlwaysDash) Catcher.Dashing = false;
                     break;
             }
             if (TwinCatchersApplies)
@@ -269,7 +270,7 @@ namespace osu.Game.Rulesets.Catch.UI
                         break;
 
                     case CatchAction.DashTwin:
-                        Twin.Dashing = false;
+                        if (!AlwaysDash) Twin.Dashing = false;
                         break;
                 }
             }
