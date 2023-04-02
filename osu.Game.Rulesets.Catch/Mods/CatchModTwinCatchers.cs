@@ -12,6 +12,7 @@ using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.UI;
+using System;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
@@ -23,6 +24,8 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override double ScoreMultiplier => 1;
         public override IconUsage? Icon => FontAwesome.Solid.Moon; //Placeholder
         public override ModType Type => ModType.Conversion;
+
+        public override Type[] IncompatibleMods => new[] { typeof(CatchModWraparound) };
 
         //The edge of the Catcher field, near the middle of the screen
         public float LeftEdgeFromMiddle;

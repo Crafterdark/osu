@@ -129,6 +129,8 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModClassic(),
                         new CatchModMirror(),
                         new CatchModTwinCatchers(),
+                        new CatchModCatchTheMania(),
+                        new CatchModNoDash(),
                     };
 
                 case ModType.Automation:
@@ -145,6 +147,9 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModFloatingFruits(),
                         new CatchModMuted(),
                         new CatchModNoScope(),
+                        new CatchModAlwaysDash(),
+                        new CatchModWraparound(),
+                        new CatchModTeleport(),
                     };
 
                 default:
