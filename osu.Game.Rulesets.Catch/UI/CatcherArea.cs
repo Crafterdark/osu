@@ -35,6 +35,8 @@ namespace osu.Game.Rulesets.Catch.UI
 
         public bool TwinCatchersApplies { get; set; } = false!;
 
+        public bool TwinCatchersInvert { get; set; } = false!;
+
         private readonly Container<Catcher> catcherContainer;
 
         private readonly Container<Catcher> twinContainer;
@@ -179,8 +181,8 @@ namespace osu.Game.Rulesets.Catch.UI
             if (TwinCatchersApplies)
             {
                 //Replaces newPosition limits, when the Twin Catchers mod is applied
-                if (currCatcher == Catcher) newPosition = Math.Clamp(x, 0, (CatchPlayfield.WIDTH / 2) - (Catcher.CatchWidth / 2));
-                else if (currCatcher == Twin) newPosition = Math.Clamp(x, (CatchPlayfield.WIDTH / 2) + (Twin.CatchWidth / 2), CatchPlayfield.WIDTH);
+                if (currCatcher == Catcher) newPosition = GetNewPositionTwins(x, Catcher);
+                else if (currCatcher == Twin) newPosition = GetNewPositionTwins(x, Twin);
             }
             currCatcher.X = newPosition;
 
@@ -190,6 +192,17 @@ namespace osu.Game.Rulesets.Catch.UI
                 currCatcher.VisualDirection = Direction.Left;
         }
 
+        public float GetNewPositionTwins(float x, Catcher currCatcher)
+        {
+            if (currCatcher == Catcher)
+            {
+                if (!TwinCatchersInvert) return Math.Clamp(x, 0, (CatchPlayfield.WIDTH / 2) - (Catcher.CatchWidth / 2));
+                return Math.Clamp(x, (CatchPlayfield.WIDTH / 2) + (Catcher.CatchWidth / 2), CatchPlayfield.WIDTH);
+            }
+
+            if (!TwinCatchersInvert) return Math.Clamp(x, (CatchPlayfield.WIDTH / 2) + (Twin.CatchWidth / 2), CatchPlayfield.WIDTH);
+            return Math.Clamp(x, 0, (CatchPlayfield.WIDTH / 2) - (Twin.CatchWidth / 2));
+        }
         public bool OnPressed(KeyBindingPressEvent<CatchAction> e)
         {
             switch (e.Action)

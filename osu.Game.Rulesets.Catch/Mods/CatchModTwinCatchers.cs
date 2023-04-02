@@ -33,16 +33,26 @@ namespace osu.Game.Rulesets.Catch.Mods
         [SettingSource("Enhanced Generation", "Patterns don't show up near the center of the Playfield.")]
         public BindableBool TwinCatchersOffsets { get; } = new BindableBool(true);
 
+        [SettingSource("Invert Catchers", "The twins exchange their location.")]
+        public BindableBool TwinCatchersInvert { get; } = new BindableBool(false);
+
+        [SettingSource("Half Autoplay", "The twin plays automatically.")]
+        public BindableBool TwinCatcherAutoplay { get; } = new BindableBool(false);
+
         public override string SettingDescription
         {
             get
             {
                 string twinCatchersPatterns = TwinCatchersOffsets.IsDefault ? string.Empty : string.Empty;
+                string twinCatcherInvert = TwinCatchersInvert.IsDefault ? string.Empty : string.Empty;
+                string twinCatcherAutoplay = TwinCatcherAutoplay.IsDefault ? string.Empty : string.Empty;
 
                 return string.Join(", ", new[]
                 {
                     base.SettingDescription,
                     twinCatchersPatterns,
+                    twinCatcherInvert,
+                    twinCatcherAutoplay,
                 }.Where(s => !string.IsNullOrEmpty(s)));
             }
         }
@@ -51,22 +61,38 @@ namespace osu.Game.Rulesets.Catch.Mods
         {
             var drawableCatchRuleset = (DrawableCatchRuleset)drawableRuleset;
             var catchPlayfield = (CatchPlayfield)drawableCatchRuleset.Playfield;
+            var theCatcherOnArea = catchPlayfield.CatcherArea.Catcher;
 
-            catchPlayfield.CatcherArea.TwinCatchersApplies = true;
+            catchPlayfield.CatcherArea.Twin = catchPlayfield.Twin; //Set it to be visible ingame
 
-            catchPlayfield.CatcherArea.Twin = catchPlayfield.Twin;
+            var theTwinOnArea = catchPlayfield.CatcherArea.Twin;
+
+            catchPlayfield.CatcherArea.TwinCatchersApplies = true; //Apply the mod
+
+            catchPlayfield.CatcherArea.TwinCatchersInvert = TwinCatchersInvert.Value; //Apply the mod config
+
+            float HalfCatcherLength = catchPlayfield.Catcher.CatchWidth / 2;
 
             //The edge of the Catcher field, near the the middle of the screen
-            LeftEdgeFromMiddle = (CatchPlayfield.WIDTH / 2) - (catchPlayfield.Catcher.CatchWidth / 2);
+            LeftEdgeFromMiddle = (CatchPlayfield.WIDTH / 2) - (HalfCatcherLength);
 
             //The edge of the Twin catcher field, near the the middle of the screen
-            RightEdgeFromMiddle = (CatchPlayfield.WIDTH / 2) + (catchPlayfield.Twin.CatchWidth / 2);
+            RightEdgeFromMiddle = (CatchPlayfield.WIDTH / 2) + (HalfCatcherLength);
 
-            catchPlayfield.CatcherArea.Catcher.X = LeftEdgeFromMiddle / 2;
-            catchPlayfield.CatcherArea.Catcher.VisualDirection = Direction.Right;
-            catchPlayfield.CatcherArea.Twin.X = CatchPlayfield.WIDTH - ((CatchPlayfield.WIDTH - RightEdgeFromMiddle) / 2);
-            catchPlayfield.CatcherArea.Twin.VisualDirection = Direction.Left;
-
+            if (TwinCatchersInvert.Value)
+            {
+                theTwinOnArea.X = LeftEdgeFromMiddle / 2;
+                theTwinOnArea.VisualDirection = Direction.Right;
+                theCatcherOnArea.X = CatchPlayfield.WIDTH - ((CatchPlayfield.WIDTH - RightEdgeFromMiddle) / 2);
+                theCatcherOnArea.VisualDirection = Direction.Left;
+            }
+            else
+            {
+                theCatcherOnArea.X = LeftEdgeFromMiddle / 2;
+                theCatcherOnArea.VisualDirection = Direction.Right;
+                theTwinOnArea.X = CatchPlayfield.WIDTH - ((CatchPlayfield.WIDTH - RightEdgeFromMiddle) / 2);
+                theTwinOnArea.VisualDirection = Direction.Left;
+            }
         }
 
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
