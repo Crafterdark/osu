@@ -32,6 +32,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         public bool LastDirection { get; set; } //true: left, false: right
         public CatchHitObject PreviousObject { get; set; } = null!;
 
+
         public CatchBeatmapProcessor(IBeatmap beatmap)
             : base(beatmap)
         {
@@ -85,11 +86,13 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 {
                     case Fruit fruit:
                         if (HardRockOffsets)
+
                             applyHardRockOffset(fruit, ref previousPosition, ref previousStartTime, rng);
                         if (TwinCatchersOffsets)
                             applyTwinCatchersOffset(fruit, beatmap, TwinCatchersInvertGen);
                         if (NoDashHyperOffsets)
                             applyNoDashOffset(fruit);
+
                         break;
 
                     case BananaShower bananaShower:
@@ -97,7 +100,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         {
                             banana.XOffset = (float)(rng.NextDouble() * CatchPlayfield.WIDTH);
                             if (TwinCatchersOffsets)
+
                                 applyTwinCatchersOffset(banana, beatmap, TwinCatchersInvertGen);
+
                             rng.Next(); // osu!stable retrieved a random banana type
                             rng.Next(); // osu!stable retrieved a random banana rotation
                             rng.Next(); // osu!stable retrieved a random banana colour
@@ -123,9 +128,12 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                                 rng.Next(); // osu!stable retrieved a random droplet rotation
 
                             if (TwinCatchersOffsets)
+
                                 applyTwinCatchersOffset(catchObject, beatmap, TwinCatchersInvertGen);
                             if (NoDashHyperOffsets)
                                 applyNoDashOffset(catchObject);
+
+
                         }
 
                         break;
@@ -177,7 +185,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             lastStartTime = startTime;
         }
 
+
         private static void applyTwinCatchersOffset(CatchHitObject hitObject, IBeatmap beatmap, bool invertGen)
+
         {
 
             //Taken from Hyperdash calculations
@@ -200,6 +210,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
                     else if (hitObject.XOffset == CatchPlayfield.WIDTH / 2)
                     {
+
                         invertGen = !invertGen; //Invert
 
                         if (invertGen)
@@ -236,6 +247,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 {
                     invertGen = !invertGen; //Invert
                     if (invertGen)
+r
                     {
                         hitObject.XOffset = Math.Clamp(currentObjectComparedX + initialOffset, rightSideFromMiddle, maxMapSide) - currentObjectComparedX;
                     }

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+
 using osu.Framework.Bindables;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
@@ -13,6 +14,7 @@ using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.UI;
 using System;
 using System.Linq;
+
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
@@ -40,10 +42,12 @@ namespace osu.Game.Rulesets.Catch.Mods
             }
         }
 
+
         public override Type[] IncompatibleMods => new[] { typeof(CatchModAlwaysDash) };
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {
+
             var drawableCatchRuleset = (DrawableCatchRuleset)drawableRuleset;
             var catchPlayfield = (CatchPlayfield)drawableCatchRuleset.Playfield;
             catchPlayfield.CatcherArea.NoDash = true;
@@ -54,13 +58,16 @@ namespace osu.Game.Rulesets.Catch.Mods
                 var theTwinOnArea = catchPlayfield.CatcherArea.Twin;
                 theTwinOnArea.Dashing = false;
             }
+
         }
 
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
         {
+
             var catchProcessor = (CatchBeatmapProcessor)beatmapProcessor;
             catchProcessor.NoDashHyperOffsets = true;
             catchProcessor.NoDashPatternLimit = NoDashPatternLimit.Value;
+
         }
 
     }
