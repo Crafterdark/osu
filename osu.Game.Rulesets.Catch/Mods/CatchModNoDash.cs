@@ -22,7 +22,6 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override string Acronym => "ND";
         public override LocalisableString Description => "The catcher can't dash or hyperdash.";
         public override double ScoreMultiplier => 1;
-        public override IconUsage? Icon => FontAwesome.Solid.Moon; //Placeholder
         public override ModType Type => ModType.Conversion;
 
         [SettingSource("ExGon Mode", "No Dash patterns are catchable to the very pixel limit.")] //Temporarily :)
