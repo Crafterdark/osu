@@ -22,14 +22,14 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         public bool NoDashHyperOffsets { get; set; }
 
-        public bool NoDashPatternLimit { get; set; }
-
         //Used to generate a symmetrical pattern when objects fall in the middle of the Playfield
         public bool TwinCatchersInvertGen;
 
         public double HalfCatcherWidth { get; set; }
         public double LastExcess { get; set; }
         public bool LastDirection { get; set; } //true: left, false: right
+
+        public float NoDashHumanThreshold { get; set; } //default: 0.25
         public CatchHitObject PreviousObject { get; set; } = null!;
 
 
@@ -139,8 +139,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         break;
                 }
             }
-
-            initialiseHyperDash(beatmap);
+            if (!NoDashHyperOffsets) initialiseHyperDash(beatmap);
         }
 
         private static void applyHardRockOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime, LegacyRandom rng)
@@ -287,21 +286,14 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
                 if (catcherTotalTravel < distanceToNext)
                 {
-                    float humanThreshold = (float)0.25; //How much "bearable" the patterns will be
+                    float humanThreshold = NoDashHumanThreshold; //How much "bearable" the patterns will be
 
-                    if (thisDirection) //Left
-                    {
-                        if (NoDashPatternLimit) hitObject.XOffset -= (float)catcherImpossibleTravel;
-                        else hitObject.XOffset -= (float)(catcherImpossibleTravel + (catcherTotalTravel * humanThreshold));
-                    }
-                    else
-                    {
-                        if (NoDashPatternLimit) hitObject.XOffset += (float)catcherImpossibleTravel;
-                        else hitObject.XOffset += (float)(catcherImpossibleTravel + (catcherTotalTravel * humanThreshold));
-                    }
+                    if (thisDirection) hitObject.XOffset -= (float)(catcherImpossibleTravel + (catcherTotalTravel * humanThreshold));
+                    else hitObject.XOffset += (float)(catcherImpossibleTravel + (catcherTotalTravel * humanThreshold));
                     //currentObject.HyperDashTarget = nextObject;
                     //LastExcess = HalfCatcherWidth;
                     LastExcess = 0;
+
                 }
                 else
                 {
