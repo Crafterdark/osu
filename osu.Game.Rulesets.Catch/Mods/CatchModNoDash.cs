@@ -3,7 +3,6 @@
 
 
 using osu.Framework.Bindables;
-using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
 using osu.Game.Beatmaps;
 using osu.Game.Configuration;
@@ -26,18 +25,28 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override double ScoreMultiplier => 1;
         public override ModType Type => ModType.Conversion;
 
-        [SettingSource("ExGon Mode", "No Dash patterns are catchable to the very pixel limit.")] //Temporarily :)
-        public BindableBool NoDashPatternLimit { get; } = new BindableBool(false);
+        [SettingSource("No Dash Human Threshold", "Less edge or pixel patterns with higher values.")]
+        public Bindable<float> NoDashHumanThreshold { get; } = new BindableFloat((float)0.25)
+        {
+            Precision = (float)0.01,
+            MinValue = (float)0.00,
+            MaxValue = (float)1.00
+        };
+
+        public float GetNoDashHumanThreshold()
+        {
+            return NoDashHumanThreshold.Value;
+        }
 
         public override string SettingDescription
         {
             get
             {
-                string noDashPatternLimit = NoDashPatternLimit.IsDefault ? string.Empty : string.Empty;
+                string noDashHumanThreshold = NoDashHumanThreshold.IsDefault ? string.Empty : string.Empty;
                 return string.Join(", ", new[]
                 {
                     base.SettingDescription,
-                    noDashPatternLimit,
+                    noDashHumanThreshold,
                 }.Where(s => !string.IsNullOrEmpty(s)));
             }
         }
@@ -66,8 +75,7 @@ namespace osu.Game.Rulesets.Catch.Mods
 
             var catchProcessor = (CatchBeatmapProcessor)beatmapProcessor;
             catchProcessor.NoDashHyperOffsets = true;
-            catchProcessor.NoDashPatternLimit = NoDashPatternLimit.Value;
-
+            catchProcessor.NoDashHumanThreshold = GetNoDashHumanThreshold();
         }
 
     }
