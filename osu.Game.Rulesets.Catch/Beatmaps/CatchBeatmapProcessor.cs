@@ -20,8 +20,18 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         public bool TwinCatchersOffsets { get; set; }
 
+        public bool NoDashHyperOffsets { get; set; }
+
+        public bool NoDashPatternLimit { get; set; }
+
         //Used to generate a symmetrical pattern when objects fall in the middle of the Playfield
-        public static bool TwinCatchersInvertGen;
+        public bool TwinCatchersInvertGen;
+
+        public double HalfCatcherWidth { get; set; }
+        public double LastExcess { get; set; }
+        public bool LastDirection { get; set; } //true: left, false: right
+        public CatchHitObject PreviousObject { get; set; } = null!;
+
 
         public CatchBeatmapProcessor(IBeatmap beatmap)
             : base(beatmap)
@@ -49,12 +59,24 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             }
         }
 
+
         public void ApplyPositionOffsets(IBeatmap beatmap)
         {
             var rng = new LegacyRandom(RNG_SEED);
 
-            float? lastPosition = null;
-            double lastStartTime = 0;
+            float? previousPosition = null;
+            double previousStartTime = 0;
+
+
+            if (NoDashHyperOffsets)
+            {
+                HalfCatcherWidth = Catcher.CalculateCatchWidth(beatmap.Difficulty) / 2;
+                // Todo: This is wrong. osu!stable calculated hyperdashes using the full catcher size, excluding the margins.
+                // This should theoretically cause impossible scenarios, but practically, likely due to the size of the playfield, it doesn't seem possible.
+                // For now, to bring gameplay (and diffcalc!) completely in-line with stable, this code also uses the full catcher size.
+                HalfCatcherWidth /= Catcher.ALLOWED_CATCH_RANGE;
+                LastExcess = HalfCatcherWidth;
+            }
 
             foreach (var obj in beatmap.HitObjects.OfType<CatchHitObject>())
             {
@@ -64,9 +86,13 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 {
                     case Fruit fruit:
                         if (HardRockOffsets)
-                            applyHardRockOffset(fruit, ref lastPosition, ref lastStartTime, rng);
+
+                            applyHardRockOffset(fruit, ref previousPosition, ref previousStartTime, rng);
                         if (TwinCatchersOffsets)
-                            applyTwinCatchersOffset(fruit, beatmap);
+                            applyTwinCatchersOffset(fruit, beatmap, TwinCatchersInvertGen);
+                        if (NoDashHyperOffsets)
+                            applyNoDashOffset(fruit);
+
                         break;
 
                     case BananaShower bananaShower:
@@ -74,7 +100,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         {
                             banana.XOffset = (float)(rng.NextDouble() * CatchPlayfield.WIDTH);
                             if (TwinCatchersOffsets)
-                                applyTwinCatchersOffset(banana, beatmap);
+
+                                applyTwinCatchersOffset(banana, beatmap, TwinCatchersInvertGen);
+
                             rng.Next(); // osu!stable retrieved a random banana type
                             rng.Next(); // osu!stable retrieved a random banana rotation
                             rng.Next(); // osu!stable retrieved a random banana colour
@@ -84,10 +112,10 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
                     case JuiceStream juiceStream:
                         // Todo: BUG!! Stable used the last control point as the final position of the path, but it should use the computed path instead.
-                        lastPosition = juiceStream.OriginalX + juiceStream.Path.ControlPoints[^1].Position.X;
+                        previousPosition = juiceStream.OriginalX + juiceStream.Path.ControlPoints[^1].Position.X;
 
                         // Todo: BUG!! Stable attempted to use the end time of the stream, but referenced it too early in execution and used the start time instead.
-                        lastStartTime = juiceStream.StartTime;
+                        previousStartTime = juiceStream.StartTime;
 
                         foreach (var nested in juiceStream.NestedHitObjects)
                         {
@@ -100,7 +128,12 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                                 rng.Next(); // osu!stable retrieved a random droplet rotation
 
                             if (TwinCatchersOffsets)
-                                applyTwinCatchersOffset(catchObject, beatmap);
+
+                                applyTwinCatchersOffset(catchObject, beatmap, TwinCatchersInvertGen);
+                            if (NoDashHyperOffsets)
+                                applyNoDashOffset(catchObject);
+
+
                         }
 
                         break;
@@ -152,7 +185,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             lastStartTime = startTime;
         }
 
-        private static void applyTwinCatchersOffset(CatchHitObject hitObject, IBeatmap beatmap)
+
+        private static void applyTwinCatchersOffset(CatchHitObject hitObject, IBeatmap beatmap, bool invertGen)
+
         {
 
             //Taken from Hyperdash calculations
@@ -175,9 +210,10 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
                     else if (hitObject.XOffset == CatchPlayfield.WIDTH / 2)
                     {
-                        TwinCatchersInvertGen = !TwinCatchersInvertGen; //Invert
 
-                        if (TwinCatchersInvertGen)
+                        invertGen = !invertGen; //Invert
+
+                        if (invertGen)
                         {
                             hitObject.XOffset = Math.Clamp(hitObject.XOffset, minMapSide, leftSideFromMiddle);
                         }
@@ -209,8 +245,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
                 else if (currentObjectComparedX == currentObjectComparisonX)
                 {
-                    TwinCatchersInvertGen = !TwinCatchersInvertGen; //Invert
-                    if (TwinCatchersInvertGen)
+                    invertGen = !invertGen; //Invert
+                    if (invertGen)
+r
                     {
                         hitObject.XOffset = Math.Clamp(currentObjectComparedX + initialOffset, rightSideFromMiddle, maxMapSide) - currentObjectComparedX;
                     }
@@ -222,6 +259,60 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 }
 
                 else hitObject.XOffset = Math.Clamp(currentObjectComparedX - initialOffset, minMapSide, leftSideFromMiddle) - currentObjectComparedX;
+            }
+        }
+
+        private void applyNoDashOffset(CatchHitObject hitObject)
+        {
+            float currentEffective = hitObject.EffectiveX;
+            double currentStartTime = hitObject.StartTime;
+
+            if (hitObject is not Banana || hitObject is not TinyDroplet)
+            {
+
+                if (PreviousObject == null)
+                {
+                    PreviousObject = hitObject;
+                    return;
+                }
+
+                float previousEffective = PreviousObject.EffectiveX;
+                float previousStartTime = (float)PreviousObject.StartTime;
+
+                bool thisDirection = currentEffective > previousEffective ? true : false;
+
+                double timeToNext = currentStartTime - previousStartTime - 1000f / 60f / 4; // 1/4th of a frame of grace time, taken from osu-stable
+                double catcherTotalTravel = timeToNext * Catcher.BASE_WALK_SPEED;
+                double distanceToNext = Math.Abs(currentEffective - previousEffective) - (LastDirection == thisDirection ? LastExcess : HalfCatcherWidth);
+                double catcherImpossibleTravel = distanceToNext - catcherTotalTravel;
+
+                if (catcherTotalTravel < distanceToNext)
+                {
+                    float humanThreshold = (float)0.25; //How much "bearable" the patterns will be
+
+                    if (thisDirection) //Left
+                    {
+                        if (NoDashPatternLimit) hitObject.XOffset -= (float)catcherImpossibleTravel;
+                        else hitObject.XOffset -= (float)(catcherImpossibleTravel + (catcherTotalTravel * humanThreshold));
+                    }
+                    else
+                    {
+                        if (NoDashPatternLimit) hitObject.XOffset += (float)catcherImpossibleTravel;
+                        else hitObject.XOffset += (float)(catcherImpossibleTravel + (catcherTotalTravel * humanThreshold));
+                    }
+                    //currentObject.HyperDashTarget = nextObject;
+                    //LastExcess = HalfCatcherWidth;
+                    LastExcess = 0;
+                }
+                else
+                {
+                    //currentObject.DistanceToHyperDash = distanceToHyper;
+                    LastExcess = Math.Clamp(catcherImpossibleTravel, 0, HalfCatcherWidth);
+                }
+
+                LastDirection = thisDirection;
+
+                PreviousObject = hitObject;
             }
         }
 
