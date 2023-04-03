@@ -247,7 +247,6 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 {
                     invertGen = !invertGen; //Invert
                     if (invertGen)
-r
                     {
                         hitObject.XOffset = Math.Clamp(currentObjectComparedX + initialOffset, rightSideFromMiddle, maxMapSide) - currentObjectComparedX;
                     }
