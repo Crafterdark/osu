@@ -130,7 +130,7 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModMirror(),
                         new CatchModTwinCatchers(),
                         new CatchModCatchTheMania(),
-                        new CatchModNoDash(),
+                        new MultiMod(new CatchModNoDash(), new CatchModNoHyperDash())
                     };
 
                 case ModType.Automation:
