@@ -3,7 +3,6 @@
 
 using osu.Framework.Bindables;
 using System.Linq;
-using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
 using osu.Game.Beatmaps;
 using osu.Game.Configuration;
@@ -22,7 +21,6 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override string Acronym => "TC";
         public override LocalisableString Description => "Two catchers, two fields.";
         public override double ScoreMultiplier => 1;
-        public override IconUsage? Icon => FontAwesome.Solid.Moon; //Placeholder
         public override ModType Type => ModType.Conversion;
 
         public override Type[] IncompatibleMods => new[] { typeof(CatchModWraparound) };
