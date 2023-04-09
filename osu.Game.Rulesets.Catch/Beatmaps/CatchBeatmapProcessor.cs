@@ -10,6 +10,7 @@ using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Objects.Types;
 using osu.Game.Utils;
 
+
 namespace osu.Game.Rulesets.Catch.Beatmaps
 {
     public class CatchBeatmapProcessor : BeatmapProcessor
@@ -17,6 +18,8 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         public const int RNG_SEED = 1337;
 
         public bool HardRockOffsets { get; set; }
+
+        public bool Easy2Offsets { get; set; }
 
         public bool TwinCatchersOffsets { get; set; }
 
@@ -113,7 +116,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         break;
                 }
             }
-            initialiseHyperDash(beatmap, GetNoDashStatus(), TwinCatchersOffsets, SpacingDifficulty);
+            initialiseHyperDash(beatmap, GetNoDashStatus(), Easy2Offsets, TwinCatchersOffsets, SpacingDifficulty);
         }
 
         private static void applyHardRockOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime, LegacyRandom rng)
@@ -292,9 +295,90 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             return 0; //No difference
         }
 
+        private static void elaborateHyperdashPalpableCatchHitObject(double halfCatcherWidth_input, int lastDirection_input, List<PalpableCatchHitObject> listHitObjects, int noDashStatus, float spacingDifficulty, bool resetHyperdashValues)
+        {
+            double catcherSpeed;
 
+            if (noDashStatus == 2) catcherSpeed = Catcher.BASE_WALK_SPEED;
+            else catcherSpeed = Catcher.BASE_DASH_SPEED;
 
-        private static void initialiseHyperDash(IBeatmap beatmap, int noDashStatus, bool twins, float spacingDifficulty)
+            double halfCatcherWidth = halfCatcherWidth_input;
+            int lastDirection = lastDirection_input;
+            double lastExcess = halfCatcherWidth_input;
+            double distanceToNext;
+
+            for (int i = 0; i < listHitObjects.Count - 1; i++)
+            {
+                var currentObject = listHitObjects[i];
+                var nextObject = listHitObjects[i + 1];
+
+                if (resetHyperdashValues)
+                {
+                    // This is not nomod
+                    // Reset variables in-case values have changed (e.g. after applying HR)
+                    currentObject.HyperDashTarget = null;
+                    currentObject.DistanceToHyperDash = 0;
+                }
+
+                int thisDirection = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
+                double timeToNext = nextObject.StartTime - currentObject.StartTime - 1000f / 60f / 4; // 1/4th of a frame of grace time, taken from osu-stable
+
+                if (noDashStatus == 0) distanceToNext = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcess : halfCatcherWidth); //nomod
+                else distanceToNext = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcess : halfCatcherWidth * spacingDifficulty);
+
+                float distanceToHyper = (float)(timeToNext * catcherSpeed - distanceToNext); //nomod
+
+                if (distanceToHyper < 0)
+                {
+                    if (noDashStatus != 0)
+                    {
+
+                        if (resetHyperdashValues)
+                        {
+
+                            if (thisDirection == 1)
+                            {
+                                nextObject.XOffset += distanceToHyper;
+                            }
+                            else if (thisDirection == -1)
+                            {
+                                nextObject.XOffset -= distanceToHyper;
+                            }
+
+                        }
+
+                        lastExcess = 0; //Should be correct (?)
+
+                    }
+                    else //nomod
+                    {
+                        currentObject.HyperDashTarget = nextObject;
+                        lastExcess = halfCatcherWidth;
+                    }
+
+                }
+                else
+                {
+                    if (noDashStatus != 0)
+                    {
+                        currentObject.DistanceToHyperDash = distanceToHyper;
+                        lastExcess = Math.Clamp(distanceToHyper, 0, halfCatcherWidth * spacingDifficulty);
+                    }
+                    else //nomod
+                    {
+                        currentObject.DistanceToHyperDash = distanceToHyper;
+                        lastExcess = Math.Clamp(distanceToHyper, 0, halfCatcherWidth);
+                    }
+
+                }
+
+                lastDirection = thisDirection; //nomod
+
+            }
+
+        }
+
+        private static void initialiseHyperDash(IBeatmap beatmap, int noDashStatus, bool easy2, bool twins, float spacingDifficulty)
         {
             List<PalpableCatchHitObject> palpableObjects = new List<PalpableCatchHitObject>();
 
@@ -303,6 +387,22 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             List<PalpableCatchHitObject> palpableObjectsRight = new List<PalpableCatchHitObject>();
 
             double halfCatcherWidth = Catcher.CalculateCatchWidth(beatmap.Difficulty) / 2;
+            double halfCatcherWidthOriginalBeatmap = 0;
+            double halfCatcherWidthModifiedBeatmap = 0;
+
+            BeatmapDifficulty difficultyCustom = new BeatmapDifficulty();
+
+            if (easy2)
+            {
+                beatmap.Difficulty.CopyTo(difficultyCustom);
+                difficultyCustom.CircleSize *= 2;
+
+                halfCatcherWidthModifiedBeatmap = halfCatcherWidth;
+                halfCatcherWidthModifiedBeatmap /= Catcher.ALLOWED_CATCH_RANGE; //Modified is ready
+
+                halfCatcherWidthOriginalBeatmap = Catcher.CalculateCatchWidth(difficultyCustom) / 2;
+                halfCatcherWidthOriginalBeatmap /= Catcher.ALLOWED_CATCH_RANGE; //Original is ready
+            }
 
             double halfPlayfield = CatchPlayfield.WIDTH / 2;
 
@@ -361,201 +461,33 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             // For now, to bring gameplay (and diffcalc!) completely in-line with stable, this code also uses the full catcher size.
             halfCatcherWidth /= Catcher.ALLOWED_CATCH_RANGE;
 
-            int lastDirection = 0;
-            double lastExcess = halfCatcherWidth;
-
-            double catcherSpeed;
-
-            if (noDashStatus == 2) catcherSpeed = Catcher.BASE_WALK_SPEED;
-            else catcherSpeed = Catcher.BASE_DASH_SPEED;
-
             if (twins)
             {
 
-                for (int i = 0; i < palpableObjectsLeft.Count - 1; i++)
+                if (easy2)
                 {
-                    var currentObject = palpableObjectsLeft[i];
-                    var nextObject = palpableObjectsLeft[i + 1];
+                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthOriginalBeatmap, 0, palpableObjectsLeft, noDashStatus, spacingDifficulty, true); //Used to add hyperdash from NM spacing (!) [Left]
+                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthModifiedBeatmap, 0, palpableObjectsLeft, noDashStatus, spacingDifficulty, false); //Only used to add hyperdash from new CS spacing (!) [Left]
 
-                    // Reset variables in-case values have changed (e.g. after applying HR)
-                    currentObject.HyperDashTarget = null;
-                    currentObject.DistanceToHyperDash = 0;
-
-                    int thisDirection = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
-                    double timeToNext = nextObject.StartTime - currentObject.StartTime - 1000f / 60f / 4; // 1/4th of a frame of grace time, taken from osu-stable
-
-                    double distanceToNext;
-
-                    if (noDashStatus == 0) distanceToNext = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcess : halfCatcherWidth); //nomod
-                    else distanceToNext = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcess : halfCatcherWidth * spacingDifficulty);
-
-                    float distanceToHyper = (float)(timeToNext * catcherSpeed - distanceToNext); //nomod
-
-                    if (distanceToHyper < 0)
-                    {
-                        if (noDashStatus != 0)
-                        {
-                            if (thisDirection == 1)
-                            {
-                                nextObject.XOffset += distanceToHyper;
-                            }
-                            else if (thisDirection == -1)
-                            {
-                                nextObject.XOffset -= distanceToHyper;
-                            }
-                            lastExcess = 0; //Should be correct (?)
-
-                        }
-                        else //nomod
-                        {
-                            currentObject.HyperDashTarget = nextObject;
-                            lastExcess = halfCatcherWidth;
-                        }
-
-                    }
-                    else
-                    {
-                        if (noDashStatus != 0)
-                        {
-                            currentObject.DistanceToHyperDash = distanceToHyper;
-                            lastExcess = Math.Clamp(distanceToHyper, 0, halfCatcherWidth * spacingDifficulty);
-                        }
-                        else //nomod
-                        {
-                            currentObject.DistanceToHyperDash = distanceToHyper;
-                            lastExcess = Math.Clamp(distanceToHyper, 0, halfCatcherWidth);
-                        }
-
-                    }
-
-                    lastDirection = thisDirection; //nomod
-
+                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthOriginalBeatmap, 0, palpableObjectsRight, noDashStatus, spacingDifficulty, true); //Used to add hyperdash from NM spacing (!) [Right]
+                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthModifiedBeatmap, 0, palpableObjectsRight, noDashStatus, spacingDifficulty, false); //Only used to add hyperdash from new CS spacing (!) [Right]
                 }
 
-                lastDirection = 0;
-                lastExcess = halfCatcherWidth;
-
-                for (int i = 0; i < palpableObjectsRight.Count - 1; i++)
+                else
                 {
-                    var currentObject = palpableObjectsRight[i];
-                    var nextObject = palpableObjectsRight[i + 1];
-
-                    // Reset variables in-case values have changed (e.g. after applying HR)
-                    currentObject.HyperDashTarget = null;
-                    currentObject.DistanceToHyperDash = 0;
-
-                    int thisDirection = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
-                    double timeToNext = nextObject.StartTime - currentObject.StartTime - 1000f / 60f / 4; // 1/4th of a frame of grace time, taken from osu-stable
-
-                    double distanceToNext;
-
-                    if (noDashStatus == 0) distanceToNext = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcess : halfCatcherWidth); //nomod
-                    else distanceToNext = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcess : halfCatcherWidth * spacingDifficulty);
-
-                    float distanceToHyper = (float)(timeToNext * catcherSpeed - distanceToNext); //nomod
-
-                    if (distanceToHyper < 0)
-                    {
-                        if (noDashStatus != 0)
-                        {
-                            if (thisDirection == 1)
-                            {
-                                nextObject.XOffset += distanceToHyper;
-                            }
-                            else if (thisDirection == -1)
-                            {
-                                nextObject.XOffset -= distanceToHyper;
-                            }
-                            lastExcess = 0; //Should be correct (?)
-
-                        }
-                        else //nomod
-                        {
-                            currentObject.HyperDashTarget = nextObject;
-                            lastExcess = halfCatcherWidth;
-                        }
-
-                    }
-                    else
-                    {
-                        if (noDashStatus != 0)
-                        {
-                            currentObject.DistanceToHyperDash = distanceToHyper;
-                            lastExcess = Math.Clamp(distanceToHyper, 0, halfCatcherWidth * spacingDifficulty);
-                        }
-                        else //nomod
-                        {
-                            currentObject.DistanceToHyperDash = distanceToHyper;
-                            lastExcess = Math.Clamp(distanceToHyper, 0, halfCatcherWidth);
-                        }
-
-                    }
-
-                    lastDirection = thisDirection; //nomod
-
+                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidth, 0, palpableObjectsLeft, noDashStatus, spacingDifficulty, true); //[Left]
+                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidth, 0, palpableObjectsRight, noDashStatus, spacingDifficulty, true); //[Right]
                 }
             }
             else
             {
-                for (int i = 0; i < palpableObjects.Count - 1; i++)
+                if (easy2)
                 {
-                    var currentObject = palpableObjects[i];
-                    var nextObject = palpableObjects[i + 1];
-
-                    // Reset variables in-case values have changed (e.g. after applying HR)
-                    currentObject.HyperDashTarget = null;
-                    currentObject.DistanceToHyperDash = 0;
-
-                    int thisDirection = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
-                    double timeToNext = nextObject.StartTime - currentObject.StartTime - 1000f / 60f / 4; // 1/4th of a frame of grace time, taken from osu-stable
-
-                    double distanceToNext;
-
-                    if (noDashStatus == 0) distanceToNext = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcess : halfCatcherWidth); //nomod
-                    else distanceToNext = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcess : halfCatcherWidth * spacingDifficulty);
-
-                    float distanceToHyper = (float)(timeToNext * catcherSpeed - distanceToNext); //nomod
-
-                    if (distanceToHyper < 0)
-                    {
-                        if (noDashStatus != 0)
-                        {
-                            if (thisDirection == 1)
-                            {
-                                nextObject.XOffset += distanceToHyper;
-                            }
-                            else if (thisDirection == -1)
-                            {
-                                nextObject.XOffset -= distanceToHyper;
-                            }
-                            lastExcess = 0; //Should be correct (?)
-
-                        }
-                        else //nomod
-                        {
-                            currentObject.HyperDashTarget = nextObject;
-                            lastExcess = halfCatcherWidth;
-                        }
-
-                    }
-                    else
-                    {
-                        if (noDashStatus != 0)
-                        {
-                            currentObject.DistanceToHyperDash = distanceToHyper;
-                            lastExcess = Math.Clamp(distanceToHyper, 0, halfCatcherWidth * spacingDifficulty);
-                        }
-                        else //nomod
-                        {
-                            currentObject.DistanceToHyperDash = distanceToHyper;
-                            lastExcess = Math.Clamp(distanceToHyper, 0, halfCatcherWidth);
-                        }
-
-                    }
-
-                    lastDirection = thisDirection; //nomod
-
+                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthOriginalBeatmap, 0, palpableObjects, noDashStatus, spacingDifficulty, true); //Used to add hyperdash from NM spacing (!)
+                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthModifiedBeatmap, 0, palpableObjects, noDashStatus, spacingDifficulty, false); //Only used to add hyperdash from new CS spacing (!)
                 }
+
+                else elaborateHyperdashPalpableCatchHitObject(halfCatcherWidth, 0, palpableObjects, noDashStatus, spacingDifficulty, true); //This is the main hyperdash gen + other mods
             }
         }
     }

@@ -106,7 +106,7 @@ namespace osu.Game.Rulesets.Catch
                 case ModType.DifficultyReduction:
                     return new Mod[]
                     {
-                        new CatchModEasy(),
+                        new MultiMod(new CatchModEasy(), new CatchModEasy2()),
                         new CatchModNoFail(),
                         new MultiMod(new CatchModHalfTime(), new CatchModDaycore())
                     };
