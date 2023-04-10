@@ -28,7 +28,7 @@ namespace osu.Game.Rulesets.Catch.Mods
 
             var drawableCatchRuleset = (DrawableCatchRuleset)drawableRuleset;
             var catchPlayfield = (CatchPlayfield)drawableCatchRuleset.Playfield;
-            catchPlayfield.CatcherArea.AlwaysDash = true;
+            catchPlayfield.CatcherArea.AlwaysDashApplies = true;
             var theCatcherOnArea = catchPlayfield.CatcherArea.Catcher;
             theCatcherOnArea.Dashing = true;
             if (catchPlayfield.CatcherArea.TwinCatchersApplies) {

@@ -466,11 +466,11 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
                 if (easy2)
                 {
-                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthOriginalBeatmap, 0, palpableObjectsLeft, noDashStatus, spacingDifficulty, true); //Used to add hyperdash from NM spacing (!) [Left]
-                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthModifiedBeatmap, 0, palpableObjectsLeft, noDashStatus, spacingDifficulty, false); //Only used to add hyperdash from new CS spacing (!) [Left]
+                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthOriginalBeatmap, 0, palpableObjectsLeft, noDashStatus, spacingDifficulty, true); //Used to elaborate hyperdash from NM spacing (!) [Left]
+                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthModifiedBeatmap, 0, palpableObjectsLeft, noDashStatus, spacingDifficulty, false); //Only used to add hyperdash from new CS spacing OR calculate new SR with new CS (!) [Left]
 
-                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthOriginalBeatmap, 0, palpableObjectsRight, noDashStatus, spacingDifficulty, true); //Used to add hyperdash from NM spacing (!) [Right]
-                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthModifiedBeatmap, 0, palpableObjectsRight, noDashStatus, spacingDifficulty, false); //Only used to add hyperdash from new CS spacing (!) [Right]
+                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthOriginalBeatmap, 0, palpableObjectsRight, noDashStatus, spacingDifficulty, true); //Used to elaborate hyperdash from NM spacing (!) [Right]
+                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthModifiedBeatmap, 0, palpableObjectsRight, noDashStatus, spacingDifficulty, false); //Only used to add hyperdash from new CS spacing OR calculate new SR with new CS  (!) [Right]
                 }
 
                 else
@@ -483,8 +483,8 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             {
                 if (easy2)
                 {
-                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthOriginalBeatmap, 0, palpableObjects, noDashStatus, spacingDifficulty, true); //Used to add hyperdash from NM spacing (!)
-                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthModifiedBeatmap, 0, palpableObjects, noDashStatus, spacingDifficulty, false); //Only used to add hyperdash from new CS spacing (!)
+                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthOriginalBeatmap, 0, palpableObjects, noDashStatus, spacingDifficulty, true); //Used to elaborate hyperdash from NM spacing (!)
+                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthModifiedBeatmap, 0, palpableObjects, noDashStatus, spacingDifficulty, false); //Only used to add hyperdash from new CS spacing OR calculate new SR with new CS  (!)
                 }
 
                 else elaborateHyperdashPalpableCatchHitObject(halfCatcherWidth, 0, palpableObjects, noDashStatus, spacingDifficulty, true); //This is the main hyperdash gen + other mods

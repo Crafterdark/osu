@@ -27,6 +27,7 @@ namespace osu.Game.Rulesets.Catch.Mods
             var catchPlayfield = (CatchPlayfield)drawableCatchRuleset.Playfield;
 
             catchPlayfield.Catcher.CatchFruitOnPlate = false;
+            if (catchPlayfield.CatcherArea.TwinCatchersApplies) catchPlayfield.Twin.CatchFruitOnPlate = false;
         }
 
         protected override void ApplyIncreasedVisibilityState(DrawableHitObject hitObject, ArmedState state)

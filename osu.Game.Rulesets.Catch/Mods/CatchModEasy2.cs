@@ -20,7 +20,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override IconUsage? Icon => null;
         public override ModType Type => ModType.DifficultyReduction;
         public override double ScoreMultiplier => 0.5;
-        public override Type[] IncompatibleMods => new[] { typeof(CatchModEasy), typeof(CatchModHardRock), typeof(CatchModDifficultyAdjust) };
+        public override Type[] IncompatibleMods => new[] { typeof(CatchModEasy), typeof(CatchModHardRock), typeof(ModAccuracyChallenge), typeof(CatchModDifficultyAdjust) };
 
         public new virtual void ReadFromDifficulty(BeatmapDifficulty difficulty)
         {

@@ -38,5 +38,10 @@ namespace osu.Game.Rulesets.Catch
 
         [Description("Engage dash (twin)")]
         DashTwin,
+
+        //This only apply when using the Teleport mod
+
+        [Description("Teleport")]
+        Teleport,
     }
 }

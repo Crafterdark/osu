@@ -6,6 +6,7 @@ using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Input.Bindings;
 using osu.Framework.Input.Events;
+using osu.Game.Rulesets.Catch.Mods;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.Objects.Drawables;
 using osu.Game.Rulesets.Catch.Replays;
@@ -35,12 +36,13 @@ namespace osu.Game.Rulesets.Catch.UI
 
         public bool TwinCatchersApplies { get; set; } = false!;
 
-        public bool TwinCatchersInvert { get; set; } = false!;
+        public bool TwinCatchersInvertApplies { get; set; } = false!;
 
-        public bool AlwaysDash { get; set; } = false!;
+        public bool AlwaysDashApplies { get; set; } = false!;
 
-        public bool NoDash { get; set; } = false!;
+        public bool NoDashApplies { get; set; } = false!;
 
+        public bool TeleportApplies { get; set; } = false!;
 
         private readonly Container<Catcher> catcherContainer;
 
@@ -57,6 +59,15 @@ namespace osu.Game.Rulesets.Catch.UI
         private Catcher catcher = null!;
 
         private Catcher twin = null!;
+
+        public bool HasTeleported = false!;
+
+        public double TeleportTimer = -1;
+
+        public double TeleportCooldownTimer = -1;
+
+        public double TeleportTimerParam { get; set; }
+        public double TeleportCooldownParam { get; set; }
 
         /// <summary>
         /// <c>-1</c> when only left button is pressed.
@@ -101,6 +112,7 @@ namespace osu.Game.Rulesets.Catch.UI
                 GetCatchComboDisplay(Twin).OnNewResult(hitObject, result);
                 Twin.CanCatchObj = false;
             }
+
         }
 
         public void OnRevertResult(JudgementResult result)
@@ -129,11 +141,26 @@ namespace osu.Game.Rulesets.Catch.UI
                 replayState?.CatcherX ??
                 (float)(Twin.X + Twin.Speed * currentDirectionTwin * Clock.ElapsedFrameTime), Twin);
 
+            if (HasTeleported)
+            {
+
+                if (Catcher.X > CatchModTeleportSkill.CatchableObject.EffectiveX) Catcher.VisualDirection = Direction.Left;
+                else if (Catcher.X < CatchModTeleportSkill.CatchableObject.EffectiveX) Catcher.VisualDirection = Direction.Right;
+
+                Catcher.X = CatchModTeleportSkill.CatchableObject.EffectiveX;
+
+                TeleportTimer -= Clock.ElapsedFrameTime;
+                if (TeleportTimer <= 0) HasTeleported = false;
+
+            }
+            else if (TeleportApplies && !HasTeleported && TeleportCooldownTimer > 0) TeleportCooldownTimer -= Clock.ElapsedFrameTime;
         }
 
         protected override void UpdateAfterChildren()
         {
             base.UpdateAfterChildren();
+
+
 
             GetCatchComboDisplay(Catcher).X = Catcher.X;
             if (TwinCatchersApplies) GetCatchComboDisplay(Twin).X = Twin.X;
@@ -201,11 +228,11 @@ namespace osu.Game.Rulesets.Catch.UI
         {
             if (currCatcher == Catcher)
             {
-                if (!TwinCatchersInvert) return Math.Clamp(x, 0, (CatchPlayfield.WIDTH / 2) - (Catcher.CatchWidth / 2));
+                if (!TwinCatchersInvertApplies) return Math.Clamp(x, 0, (CatchPlayfield.WIDTH / 2) - (Catcher.CatchWidth / 2));
                 return Math.Clamp(x, (CatchPlayfield.WIDTH / 2) + (Catcher.CatchWidth / 2), CatchPlayfield.WIDTH);
             }
 
-            if (!TwinCatchersInvert) return Math.Clamp(x, (CatchPlayfield.WIDTH / 2) + (Twin.CatchWidth / 2), CatchPlayfield.WIDTH);
+            if (!TwinCatchersInvertApplies) return Math.Clamp(x, (CatchPlayfield.WIDTH / 2) + (Twin.CatchWidth / 2), CatchPlayfield.WIDTH);
             return Math.Clamp(x, 0, (CatchPlayfield.WIDTH / 2) - (Twin.CatchWidth / 2));
         }
         public bool OnPressed(KeyBindingPressEvent<CatchAction> e)
@@ -221,7 +248,7 @@ namespace osu.Game.Rulesets.Catch.UI
                     return true;
 
                 case CatchAction.Dash:
-                    if (!NoDash) Catcher.Dashing = true;
+                    if (!NoDashApplies) Catcher.Dashing = true;
                     return true;
             }
 
@@ -239,11 +266,27 @@ namespace osu.Game.Rulesets.Catch.UI
 
                     case CatchAction.DashTwin:
 
-                        if (!NoDash) Twin.Dashing = true;
+                        if (!NoDashApplies) Twin.Dashing = true;
 
                         return true;
                 }
             }
+
+            if (TeleportApplies)
+            {
+                switch (e.Action)
+                {
+                    case CatchAction.Teleport:
+                        if (!HasTeleported && (TeleportCooldownTimer <= 0))
+                        {
+                            HasTeleported = true;
+                            TeleportTimer = TeleportTimerParam * 1000d;
+                            TeleportCooldownTimer = TeleportCooldownParam * 1000d;
+                        }
+                        return true;
+                }
+            }
+
             return false;
         }
 
@@ -260,7 +303,7 @@ namespace osu.Game.Rulesets.Catch.UI
                     break;
 
                 case CatchAction.Dash:
-                    if (!AlwaysDash) Catcher.Dashing = false;
+                    if (!AlwaysDashApplies) Catcher.Dashing = false;
                     break;
             }
             if (TwinCatchersApplies)
@@ -277,7 +320,7 @@ namespace osu.Game.Rulesets.Catch.UI
 
                     case CatchAction.DashTwin:
 
-                        if (!AlwaysDash) Twin.Dashing = false;
+                        if (!AlwaysDashApplies) Twin.Dashing = false;
 
                         break;
                 }

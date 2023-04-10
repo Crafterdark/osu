@@ -13,6 +13,7 @@ using osu.Framework.Utils;
 using osu.Game.Beatmaps;
 using osu.Game.Configuration;
 using osu.Game.Rulesets.Catch.Judgements;
+using osu.Game.Rulesets.Catch.Mods;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.Objects.Drawables;
 using osu.Game.Rulesets.Catch.Skinning;
@@ -91,6 +92,11 @@ namespace osu.Game.Rulesets.Catch.UI
             get => body.AnimationState.Value;
             private set => body.AnimationState.Value = value;
         }
+
+        /// <summary>
+        /// Whether the catcher can teleport by pressing a key (Teleport Mod).
+        /// </summary>
+        public bool CanTeleport { get; set; }
 
         /// <summary>
         /// Whether the catcher can catch something.
@@ -220,6 +226,8 @@ namespace osu.Game.Rulesets.Catch.UI
             if (!(drawableObject is DrawablePalpableCatchHitObject palpableObject)) return;
 
             var hitObject = palpableObject.HitObject;
+
+            if (CanTeleport && !(hitObject is Banana)) CatchModTeleportSkill.ListPalpableCatchableObject.RemoveAt(0);
 
             if (result.IsHit && CanCatchObj)
             {

@@ -20,7 +20,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override IconUsage? Icon => FontAwesome.Solid.Moon; //Placeholder
         public override ModType Type => ModType.Conversion;
 
-        public override Type[] IncompatibleMods => new[] { typeof(CatchModAlwaysDash), typeof(CatchModClassic), typeof(CatchModNoDash), typeof(CatchModRelax), typeof(CatchModTeleport), typeof(CatchModWraparound) };
+        public override Type[] IncompatibleMods => new[] { typeof(CatchModAlwaysDash), typeof(CatchModClassic), typeof(CatchModNoDash), typeof(CatchModRelax), typeof(CatchModTeleportSkill), typeof(CatchModWraparound) };
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {

@@ -70,7 +70,7 @@ namespace osu.Game.Rulesets.Catch.Mods
 
             catchPlayfield.CatcherArea.TwinCatchersApplies = true; //Apply the mod
 
-            catchPlayfield.CatcherArea.TwinCatchersInvert = TwinCatchersInvert.Value; //Apply the mod config
+            catchPlayfield.CatcherArea.TwinCatchersInvertApplies = TwinCatchersInvert.Value; //Apply the mod config
 
             float HalfCatcherLength = catchPlayfield.Catcher.CatchWidth / 2;
 

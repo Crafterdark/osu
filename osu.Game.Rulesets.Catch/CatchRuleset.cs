@@ -58,6 +58,10 @@ namespace osu.Game.Rulesets.Catch
             new KeyBinding(InputKey.B, CatchAction.MoveLeftTwin),
             new KeyBinding(InputKey.M, CatchAction.MoveRightTwin),
             new KeyBinding(InputKey.N, CatchAction.DashTwin),
+
+            //Only applies to Teleport
+
+            new KeyBinding(InputKey.T, CatchAction.Teleport),
         };
 
         public override IEnumerable<Mod> ConvertFromLegacyMods(LegacyMods mods)
@@ -149,7 +153,7 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModNoScope(),
                         new CatchModAlwaysDash(),
                         new CatchModWraparound(),
-                        new CatchModTeleport(),
+                        new CatchModTeleportSkill(),
                     };
 
                 default:
