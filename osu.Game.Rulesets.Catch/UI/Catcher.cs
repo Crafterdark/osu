@@ -93,6 +93,12 @@ namespace osu.Game.Rulesets.Catch.UI
             private set => body.AnimationState.Value = value;
         }
 
+
+        /// <summary>
+        /// Whether the catcher can attract fruits.
+        /// </summary>
+        public bool CanAttract { get; set; }
+
         /// <summary>
         /// Whether the catcher can teleport by pressing a key (Teleport Mod).
         /// </summary>
@@ -227,7 +233,11 @@ namespace osu.Game.Rulesets.Catch.UI
 
             var hitObject = palpableObject.HitObject;
 
-            if (CanTeleport && !(hitObject is Banana)) CatchModTeleportSkill.ListPalpableCatchableObject.RemoveAt(0);
+            if (CanTeleport && !(hitObject is Banana))
+            {
+                CatchModTeleportSkill.ListPalpableCatchableObject.RemoveAt(0);
+                CatchModTeleportSkill.Trigger = false;
+            }
 
             if (result.IsHit && CanCatchObj)
             {

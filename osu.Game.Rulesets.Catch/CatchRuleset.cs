@@ -154,6 +154,7 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModAlwaysDash(),
                         new CatchModWraparound(),
                         new CatchModTeleportSkill(),
+                        new CatchModMagnetAttractSkill(),
                     };
 
                 default:

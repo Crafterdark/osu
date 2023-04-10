@@ -25,7 +25,9 @@ namespace osu.Game.Rulesets.Catch.Mods
 
         public static List<PalpableCatchHitObject> ListPalpableCatchableObject = new List<PalpableCatchHitObject>();
 
-        public static PalpableCatchHitObject CatchableObject = null!;
+        public static float CatchableObjectEffectiveX;
+
+        public static bool Trigger = false!;
 
         [SettingSource("Teleportation Time", "The length of time [seconds] that the catcher will teleport to catch fruits.")]
         public Bindable<int> TeleportationTime { get; } = new BindableInt(5)
@@ -71,16 +73,77 @@ namespace osu.Game.Rulesets.Catch.Mods
 
         public void Update(Playfield playfield)
         {
-            if (ListPalpableCatchableObject.Count > 0)
+            if (!Trigger)
             {
-                CatchableObject = ListPalpableCatchableObject[0];
-            }
+                Trigger = true; //locks the function until one object is removed later
+                if (ListPalpableCatchableObject.Count > 0)
+                {
+                    float tempObjectEffectiveX = ListPalpableCatchableObject[0].EffectiveX;
 
+                    double startTimeFirstObject = ListPalpableCatchableObject[0].StartTime;
+
+                    float halfCatcherWidth = ((CatchPlayfield)playfield).CatcherArea.Catcher.CatchWidth / 2;
+
+                    //Find double+ notes catch position
+
+                    if (ListPalpableCatchableObject.Count > 1) //multiple notes at the same time
+                    {
+                        int multipleNotesSameTime = 1;
+
+                        int index = 1;
+
+                        while (index < ListPalpableCatchableObject.Count && (startTimeFirstObject == ListPalpableCatchableObject[index].StartTime))
+                        {
+                            tempObjectEffectiveX += ListPalpableCatchableObject[index].EffectiveX;
+                            multipleNotesSameTime++;
+                            index++;
+                        }
+                        if (multipleNotesSameTime > 1) //previous cycle executed one time
+                        {
+                            tempObjectEffectiveX /= multipleNotesSameTime;
+                            CatchableObjectEffectiveX = tempObjectEffectiveX;
+                            return;
+                        }
+                    }
+
+                    //Find no movement on a note OR two notes
+
+                    if (tempObjectEffectiveX <= CatchableObjectEffectiveX + halfCatcherWidth && tempObjectEffectiveX >= CatchableObjectEffectiveX - halfCatcherWidth)
+                    {
+                        if (ListPalpableCatchableObject.Count > 1)
+                        {
+                            float testObjectEffectiveX = (tempObjectEffectiveX + ListPalpableCatchableObject[1].EffectiveX) / 2;
+                            if (ListPalpableCatchableObject[0].EffectiveX <= testObjectEffectiveX + halfCatcherWidth && ListPalpableCatchableObject[0].EffectiveX >= testObjectEffectiveX - halfCatcherWidth)
+                                if (ListPalpableCatchableObject[1].EffectiveX <= testObjectEffectiveX + halfCatcherWidth && ListPalpableCatchableObject[1].EffectiveX >= testObjectEffectiveX - halfCatcherWidth)
+                                {
+                                    CatchableObjectEffectiveX = testObjectEffectiveX;
+                                    return;
+                                }
+                        }
+
+                        return;
+                    }
+
+                    //Normal case: Move catcher in the middle of the next note
+
+                    else
+                    {
+
+                        CatchableObjectEffectiveX = tempObjectEffectiveX;
+
+                    }
+
+                }
+            }
         }
 
         public void ApplyToBeatmap(IBeatmap beatmap)
         {
             ListPalpableCatchableObject.Clear();
+
+            CatchableObjectEffectiveX = CatchPlayfield.WIDTH / 2;
+
+            Trigger = false;
 
             foreach (var currentObject in beatmap.HitObjects)
             {

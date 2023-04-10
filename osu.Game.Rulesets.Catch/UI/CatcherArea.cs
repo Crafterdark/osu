@@ -144,10 +144,10 @@ namespace osu.Game.Rulesets.Catch.UI
             if (HasTeleported)
             {
 
-                if (Catcher.X > CatchModTeleportSkill.CatchableObject.EffectiveX) Catcher.VisualDirection = Direction.Left;
-                else if (Catcher.X < CatchModTeleportSkill.CatchableObject.EffectiveX) Catcher.VisualDirection = Direction.Right;
+                if (Catcher.X > CatchModTeleportSkill.CatchableObjectEffectiveX) Catcher.VisualDirection = Direction.Left;
+                else if (Catcher.X < CatchModTeleportSkill.CatchableObjectEffectiveX) Catcher.VisualDirection = Direction.Right;
 
-                Catcher.X = CatchModTeleportSkill.CatchableObject.EffectiveX;
+                Catcher.X = CatchModTeleportSkill.CatchableObjectEffectiveX;
 
                 TeleportTimer -= Clock.ElapsedFrameTime;
                 if (TeleportTimer <= 0) HasTeleported = false;
