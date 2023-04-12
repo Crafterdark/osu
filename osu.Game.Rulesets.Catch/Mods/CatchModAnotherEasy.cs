@@ -7,20 +7,40 @@ using osu.Framework.Localisation;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Catch.Beatmaps;
+using osu.Framework.Bindables;
+using osu.Game.Configuration;
+using System.Linq;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
-    public class CatchModEasy2 : ModEasyWithExtraLives, IApplicableToDifficulty, IApplicableToBeatmapProcessor
+    public class CatchModAnotherEasy : ModEasyWithExtraLives, IApplicableToDifficulty, IApplicableToBeatmapProcessor
     {
 
         //TODO: Add an option for adding extra hyperdashes
 
-        public override string Name => "Easy 2";
-        public override string Acronym => "E2";
+        public override string Name => "Another Easy";
+        public override string Acronym => "AE";
         public override IconUsage? Icon => null;
         public override ModType Type => ModType.DifficultyReduction;
         public override double ScoreMultiplier => 0.5;
         public override Type[] IncompatibleMods => new[] { typeof(CatchModEasy), typeof(CatchModHardRock), typeof(ModAccuracyChallenge), typeof(CatchModDifficultyAdjust) };
+
+        [SettingSource("Easier Edge Patterns", "Extra hyper dashes will generate on difficult edge patterns. [1/6 of the Catcher plate]")]
+        public Bindable<bool> NewHyperdashes { get; } = new BindableBool(true);
+
+        public override string SettingDescription
+        {
+            get
+            {
+                string newHyperdashes_string = NewHyperdashes.IsDefault ? string.Empty : string.Empty;
+
+                return string.Join(", ", new[]
+                {
+                    base.SettingDescription,
+                    newHyperdashes_string,
+                }.Where(s => !string.IsNullOrEmpty(s)));
+            }
+        }
 
         public new virtual void ReadFromDifficulty(BeatmapDifficulty difficulty)
         {
@@ -39,9 +59,10 @@ namespace osu.Game.Rulesets.Catch.Mods
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
         {
             var catchProcessor = (CatchBeatmapProcessor)beatmapProcessor;
-            catchProcessor.Easy2Offsets = true;
+            catchProcessor.AnotherEasyOffsets = true;
+            catchProcessor.AnotherEasyNewHyperdashes = NewHyperdashes.Value;
         }
 
-        public override LocalisableString Description => @"Larger fruits, more forgiving HP drain, less accuracy required, and three lives!";
+        public override LocalisableString Description => @"Larger fruits, more forgiving HP drain, less accuracy required, frequent hyperdashes and three lives!";
     }
 }

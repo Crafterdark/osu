@@ -16,13 +16,13 @@ namespace osu.Game.Rulesets.Catch.Mods
 {
     public class CatchModNoHyperDash : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IApplicableToBeatmapProcessor
     {
-        public override string Name => "No Hyperdash";
+        public override string Name => "No Hyper Dash";
         public override string Acronym => "NH";
-        public override LocalisableString Description => "The catcher can't hyperdash.";
+        public override LocalisableString Description => "No hyper dash will be found during gameplay.";
         public override double ScoreMultiplier => 1;
         public override ModType Type => ModType.Conversion;
 
-        public override Type[] IncompatibleMods => new[] { typeof(CatchModNoDash) };
+        public override Type[] IncompatibleMods => new[] { typeof(CatchModNoDashing) };
 
         [SettingSource("Spacing Difficulty", "The overall difficulty of the spacing between note")]
         public Bindable<float> SpacingDifficulty { get; } = new BindableFloat((float)0.50)

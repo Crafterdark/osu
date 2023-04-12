@@ -10,7 +10,7 @@ namespace osu.Game.Rulesets.Catch.Mods
 {
     public class CatchModEasy : ModEasyWithExtraLives
     {
-        public override Type[] IncompatibleMods => base.IncompatibleMods.Append(typeof(CatchModEasy2)).ToArray();
+        public override Type[] IncompatibleMods => base.IncompatibleMods.Append(typeof(CatchModAnotherEasy)).ToArray();
         public override LocalisableString Description => @"Larger fruits, more forgiving HP drain, less accuracy required, and three lives!";
     }
 }

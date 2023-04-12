@@ -23,7 +23,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override double ScoreMultiplier => 1;
         public override ModType Type => ModType.Conversion;
 
-        public override Type[] IncompatibleMods => new[] { typeof(CatchModWraparound) };
+        public override Type[] IncompatibleMods => new[] { typeof(CatchModWrapAround) };
 
         //The edge of the Catcher field, near the middle of the screen
         public float LeftEdgeFromMiddle;

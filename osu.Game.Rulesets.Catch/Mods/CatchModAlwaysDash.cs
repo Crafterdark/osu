@@ -21,7 +21,7 @@ namespace osu.Game.Rulesets.Catch.Mods
 
         public override ModType Type => ModType.Fun;
 
-        public override Type[] IncompatibleMods => new[] { typeof(CatchModNoDash) };
+        public override Type[] IncompatibleMods => new[] { typeof(CatchModNoDashing) };
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {

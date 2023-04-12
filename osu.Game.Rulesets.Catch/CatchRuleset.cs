@@ -115,7 +115,7 @@ namespace osu.Game.Rulesets.Catch
                 case ModType.DifficultyReduction:
                     return new Mod[]
                     {
-                        new MultiMod(new CatchModEasy(), new CatchModEasy2()),
+                        new MultiMod(new CatchModEasy(), new CatchModAnotherEasy()),
                         new CatchModNoFail(),
                         new MultiMod(new CatchModHalfTime(), new CatchModDaycore())
                     };
@@ -139,7 +139,7 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModMirror(),
                         new CatchModTwinCatchers(),
                         new CatchModCatchTheMania(),
-                        new MultiMod(new CatchModNoDash(), new CatchModNoHyperDash())
+                        new MultiMod(new CatchModNoDashing(), new CatchModNoHyperDash())
                     };
 
                 case ModType.Automation:
@@ -157,7 +157,7 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModMuted(),
                         new CatchModNoScope(),
                         new CatchModAlwaysDash(),
-                        new CatchModWraparound(),
+                        new CatchModWrapAround(),
                         new MultiMod(new CatchModSkillTeleport(),new CatchModSkillMagnetAttract(),new CatchModSkillBulletTime(), new CatchModSkillExpertReading(), new CatchModSkillGrowth()),
                     };
 

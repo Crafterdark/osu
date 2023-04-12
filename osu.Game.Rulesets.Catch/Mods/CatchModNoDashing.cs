@@ -15,14 +15,17 @@ using System.Linq;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
-    public class CatchModNoDash : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IApplicableToBeatmapProcessor
+    public class CatchModNoDashing : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IApplicableToBeatmapProcessor
     {
-        public override string Name => "No Dash";
+        public override string Name => "No Dashing";
         public override string Acronym => "ND";
-        public override LocalisableString Description => "The catcher can't dash or hyperdash.";
+        public override LocalisableString Description => "The catcher can't dash.";
         public override double ScoreMultiplier => 1;
         public override ModType Type => ModType.Conversion;
         public override Type[] IncompatibleMods => new[] { typeof(CatchModAlwaysDash), typeof(CatchModNoHyperDash) };
+
+        [SettingSource("Special Hyper 'Walk' Dashes", "The hyper 'walk' dashes will generate.")]
+        public Bindable<bool> SpecialHyperWalkDashes { get; } = new BindableBool(false);
 
         [SettingSource("Spacing Difficulty", "The overall difficulty of the spacing between note")]
         public Bindable<float> SpacingDifficulty { get; } = new BindableFloat((float)0.75)
@@ -51,7 +54,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         {
             var drawableCatchRuleset = (DrawableCatchRuleset)drawableRuleset;
             var catchPlayfield = (CatchPlayfield)drawableCatchRuleset.Playfield;
-            catchPlayfield.CatcherArea.NoDashApplies = true;
+            catchPlayfield.CatcherArea.NoDashingApplies = true;
             var theCatcherOnArea = catchPlayfield.CatcherArea.Catcher;
             theCatcherOnArea.Dashing = false;
             if (catchPlayfield.CatcherArea.TwinCatchersApplies)
@@ -65,7 +68,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
         {
             var catchProcessor = (CatchBeatmapProcessor)beatmapProcessor;
-            catchProcessor.NoAllDashesOffsets = true;
+            catchProcessor.NoDashingOffsets = true;
             catchProcessor.SpacingDifficulty = SpacingDifficulty.Value;
         }
 

@@ -19,11 +19,13 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         public bool HardRockOffsets { get; set; }
 
-        public bool Easy2Offsets { get; set; }
+        public bool AnotherEasyOffsets { get; set; }
+
+        public bool AnotherEasyNewHyperdashes { get; set; }
 
         public bool TwinCatchersOffsets { get; set; }
 
-        public bool NoAllDashesOffsets { get; set; }
+        public bool NoDashingOffsets { get; set; }
 
         public bool NoHyperOffsets { get; set; }
 
@@ -116,7 +118,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         break;
                 }
             }
-            initialiseHyperDash(beatmap, GetNoDashStatus(), Easy2Offsets, TwinCatchersOffsets, SpacingDifficulty);
+            initialiseHyperDash(beatmap, GetNoDashStatus(), AnotherEasyOffsets, AnotherEasyNewHyperdashes, TwinCatchersOffsets, SpacingDifficulty);
         }
 
         private static void applyHardRockOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime, LegacyRandom rng)
@@ -290,12 +292,12 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         public int GetNoDashStatus()
         {
-            if (NoAllDashesOffsets) return 2; //Cannot dash or use hyper
+            if (NoDashingOffsets) return 2; //Cannot dash or use hyper
             else if (NoHyperOffsets) return 1; //Cannot use hyper
             return 0; //No difference
         }
 
-        private static void elaborateHyperdashPalpableCatchHitObject(double halfCatcherWidth_input, int lastDirection_input, List<PalpableCatchHitObject> listHitObjects, int noDashStatus, float spacingDifficulty, bool resetHyperdashValues)
+        private static void elaborateHyperdashPalpableCatchHitObject(double halfCatcherWidth_input, int lastDirection_input, List<PalpableCatchHitObject> listHitObjects, int noDashStatus, float spacingDifficulty, bool resetHyperdashValues, bool anotherEasyEdgeRemoval)
         {
             double catcherSpeed;
 
@@ -327,6 +329,8 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 else distanceToNext = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcess : halfCatcherWidth * spacingDifficulty);
 
                 float distanceToHyper = (float)(timeToNext * catcherSpeed - distanceToNext); //nomod
+
+                if (anotherEasyEdgeRemoval) distanceToHyper -= (float)(halfCatcherWidth / 3d); //another easy
 
                 if (distanceToHyper < 0)
                 {
@@ -378,7 +382,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         }
 
-        private static void initialiseHyperDash(IBeatmap beatmap, int noDashStatus, bool easy2, bool twins, float spacingDifficulty)
+        private static void initialiseHyperDash(IBeatmap beatmap, int noDashStatus, bool anotherEasy, bool anotherEasyNewHyperdashes, bool twins, float spacingDifficulty)
         {
             List<PalpableCatchHitObject> palpableObjects = new List<PalpableCatchHitObject>();
 
@@ -392,7 +396,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
             BeatmapDifficulty difficultyCustom = new BeatmapDifficulty();
 
-            if (easy2)
+            if (anotherEasy)
             {
                 beatmap.Difficulty.CopyTo(difficultyCustom);
                 difficultyCustom.CircleSize *= 2;
@@ -464,30 +468,30 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             if (twins)
             {
 
-                if (easy2)
+                if (anotherEasy)
                 {
-                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthOriginalBeatmap, 0, palpableObjectsLeft, noDashStatus, spacingDifficulty, true); //Used to elaborate hyperdash from NM spacing (!) [Left]
-                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthModifiedBeatmap, 0, palpableObjectsLeft, noDashStatus, spacingDifficulty, false); //Only used to add hyperdash from new CS spacing OR calculate new SR with new CS (!) [Left]
+                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthOriginalBeatmap, 0, palpableObjectsLeft, noDashStatus, spacingDifficulty, true, false); //Used to elaborate hyperdash from NM spacing (!) [Left]
+                    if (anotherEasyNewHyperdashes) elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthModifiedBeatmap, 0, palpableObjectsLeft, noDashStatus, spacingDifficulty, false, true); //Only used to add hyperdash from new CS spacing OR calculate new SR with new CS (!) [Left]
 
-                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthOriginalBeatmap, 0, palpableObjectsRight, noDashStatus, spacingDifficulty, true); //Used to elaborate hyperdash from NM spacing (!) [Right]
-                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthModifiedBeatmap, 0, palpableObjectsRight, noDashStatus, spacingDifficulty, false); //Only used to add hyperdash from new CS spacing OR calculate new SR with new CS  (!) [Right]
+                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthOriginalBeatmap, 0, palpableObjectsRight, noDashStatus, spacingDifficulty, true, false); //Used to elaborate hyperdash from NM spacing (!) [Right]
+                    if (anotherEasyNewHyperdashes) elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthModifiedBeatmap, 0, palpableObjectsRight, noDashStatus, spacingDifficulty, false, true); //Only used to add hyperdash from new CS spacing OR calculate new SR with new CS  (!) [Right]
                 }
 
                 else
                 {
-                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidth, 0, palpableObjectsLeft, noDashStatus, spacingDifficulty, true); //[Left]
-                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidth, 0, palpableObjectsRight, noDashStatus, spacingDifficulty, true); //[Right]
+                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidth, 0, palpableObjectsLeft, noDashStatus, spacingDifficulty, true, false); //[Left]
+                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidth, 0, palpableObjectsRight, noDashStatus, spacingDifficulty, true, false); //[Right]
                 }
             }
             else
             {
-                if (easy2)
+                if (anotherEasy)
                 {
-                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthOriginalBeatmap, 0, palpableObjects, noDashStatus, spacingDifficulty, true); //Used to elaborate hyperdash from NM spacing (!)
-                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthModifiedBeatmap, 0, palpableObjects, noDashStatus, spacingDifficulty, false); //Only used to add hyperdash from new CS spacing OR calculate new SR with new CS  (!)
+                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthOriginalBeatmap, 0, palpableObjects, noDashStatus, spacingDifficulty, true, false); //Used to elaborate hyperdash from NM spacing (!)
+                    if (anotherEasyNewHyperdashes) elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthModifiedBeatmap, 0, palpableObjects, noDashStatus, spacingDifficulty, false, true); //Only used to add hyperdash from new CS spacing OR calculate new SR with new CS  (!)
                 }
 
-                else elaborateHyperdashPalpableCatchHitObject(halfCatcherWidth, 0, palpableObjects, noDashStatus, spacingDifficulty, true); //This is the main hyperdash gen + other mods
+                else elaborateHyperdashPalpableCatchHitObject(halfCatcherWidth, 0, palpableObjects, noDashStatus, spacingDifficulty, true, false); //This is the main hyperdash gen + other mods
             }
         }
     }
