@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using osu.Framework.Bindables;
+using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
 using osu.Game.Beatmaps;
 using osu.Game.Configuration;
@@ -13,14 +14,15 @@ using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.UI;
 
-namespace osu.Game.Rulesets.Catch.Mods
+namespace osu.Game.Rulesets.Catch.Mods.Skills
 {
-    public class CatchModMagnetAttractSkill : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IUpdatableByPlayfield, IApplicableToBeatmap
+    public class CatchModSkillExpertReading : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IUpdatableByPlayfield, IApplicableToBeatmap
     {
-        public override string Name => "Magnet Attract Skill";
-        public override string Acronym => "MA";
-        public override LocalisableString Description => "The fruits will be attracted by the catcher.";
+        public override string Name => "Expert Reading Skill";
+        public override string Acronym => "ER";
+        public override LocalisableString Description => "The approach rate will be customized for a limited amount of time.";
         public override double ScoreMultiplier => 1;
+        public override IconUsage? Icon => FontAwesome.Solid.Moon; //Placeholder
         public override ModType Type => ModType.Fun;
 
         public static List<PalpableCatchHitObject> ListPalpableCatchableObject = new List<PalpableCatchHitObject>();
@@ -36,7 +38,7 @@ namespace osu.Game.Rulesets.Catch.Mods
             MaxValue = 10
         };
 
-        public override Type[] IncompatibleMods => new[] { typeof(CatchModCatchTheMania), typeof(CatchModRelax), typeof(CatchModTeleportSkill) };
+        public override Type[] IncompatibleMods => new[] { typeof(CatchModCatchTheMania), typeof(CatchModRelax) };
 
         public override string SettingDescription
         {
@@ -65,7 +67,7 @@ namespace osu.Game.Rulesets.Catch.Mods
 
             if (Index < ListPalpableCatchableObject.Count)
             {
-                PalpableCatchHitObject CurrentObject = ListPalpableCatchableObject[Index];
+                var CurrentObject = ListPalpableCatchableObject[Index];
                 CurrentObject.OriginalX = ((CatchPlayfield)playfield).Catcher.X;
                 //if ([something]) Index++;
             }

@@ -4,6 +4,7 @@
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
 using osu.Game.Beatmaps;
+using osu.Game.Rulesets.Catch.Mods.Skills;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.UI;
@@ -20,7 +21,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override IconUsage? Icon => FontAwesome.Solid.Moon; //Placeholder
         public override ModType Type => ModType.Conversion;
 
-        public override Type[] IncompatibleMods => new[] { typeof(CatchModAlwaysDash), typeof(CatchModClassic), typeof(CatchModNoDash), typeof(CatchModRelax), typeof(CatchModTeleportSkill), typeof(CatchModWraparound) };
+        public override Type[] IncompatibleMods => new[] { typeof(CatchModAlwaysDash), typeof(CatchModClassic), typeof(CatchModNoDash), typeof(CatchModRelax), typeof(CatchModSkillTeleport), typeof(CatchModWraparound) };
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {

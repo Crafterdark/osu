@@ -13,7 +13,7 @@ using osu.Framework.Utils;
 using osu.Game.Beatmaps;
 using osu.Game.Configuration;
 using osu.Game.Rulesets.Catch.Judgements;
-using osu.Game.Rulesets.Catch.Mods;
+using osu.Game.Rulesets.Catch.Mods.Skills;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.Objects.Drawables;
 using osu.Game.Rulesets.Catch.Skinning;
@@ -93,6 +93,10 @@ namespace osu.Game.Rulesets.Catch.UI
             private set => body.AnimationState.Value = value;
         }
 
+        /// <summary>
+        /// Whether the catcher can grow.
+        /// </summary>
+        public bool CanGrow { get; set; }
 
         /// <summary>
         /// Whether the catcher can attract fruits.
@@ -235,8 +239,13 @@ namespace osu.Game.Rulesets.Catch.UI
 
             if (CanTeleport && !(hitObject is Banana))
             {
-                CatchModTeleportSkill.ListPalpableCatchableObject.RemoveAt(0);
-                CatchModTeleportSkill.Trigger = false;
+                CatchModSkillTeleport.ListPalpableCatchableObject.RemoveAt(0);
+                CatchModSkillTeleport.Trigger = false;
+            }
+
+            if (CanGrow && !(hitObject is Banana))
+            {
+                CatchModSkillGrowth.ListPalpableCatchableObject.RemoveAt(0);
             }
 
             if (result.IsHit && CanCatchObj)

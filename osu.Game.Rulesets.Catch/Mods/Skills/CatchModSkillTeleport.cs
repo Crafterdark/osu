@@ -13,9 +13,9 @@ using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.UI;
 
-namespace osu.Game.Rulesets.Catch.Mods
+namespace osu.Game.Rulesets.Catch.Mods.Skills
 {
-    public class CatchModTeleportSkill : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IUpdatableByPlayfield, IApplicableToBeatmap
+    public class CatchModSkillTeleport : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IUpdatableByPlayfield, IApplicableToBeatmap
     {
         public override string Name => "Teleport Skill";
         public override string Acronym => "TS";
@@ -92,7 +92,7 @@ namespace osu.Game.Rulesets.Catch.Mods
 
                         int index = 1;
 
-                        while (index < ListPalpableCatchableObject.Count && (startTimeFirstObject == ListPalpableCatchableObject[index].StartTime))
+                        while (index < ListPalpableCatchableObject.Count && startTimeFirstObject == ListPalpableCatchableObject[index].StartTime)
                         {
                             tempObjectEffectiveX += ListPalpableCatchableObject[index].EffectiveX;
                             multipleNotesSameTime++;

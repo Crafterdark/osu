@@ -6,7 +6,7 @@ using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Input.Bindings;
 using osu.Framework.Input.Events;
-using osu.Game.Rulesets.Catch.Mods;
+using osu.Game.Rulesets.Catch.Mods.Skills;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.Objects.Drawables;
 using osu.Game.Rulesets.Catch.Replays;
@@ -35,14 +35,11 @@ namespace osu.Game.Rulesets.Catch.UI
         }
 
         public bool TwinCatchersApplies { get; set; } = false!;
-
         public bool TwinCatchersInvertApplies { get; set; } = false!;
-
         public bool AlwaysDashApplies { get; set; } = false!;
-
         public bool NoDashApplies { get; set; } = false!;
-
         public bool TeleportApplies { get; set; } = false!;
+        public bool GrowthApplies { get; set; } = false!;
 
         private readonly Container<Catcher> catcherContainer;
 
@@ -62,13 +59,21 @@ namespace osu.Game.Rulesets.Catch.UI
 
         public bool HasTeleported = false!;
 
+        public bool HasGrowth = false!;
+
         public double TeleportTimer = -1;
 
         public double TeleportCooldownTimer = -1;
-
         public double TeleportTimerParam { get; set; }
         public double TeleportCooldownParam { get; set; }
 
+        public double GrowthTimer = -1;
+
+        public double GrowthCooldownTimer = -1;
+        public double GrowthTimerParam { get; set; }
+        public double GrowthCooldownParam { get; set; }
+
+        public float GrowthMultiplier { get; set; }
         /// <summary>
         /// <c>-1</c> when only left button is pressed.
         /// <c>1</c> when only right button is pressed.
@@ -144,16 +149,30 @@ namespace osu.Game.Rulesets.Catch.UI
             if (HasTeleported)
             {
 
-                if (Catcher.X > CatchModTeleportSkill.CatchableObjectEffectiveX) Catcher.VisualDirection = Direction.Left;
-                else if (Catcher.X < CatchModTeleportSkill.CatchableObjectEffectiveX) Catcher.VisualDirection = Direction.Right;
+                if (Catcher.X > CatchModSkillTeleport.CatchableObjectEffectiveX) Catcher.VisualDirection = Direction.Left;
+                else if (Catcher.X < CatchModSkillTeleport.CatchableObjectEffectiveX) Catcher.VisualDirection = Direction.Right;
 
-                Catcher.X = CatchModTeleportSkill.CatchableObjectEffectiveX;
+                Catcher.X = CatchModSkillTeleport.CatchableObjectEffectiveX;
 
                 TeleportTimer -= Clock.ElapsedFrameTime;
                 if (TeleportTimer <= 0) HasTeleported = false;
 
             }
             else if (TeleportApplies && !HasTeleported && TeleportCooldownTimer > 0) TeleportCooldownTimer -= Clock.ElapsedFrameTime;
+
+            if (HasGrowth)
+            {
+                GrowthTimer -= Clock.ElapsedFrameTime;
+
+                if (GrowthTimer <= 0)
+                {
+                    CatchModSkillGrowth.Trigger = false;
+                    HasGrowth = false;
+                }
+
+            }
+            else if (GrowthApplies && !HasGrowth && GrowthCooldownTimer > 0) GrowthCooldownTimer -= Clock.ElapsedFrameTime;
+
         }
 
         protected override void UpdateAfterChildren()
@@ -282,6 +301,22 @@ namespace osu.Game.Rulesets.Catch.UI
                             HasTeleported = true;
                             TeleportTimer = TeleportTimerParam * 1000d;
                             TeleportCooldownTimer = TeleportCooldownParam * 1000d;
+                        }
+                        return true;
+                }
+            }
+
+            if (GrowthApplies)
+            {
+                switch (e.Action)
+                {
+                    case CatchAction.Growth:
+                        if (!HasGrowth && (GrowthCooldownTimer <= 0))
+                        {
+                            HasGrowth = true;
+                            CatchModSkillGrowth.Trigger = true;
+                            GrowthTimer = GrowthTimerParam * 1000d;
+                            GrowthCooldownTimer = GrowthCooldownParam * 1000d;
                         }
                         return true;
                 }

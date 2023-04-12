@@ -39,9 +39,14 @@ namespace osu.Game.Rulesets.Catch
         [Description("Engage dash (twin)")]
         DashTwin,
 
-        //This only apply when using the Teleport mod
+        //This only apply when using the Teleport Skill mod
 
         [Description("Teleport")]
         Teleport,
+
+        //This only apply when using the Growth Skill mod
+
+        [Description("Growth")]
+        Growth,
     }
 }

@@ -15,6 +15,7 @@ using osu.Game.Rulesets.Catch.Beatmaps;
 using osu.Game.Rulesets.Catch.Difficulty;
 using osu.Game.Rulesets.Catch.Edit;
 using osu.Game.Rulesets.Catch.Mods;
+using osu.Game.Rulesets.Catch.Mods.Skills;
 using osu.Game.Rulesets.Catch.Replays;
 using osu.Game.Rulesets.Catch.Scoring;
 using osu.Game.Rulesets.Catch.Skinning.Argon;
@@ -62,6 +63,10 @@ namespace osu.Game.Rulesets.Catch
             //Only applies to Teleport
 
             new KeyBinding(InputKey.T, CatchAction.Teleport),
+
+            //Only applies to Growth
+
+            new KeyBinding(InputKey.Y, CatchAction.Growth),
         };
 
         public override IEnumerable<Mod> ConvertFromLegacyMods(LegacyMods mods)
@@ -153,8 +158,7 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModNoScope(),
                         new CatchModAlwaysDash(),
                         new CatchModWraparound(),
-                        new CatchModTeleportSkill(),
-                        new CatchModMagnetAttractSkill(),
+                        new MultiMod(new CatchModSkillTeleport(),new CatchModSkillMagnetAttract(),new CatchModSkillBulletTime(), new CatchModSkillExpertReading(), new CatchModSkillGrowth()),
                     };
 
                 default:
