@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using osu.Framework.Bindables;
-using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
 using osu.Game.Beatmaps;
 using osu.Game.Configuration;
@@ -40,18 +39,18 @@ namespace osu.Game.Rulesets.Catch.Mods.Skills
         };
 
         [SettingSource("Growth Cooldown", "The time [seconds] for using this skill again.")]
-        public Bindable<int> GrowthCooldownTime { get; } = new BindableInt(5)
+        public Bindable<int> GrowthCooldownTime { get; } = new BindableInt(10)
         {
-            MinValue = 5,
-            MaxValue = 10
+            MinValue = 10,
+            MaxValue = 30
         };
 
         [SettingSource("Growth Power", "The decreasing multiplier of the original circle size during the growth.")]
         public Bindable<float> GrowthPower { get; } = new BindableFloat((float)0.5)
         {
             Precision = (float)0.1,
-            MinValue = (float)0.1,
-            MaxValue = (float)0.5,
+            MinValue = (float)0.5,
+            MaxValue = (float)0.9,
         };
 
         public override Type[] IncompatibleMods => new[] { typeof(CatchModCatchTheMania), typeof(CatchModRelax) };
