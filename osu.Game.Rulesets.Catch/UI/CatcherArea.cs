@@ -166,6 +166,8 @@ namespace osu.Game.Rulesets.Catch.UI
 
                 if (GrowthTimer <= 0)
                 {
+                    Catcher.Scale = new Vector2(1.0f - 0.7f * (CatchModSkillGrowth.MapOriginalCS - 5) / 5);
+                    Catcher.CatchWidth = Catcher.CalculateCatchWidth(Catcher.Scale);
                     CatchModSkillGrowth.Trigger = false;
                     HasGrowth = false;
                 }
@@ -317,6 +319,8 @@ namespace osu.Game.Rulesets.Catch.UI
                             CatchModSkillGrowth.Trigger = true;
                             GrowthTimer = GrowthTimerParam * 1000d;
                             GrowthCooldownTimer = GrowthCooldownParam * 1000d;
+                            Catcher.Scale = new Vector2(1.0f - 0.7f * (CatchModSkillGrowth.MapOriginalCS * GrowthMultiplier - 5) / 5);
+                            Catcher.CatchWidth = Catcher.CalculateCatchWidth(Catcher.Scale);
                         }
                         return true;
                 }

@@ -22,7 +22,6 @@ namespace osu.Game.Rulesets.Catch.Mods.Skills
         public override string Acronym => "GR";
         public override LocalisableString Description => "The catcher and the fruits will increase in size for a limited amount of time.";
         public override double ScoreMultiplier => 1;
-        public override IconUsage? Icon => FontAwesome.Solid.Moon; //Placeholder
         public override ModType Type => ModType.Fun;
 
         public static List<PalpableCatchHitObject> ListPalpableCatchableObject = new List<PalpableCatchHitObject>();
@@ -94,7 +93,7 @@ namespace osu.Game.Rulesets.Catch.Mods.Skills
                 ListPalpableCatchableObject[0].Scale = (1.0f - 0.7f * ((MapOriginalCS * GrowthPower.Value) - 5) / 5) / 2;
                 double startTime = currentObject.StartTime;
                 double timePreempt = currentObject.TimePreempt;
-                for (int index = 1; ListPalpableCatchableObject[index].StartTime <= (startTime + timePreempt); index++)
+                for (int index = 1; index < ListPalpableCatchableObject.Count && ListPalpableCatchableObject[index].StartTime <= (startTime + timePreempt); index++)
                 {
                     ListPalpableCatchableObject[index].Scale = (1.0f - 0.7f * ((MapOriginalCS * GrowthPower.Value) - 5) / 5) / 2;
                 }

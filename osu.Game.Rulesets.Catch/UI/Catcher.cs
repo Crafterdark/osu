@@ -133,7 +133,7 @@ namespace osu.Game.Rulesets.Catch.UI
         /// <summary>
         /// Width of the area that can be used to attempt catches during gameplay.
         /// </summary>
-        public readonly float CatchWidth;
+        public float CatchWidth;
 
         private readonly SkinnableCatcher body;
 
