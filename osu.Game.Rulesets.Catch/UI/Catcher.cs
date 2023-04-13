@@ -150,6 +150,8 @@ namespace osu.Game.Rulesets.Catch.UI
         private readonly DrawablePool<CaughtBanana> caughtBananaPool;
         private readonly DrawablePool<CaughtDroplet> caughtDropletPool;
 
+        private CatchHitObject previousHitObjectWithTarget = null!;
+
         public Catcher(DroppedObjectContainer droppedObjectTarget, IBeatmapDifficultyInfo? difficulty = null)
         {
             this.droppedObjectTarget = droppedObjectTarget;
@@ -264,6 +266,7 @@ namespace osu.Game.Rulesets.Catch.UI
 
             if (result.IsHit && CanCatchObj && hitObject.HyperDashTarget is CatchHitObject target)
             {
+                previousHitObjectWithTarget = hitObject;
                 double timeDifference = target.StartTime - hitObject.StartTime;
                 double positionDifference = target.EffectiveX - X;
                 double velocity = positionDifference / Math.Max(1.0, timeDifference - 1000.0 / 60.0);
@@ -271,7 +274,7 @@ namespace osu.Game.Rulesets.Catch.UI
                 SetHyperDashState(Math.Abs(velocity) / BASE_DASH_SPEED, target.EffectiveX);
             }
             else
-                SetHyperDashState();
+                if (previousHitObjectWithTarget == null || previousHitObjectWithTarget.StartTime != hitObject.StartTime) SetHyperDashState();
 
             if (result.IsHit && CanCatchObj)
                 CurrentState = hitObject.Kiai ? CatcherAnimationState.Kiai : CatcherAnimationState.Idle;

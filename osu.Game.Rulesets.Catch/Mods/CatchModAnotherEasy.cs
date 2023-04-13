@@ -25,7 +25,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override double ScoreMultiplier => 0.5;
         public override Type[] IncompatibleMods => new[] { typeof(CatchModEasy), typeof(CatchModHardRock), typeof(ModAccuracyChallenge), typeof(CatchModDifficultyAdjust) };
 
-        [SettingSource("Easier Edge Patterns", "Extra hyper dashes will generate on difficult edge patterns. [1/6 of the Catcher plate]")]
+        [SettingSource("Easier Edge Patterns", "Extra hyper dashes will generate on difficult edge patterns. [33% of the Catcher plate]")]
         public Bindable<bool> NewHyperdashes { get; } = new BindableBool(true);
 
         public override string SettingDescription
