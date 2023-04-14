@@ -151,6 +151,11 @@ namespace osu.Game.Rulesets.Catch.UI
         private readonly DrawablePool<CaughtDroplet> caughtDropletPool;
 
         private CatchHitObject previousHitObjectWithTarget = null!;
+        private CatchHitObject previousTarget = null!;
+
+        public bool AspireApplies { get; set; } = false!;
+        public bool AspireSettingsTypeOne { get; set; } = false!;
+        public bool AspireSettingsTypeTwo { get; set; } = false!;
 
         public Catcher(DroppedObjectContainer droppedObjectTarget, IBeatmapDifficultyInfo? difficulty = null)
         {
@@ -266,15 +271,34 @@ namespace osu.Game.Rulesets.Catch.UI
 
             if (result.IsHit && CanCatchObj && hitObject.HyperDashTarget is CatchHitObject target)
             {
-                previousHitObjectWithTarget = hitObject;
+                bool isAllowingHyperDash = true; //we allow hyper dash unless following conditions
+
+                if (AspireSettingsTypeTwo && hitObject.StartTime == target.StartTime) isAllowingHyperDash = false;
+
                 double timeDifference = target.StartTime - hitObject.StartTime;
                 double positionDifference = target.EffectiveX - X;
                 double velocity = positionDifference / Math.Max(1.0, timeDifference - 1000.0 / 60.0);
 
-                SetHyperDashState(Math.Abs(velocity) / BASE_DASH_SPEED, target.EffectiveX);
+                if (AspireApplies)
+                {
+                    previousHitObjectWithTarget = hitObject;
+                    previousTarget = target;
+                }
+
+                if (isAllowingHyperDash) SetHyperDashState(Math.Abs(velocity) / BASE_DASH_SPEED, target.EffectiveX);
+
             }
             else
-                if (previousHitObjectWithTarget == null || previousHitObjectWithTarget.StartTime != hitObject.StartTime) SetHyperDashState();
+            {
+                if (AspireApplies)
+                {
+                    bool isPreventingHyperDash = true; //we prevent hyper dash unless following conditions
+                    if (AspireSettingsTypeOne && previousHitObjectWithTarget != null && previousTarget.StartTime > hitObject.StartTime) isPreventingHyperDash = false;
+                    //final check
+                    if (isPreventingHyperDash) SetHyperDashState();
+                }
+                else SetHyperDashState();
+            }
 
             if (result.IsHit && CanCatchObj)
                 CurrentState = hitObject.Kiai ? CatcherAnimationState.Kiai : CatcherAnimationState.Idle;
