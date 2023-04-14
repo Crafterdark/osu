@@ -27,8 +27,8 @@ namespace osu.Game.Rulesets.Catch.Mods
         [SettingSource("Special Hyper 'Walk' Dashes", "The hyper 'walk' dashes will generate.")]
         public Bindable<bool> SpecialHyperWalkDashes { get; } = new BindableBool(false);
 
-        [SettingSource("Spacing Difficulty", "The overall difficulty of the spacing between note")]
-        public Bindable<float> SpacingDifficulty { get; } = new BindableFloat((float)0.75)
+        [SettingSource("Edge Reduction", "Maximum distance from the center of the plate to the next note.")]
+        public Bindable<float> EdgeReduction { get; } = new BindableFloat((float)0.50)
         {
             Precision = (float)0.01,
             MinValue = (float)0.00,
@@ -40,12 +40,12 @@ namespace osu.Game.Rulesets.Catch.Mods
         {
             get
             {
-                string spacingDifficulty_string = SpacingDifficulty.IsDefault ? string.Empty : string.Empty;
+                string edgeReduction_string = EdgeReduction.IsDefault ? string.Empty : string.Empty;
 
                 return string.Join(", ", new[]
                 {
                     base.SettingDescription,
-                    spacingDifficulty_string,
+                    edgeReduction_string,
                 }.Where(s => !string.IsNullOrEmpty(s)));
             }
         }
@@ -69,7 +69,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         {
             var catchProcessor = (CatchBeatmapProcessor)beatmapProcessor;
             catchProcessor.NoDashingOffsets = true;
-            catchProcessor.SpacingDifficulty = SpacingDifficulty.Value;
+            catchProcessor.EdgeReduction = EdgeReduction.Value;
         }
 
     }

@@ -29,7 +29,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         public bool NoHyperOffsets { get; set; }
 
-        public float SpacingDifficulty { get; set; }
+        public float EdgeReduction { get; set; }
 
         //Used to generate a symmetrical pattern when objects fall in the middle of the Playfield
         public bool TwinCatchersInvertGen;
@@ -118,7 +118,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         break;
                 }
             }
-            initialiseHyperDash(beatmap, GetNoDashStatus(), AnotherEasyOffsets, AnotherEasyNewHyperdashes, TwinCatchersOffsets, SpacingDifficulty);
+            initialiseHyperDash(beatmap, GetNoDashStatus(), AnotherEasyOffsets, AnotherEasyNewHyperdashes, TwinCatchersOffsets, EdgeReduction);
         }
 
         private static void applyHardRockOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime, LegacyRandom rng)
@@ -297,9 +297,10 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             return 0; //No difference
         }
 
-        private static void elaborateHyperdashPalpableCatchHitObject(double halfCatcherWidth_input, int lastDirection_input, List<PalpableCatchHitObject> listHitObjects, int noDashStatus, float spacingDifficulty)
+        private static void elaborateHyperdashPalpableCatchHitObject(double halfCatcherWidth_input, int lastDirection_input, List<PalpableCatchHitObject> listHitObjects, int noDashStatus, float edgeReduction_input)
         {
             double catcherSpeed;
+            bool edgeReduction;
 
             if (noDashStatus == 2) catcherSpeed = Catcher.BASE_WALK_SPEED;
             else catcherSpeed = Catcher.BASE_DASH_SPEED;
@@ -309,8 +310,11 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             double lastExcess = halfCatcherWidth_input;
             double distanceToNext;
 
+            float edgeReductionValue = (float)(halfCatcherWidth * edgeReduction_input);
+
             for (int i = 0; i < listHitObjects.Count - 1; i++)
             {
+                edgeReduction = false;
 
                 var currentObject = listHitObjects[i];
                 var nextObject = listHitObjects[i + 1];
@@ -323,27 +327,50 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 int thisDirection = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
                 double timeToNext = nextObject.StartTime - currentObject.StartTime - 1000f / 60f / 4; // 1/4th of a frame of grace time, taken from osu-stable
 
-                if (noDashStatus == 0) distanceToNext = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcess : halfCatcherWidth); //nomod
-                else distanceToNext = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcess : halfCatcherWidth * spacingDifficulty);
+                distanceToNext = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcess : halfCatcherWidth); //nomod                
 
                 float distanceToHyper = (float)(timeToNext * catcherSpeed - distanceToNext); //nomod
 
+                if (noDashStatus != 0)
+                {
+                    if (distanceToHyper < edgeReductionValue) edgeReduction = true;
+                } //no dashing or no hyper dash
 
                 if (distanceToHyper < 0)
                 {
-
                     if (noDashStatus != 0)
                     {
-                        if (thisDirection == 1)
+                        if (edgeReduction)
                         {
-                            nextObject.XOffset += distanceToHyper;
-                        }
-                        else if (thisDirection == -1)
-                        {
-                            nextObject.XOffset -= distanceToHyper;
+                            if (thisDirection == 1)
+                            {
+                                nextObject.XOffset += distanceToHyper;
+                                nextObject.XOffset -= edgeReductionValue;
+                            }
+                            else if (thisDirection == -1)
+                            {
+                                nextObject.XOffset -= distanceToHyper;
+                                nextObject.XOffset += edgeReductionValue;
+                            }
+
+                            currentObject.DistanceToHyperDash = edgeReductionValue;
+                            lastExcess = Math.Clamp(edgeReductionValue, 0, halfCatcherWidth);
+
                         }
 
-                        lastExcess = 0; //Should be correct (?)
+                        else
+                        {
+                            if (thisDirection == 1)
+                            {
+                                nextObject.XOffset += distanceToHyper;
+                            }
+                            else if (thisDirection == -1)
+                            {
+                                nextObject.XOffset -= distanceToHyper;
+                            }
+
+                            lastExcess = 0; //Should be correct (?)
+                        }
 
                     }
 
@@ -360,8 +387,25 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
                     if (noDashStatus != 0)
                     {
-                        currentObject.DistanceToHyperDash = distanceToHyper;
-                        lastExcess = Math.Clamp(distanceToHyper, 0, halfCatcherWidth * spacingDifficulty);
+
+                        if (edgeReduction)
+                        {
+                            if (thisDirection == 1)
+                            {
+                                nextObject.XOffset -= (float)(edgeReductionValue - distanceToHyper);
+                            }
+                            else if (thisDirection == -1)
+                            {
+                                nextObject.XOffset += (float)(edgeReductionValue - distanceToHyper);
+                            }
+                            currentObject.DistanceToHyperDash = edgeReductionValue;
+                            lastExcess = Math.Clamp(edgeReductionValue, 0, halfCatcherWidth);
+                        }
+                        else
+                        {
+                            currentObject.DistanceToHyperDash = distanceToHyper;
+                            lastExcess = Math.Clamp(distanceToHyper, 0, halfCatcherWidth);
+                        }
                     }
 
                     else //nomod
