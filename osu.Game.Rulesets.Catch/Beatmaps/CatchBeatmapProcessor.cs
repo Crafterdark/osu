@@ -17,22 +17,47 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
     {
         public const int RNG_SEED = 1337;
 
+        //Mod Bools
         public bool HardRockOffsets { get; set; }
-
         public bool AnotherEasyOffsets { get; set; }
-
-        public bool AnotherEasyNewHyperdashes { get; set; }
-
+        public bool AnotherEasyNewHyperDashes { get; set; }
         public bool TwinCatchersOffsets { get; set; }
-
         public bool NoDashingOffsets { get; set; }
-
         public bool NoHyperOffsets { get; set; }
+        public bool AnotherEasyEdgeReduction { get; set; }
 
+        //Mod Values
         public float EdgeReduction { get; set; }
 
+        public enum ModBools
+        {
+            HR, //0
+            AE, //1
+            AE_NewHyperDashes, //2
+            TC, //3
+            ND, //4
+            NH, //5
+            AE_EdgeReduction //6
+        };
+
+        public enum ModValues
+        {
+            MovementStatus, //0
+            EdgeReduction //1
+        };
+
+        public enum MovementType
+        {
+            NoChange, //0
+            NoHyperDashing, //1
+            NoDashing, //2
+        };
+
+
+        //Utility variables
+
         //Used to generate a symmetrical pattern when objects fall in the middle of the Playfield
-        public bool TwinCatchersInvertGen;
+        public bool TC_InvertGen_Util;
 
         public CatchBeatmapProcessor(IBeatmap beatmap)
             : base(beatmap)
@@ -68,6 +93,24 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             float? previousPosition = null;
             double previousStartTime = 0;
 
+
+            List<bool> modBools = new List<bool>
+            {
+                 HardRockOffsets, //0
+                 AnotherEasyOffsets, //1
+                 AnotherEasyNewHyperDashes, //2
+                 TwinCatchersOffsets, //3
+                 NoDashingOffsets, //4
+                 NoHyperOffsets, //5
+                 AnotherEasyEdgeReduction //6
+            };
+
+            List<double> modValues = new List<double>
+            {
+                 GetMovementStatus(), //0 (Shared between ND, NH and NM)
+                 EdgeReduction, //1 (Shared between ND and NH)
+            };
+
             foreach (var obj in beatmap.HitObjects.OfType<CatchHitObject>())
             {
                 obj.XOffset = 0;
@@ -75,18 +118,18 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 switch (obj)
                 {
                     case Fruit fruit:
-                        if (HardRockOffsets)
+                        if (modBools[(int)ModBools.HR])
                             applyHardRockOffset(fruit, ref previousPosition, ref previousStartTime, rng);
-                        if (TwinCatchersOffsets)
-                            applyTwinCatchersOffset(fruit, beatmap, TwinCatchersInvertGen);
+                        if (modBools[(int)ModBools.TC])
+                            applyTwinCatchersOffset(fruit, beatmap, TC_InvertGen_Util);
                         break;
 
                     case BananaShower bananaShower:
                         foreach (var banana in bananaShower.NestedHitObjects.OfType<Banana>())
                         {
                             banana.XOffset = (float)(rng.NextDouble() * CatchPlayfield.WIDTH);
-                            if (TwinCatchersOffsets)
-                                applyTwinCatchersOffset(banana, beatmap, TwinCatchersInvertGen);
+                            if (modBools[(int)ModBools.TC])
+                                applyTwinCatchersOffset(banana, beatmap, TC_InvertGen_Util);
 
                             rng.Next(); // osu!stable retrieved a random banana type
                             rng.Next(); // osu!stable retrieved a random banana rotation
@@ -112,13 +155,15 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                             else if (catchObject is Droplet)
                                 rng.Next(); // osu!stable retrieved a random droplet rotation
 
-                            if (TwinCatchersOffsets)
-                                applyTwinCatchersOffset(catchObject, beatmap, TwinCatchersInvertGen);
+                            if (modBools[(int)ModBools.TC])
+                                applyTwinCatchersOffset(catchObject, beatmap, TC_InvertGen_Util);
                         }
                         break;
                 }
             }
-            initialiseHyperDash(beatmap, GetNoDashStatus(), AnotherEasyOffsets, AnotherEasyNewHyperdashes, TwinCatchersOffsets, EdgeReduction);
+
+            initialiseHyperDash(beatmap, modBools, modValues);
+
         }
 
         private static void applyHardRockOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime, LegacyRandom rng)
@@ -290,34 +335,54 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             }
         }
 
-        public int GetNoDashStatus()
+        public int GetMovementStatus()
         {
-            if (NoDashingOffsets) return 2; //Cannot dash or use hyper
-            else if (NoHyperOffsets) return 1; //Cannot use hyper
+            if (NoDashingOffsets) return 2; //Cannot use regular dash
+            else if (NoHyperOffsets) return 1; //Cannot use hypers
             return 0; //No difference
         }
 
-        private static void elaborateHyperdashPalpableCatchHitObject(double halfCatcherWidth_input, int lastDirection_input, List<PalpableCatchHitObject> listHitObjects, int noDashStatus, float edgeReduction_input)
+        private static void elaborateHyperdashPalpableCatchHitObject(List<double> halfCatcherWidthList, List<PalpableCatchHitObject> hitObjectsList, List<bool> modBools, List<double> modValues)
         {
             double catcherSpeed;
-            bool edgeReduction;
+            bool edgeReduction = false;
+            bool placeHyperCondition = false;
 
-            if (noDashStatus == 2) catcherSpeed = Catcher.BASE_WALK_SPEED;
+            bool checkOriginalBeatmap = false;
+
+            int movementStatus = (int)modValues[(int)ModValues.MovementStatus];
+
+            bool movementStatusChanged = movementStatus == (int)MovementType.NoChange ? false : true;
+
+            if (movementStatus == (int)MovementType.NoDashing) catcherSpeed = Catcher.BASE_WALK_SPEED;
             else catcherSpeed = Catcher.BASE_DASH_SPEED;
 
-            double halfCatcherWidth = halfCatcherWidth_input;
-            int lastDirection = lastDirection_input;
-            double lastExcess = halfCatcherWidth_input;
-            double distanceToNext;
+            double halfCatcherWidthModifiedBeatmap = halfCatcherWidthList[0];
+            int lastDirection = 0;
+            double lastExcessModifiedBeatmap = halfCatcherWidthList[0];
+            double distanceToNextModifiedBeatmap;
 
-            float edgeReductionValue = (float)(halfCatcherWidth * edgeReduction_input);
+            double halfCatcherWidthOriginalBeatmap = -1;
+            double lastExcessOriginalBeatmap = -1;
+            double distanceToNextOriginalBeatmap;
 
-            for (int i = 0; i < listHitObjects.Count - 1; i++)
+            if (halfCatcherWidthList.Count > 1)
             {
-                edgeReduction = false;
+                halfCatcherWidthOriginalBeatmap = halfCatcherWidthList[1];
+                lastExcessOriginalBeatmap = halfCatcherWidthList[1];
+                checkOriginalBeatmap = true;
+            }
 
-                var currentObject = listHitObjects[i];
-                var nextObject = listHitObjects[i + 1];
+            float edgeReductionValue = 0;
+
+            if (movementStatusChanged) edgeReductionValue = (float)(halfCatcherWidthModifiedBeatmap * (float)modValues[(int)ModValues.EdgeReduction]);
+
+            for (int i = 0; i < hitObjectsList.Count - 1; i++)
+            {
+                if (movementStatusChanged) edgeReduction = false;
+
+                var currentObject = hitObjectsList[i];
+                var nextObject = hitObjectsList[i + 1];
 
                 // This is not nomod
                 // Reset variables in-case values have changed (e.g. after applying HR)
@@ -327,34 +392,36 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 int thisDirection = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
                 double timeToNext = nextObject.StartTime - currentObject.StartTime - 1000f / 60f / 4; // 1/4th of a frame of grace time, taken from osu-stable
 
-                distanceToNext = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcess : halfCatcherWidth); //nomod                
+                distanceToNextModifiedBeatmap = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcessModifiedBeatmap : halfCatcherWidthModifiedBeatmap);
+                distanceToNextOriginalBeatmap = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcessOriginalBeatmap : halfCatcherWidthOriginalBeatmap);
 
-                float distanceToHyper = (float)(timeToNext * catcherSpeed - distanceToNext); //nomod
+                float distanceToHyperModifiedBeatmap = (float)(timeToNext * catcherSpeed - distanceToNextModifiedBeatmap);
+                float distanceToHyperOriginalBeatmap = -1;
+                if (checkOriginalBeatmap) distanceToHyperOriginalBeatmap = (float)(timeToNext * catcherSpeed - distanceToNextOriginalBeatmap);
 
-                if (noDashStatus != 0)
+                if (!movementStatusChanged && modBools[(int)ModBools.AE_EdgeReduction]) placeHyperCondition = Math.Abs(distanceToNextModifiedBeatmap) > 2 * halfCatcherWidthModifiedBeatmap; //another easy edge reduction
+
+                if (movementStatusChanged && distanceToHyperModifiedBeatmap < edgeReductionValue) edgeReduction = true; //no dashing or no hyper dash
+
+                if (distanceToHyperModifiedBeatmap < 0)
                 {
-                    if (distanceToHyper < edgeReductionValue) edgeReduction = true;
-                } //no dashing or no hyper dash
-
-                if (distanceToHyper < 0)
-                {
-                    if (noDashStatus != 0)
+                    if (movementStatusChanged)
                     {
                         if (edgeReduction)
                         {
                             if (thisDirection == 1)
                             {
-                                nextObject.XOffset += distanceToHyper;
+                                nextObject.XOffset += distanceToHyperModifiedBeatmap;
                                 nextObject.XOffset -= edgeReductionValue;
                             }
                             else if (thisDirection == -1)
                             {
-                                nextObject.XOffset -= distanceToHyper;
+                                nextObject.XOffset -= distanceToHyperModifiedBeatmap;
                                 nextObject.XOffset += edgeReductionValue;
                             }
 
                             currentObject.DistanceToHyperDash = edgeReductionValue;
-                            lastExcess = Math.Clamp(edgeReductionValue, 0, halfCatcherWidth);
+                            lastExcessModifiedBeatmap = Math.Clamp(edgeReductionValue, 0, halfCatcherWidthModifiedBeatmap);
 
                         }
 
@@ -362,14 +429,14 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         {
                             if (thisDirection == 1)
                             {
-                                nextObject.XOffset += distanceToHyper;
+                                nextObject.XOffset += distanceToHyperModifiedBeatmap;
                             }
                             else if (thisDirection == -1)
                             {
-                                nextObject.XOffset -= distanceToHyper;
+                                nextObject.XOffset -= distanceToHyperModifiedBeatmap;
                             }
 
-                            lastExcess = 0; //Should be correct (?)
+                            lastExcessModifiedBeatmap = 0; //Should be correct (?)
                         }
 
                     }
@@ -377,55 +444,70 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                     else //nomod
                     {
                         currentObject.HyperDashTarget = nextObject;
-                        lastExcess = halfCatcherWidth;
+                        lastExcessModifiedBeatmap = halfCatcherWidthModifiedBeatmap;
                     }
 
                 }
 
-                else
+                if (checkOriginalBeatmap && distanceToHyperOriginalBeatmap < 0)
+                {
+                    if (!movementStatusChanged)
+                    {
+                        currentObject.HyperDashTarget = nextObject;
+                        lastExcessOriginalBeatmap = halfCatcherWidthOriginalBeatmap;
+                    }
+                }
+
+                else if (distanceToHyperModifiedBeatmap >= 0 || checkOriginalBeatmap && distanceToHyperOriginalBeatmap >= 0)
                 {
 
-                    if (noDashStatus != 0)
+                    if (movementStatusChanged)
                     {
 
                         if (edgeReduction)
                         {
                             if (thisDirection == 1)
                             {
-                                nextObject.XOffset -= (float)(edgeReductionValue - distanceToHyper);
+                                nextObject.XOffset -= (float)(edgeReductionValue - distanceToHyperModifiedBeatmap);
                             }
                             else if (thisDirection == -1)
                             {
-                                nextObject.XOffset += (float)(edgeReductionValue - distanceToHyper);
+                                nextObject.XOffset += (float)(edgeReductionValue - distanceToHyperModifiedBeatmap);
                             }
                             currentObject.DistanceToHyperDash = edgeReductionValue;
-                            lastExcess = Math.Clamp(edgeReductionValue, 0, halfCatcherWidth);
+                            lastExcessModifiedBeatmap = Math.Clamp(edgeReductionValue, 0, halfCatcherWidthModifiedBeatmap);
                         }
                         else
                         {
-                            currentObject.DistanceToHyperDash = distanceToHyper;
-                            lastExcess = Math.Clamp(distanceToHyper, 0, halfCatcherWidth);
+                            currentObject.DistanceToHyperDash = distanceToHyperModifiedBeatmap;
+                            lastExcessModifiedBeatmap = Math.Clamp(distanceToHyperModifiedBeatmap, 0, halfCatcherWidthModifiedBeatmap);
                         }
                     }
 
                     else //nomod
                     {
-                        currentObject.DistanceToHyperDash = distanceToHyper;
-                        lastExcess = Math.Clamp(distanceToHyper, 0, halfCatcherWidth);
+                        currentObject.DistanceToHyperDash = distanceToHyperModifiedBeatmap;
+                        lastExcessModifiedBeatmap = Math.Clamp(distanceToHyperModifiedBeatmap, 0, halfCatcherWidthModifiedBeatmap);
+                    }
+
+
+                    if (checkOriginalBeatmap && modBools[(int)ModBools.AE_EdgeReduction] && placeHyperCondition)
+                    {
+                        currentObject.HyperDashTarget = nextObject;
+                        currentObject.DistanceToHyperDash = 0;
+                        lastExcessOriginalBeatmap = halfCatcherWidthOriginalBeatmap;
                     }
 
                 }
 
-                lastDirection = thisDirection; //nomod
-
+                lastDirection = thisDirection;
             }
 
         }
 
-        private static void elaborateNewHyperdashFromExistingPalpableCatchHitObject(double halfCatcherWidth_input, int lastDirection_input, List<PalpableCatchHitObject> listHitObjects, bool anotherEasyEdgeRemoval)
+        private static void elaborateNewHyperdashFromExistingPalpableCatchHitObject(double halfCatcherWidth_input, int lastDirection_input, List<PalpableCatchHitObject> listHitObjects, bool anotherEasyEdgeReduction)
         {
             double catcherSpeed;
-            bool generateHyper;
 
             catcherSpeed = Catcher.BASE_DASH_SPEED;
 
@@ -433,10 +515,11 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             int lastDirection = lastDirection_input;
             double lastExcess = halfCatcherWidth_input;
             double distanceToNext;
+            bool placeHyperCondition = false;
+            bool isAnotherEasyEdgeReduction = anotherEasyEdgeReduction;
 
             for (int i = 0; i < listHitObjects.Count - 1; i++)
             {
-                generateHyper = false;
 
                 var currentObject = listHitObjects[i];
                 var nextObject = listHitObjects[i + 1];
@@ -448,12 +531,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
                 float distanceToHyper = (float)(timeToNext * catcherSpeed - distanceToNext); //nomod
 
-                bool placeHyperCondition = Math.Abs(currentObject.EffectiveX - nextObject.EffectiveX) >= 2 * halfCatcherWidth; //Just a test
-
-                if (anotherEasyEdgeRemoval)
-                {
-                    if (distanceToHyper <= (float)(halfCatcherWidth * (2.0f / 3.0f))) generateHyper = true;
-                } //another easy
+                if (isAnotherEasyEdgeReduction) placeHyperCondition = Math.Abs(distanceToNext) > 2 * halfCatcherWidth; //another easy edge reduction
 
                 if (distanceToHyper < 0)
                 {
@@ -463,7 +541,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 }
                 else
                 {
-                    if (generateHyper && placeHyperCondition)
+                    if (isAnotherEasyEdgeReduction && placeHyperCondition)
                     {
                         currentObject.HyperDashTarget = nextObject;
                         currentObject.DistanceToHyperDash = 0;
@@ -471,8 +549,16 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                     }
                     else
                     {
-                        currentObject.DistanceToHyperDash = distanceToHyper;
-                        lastExcess = Math.Clamp(distanceToHyper, 0, halfCatcherWidth);
+                        if (currentObject.HyperDashTarget == null)
+                        {
+                            currentObject.DistanceToHyperDash = distanceToHyper;
+                            lastExcess = Math.Clamp(distanceToHyper, 0, halfCatcherWidth);
+                        }
+                        else
+                        {
+                            currentObject.DistanceToHyperDash = 0;
+                            lastExcess = halfCatcherWidth;
+                        }
                     }
                 }
 
@@ -482,7 +568,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         }
 
-        private static void initialiseHyperDash(IBeatmap beatmap, int noDashStatus, bool anotherEasy, bool anotherEasyNewHyperdashes, bool twins, float spacingDifficulty)
+        private static void initialiseHyperDash(IBeatmap beatmap, List<bool> modBools, List<double> modValues)
         {
             List<PalpableCatchHitObject> palpableObjects = new List<PalpableCatchHitObject>();
 
@@ -490,14 +576,17 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
             List<PalpableCatchHitObject> palpableObjectsRight = new List<PalpableCatchHitObject>();
 
+            List<double> halfCatcherWidthList = new List<double>();
+
             double halfCatcherWidth = Catcher.CalculateCatchWidth(beatmap.Difficulty) / 2;
             double halfCatcherWidthOriginalBeatmap = 0;
             double halfCatcherWidthModifiedBeatmap = 0;
 
-            BeatmapDifficulty difficultyCustom = new BeatmapDifficulty();
+            int movementStatus = (int)modValues[(int)ModValues.MovementStatus];
 
-            if (anotherEasy)
+            if (modBools[(int)ModBools.AE])
             {
+                BeatmapDifficulty difficultyCustom = new BeatmapDifficulty();
                 beatmap.Difficulty.CopyTo(difficultyCustom);
                 difficultyCustom.CircleSize *= 2;
 
@@ -506,6 +595,19 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
                 halfCatcherWidthOriginalBeatmap = Catcher.CalculateCatchWidth(difficultyCustom) / 2;
                 halfCatcherWidthOriginalBeatmap /= Catcher.ALLOWED_CATCH_RANGE; //Original is ready
+
+                halfCatcherWidthList.Add(halfCatcherWidthModifiedBeatmap);
+                halfCatcherWidthList.Add(halfCatcherWidthOriginalBeatmap);
+            }
+
+            else
+            {
+                // Todo: This is wrong. osu!stable calculated hyperdashes using the full catcher size, excluding the margins.
+                // This should theoretically cause impossible scenarios, but practically, likely due to the size of the playfield, it doesn't seem possible.
+                // For now, to bring gameplay (and diffcalc!) completely in-line with stable, this code also uses the full catcher size.
+                halfCatcherWidth /= Catcher.ALLOWED_CATCH_RANGE;
+
+                halfCatcherWidthList.Add(halfCatcherWidth);
             }
 
             double halfPlayfield = CatchPlayfield.WIDTH / 2;
@@ -517,7 +619,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             {
                 if (currentObject is Fruit fruitObject)
                 {
-                    if (twins)
+                    if (modBools[(int)ModBools.TC])
                     {
                         if (((PalpableCatchHitObject)currentObject).EffectiveX <= leftSidePlayfield) palpableObjectsLeft.Add(fruitObject);
                         else palpableObjectsRight.Add(fruitObject);
@@ -529,10 +631,10 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 {
                     foreach (var juice in currentObject.NestedHitObjects)
                     {
-                        if (noDashStatus != 0)
+                        if (movementStatus != (int)MovementType.NoChange)
                         {
                             if (juice is PalpableCatchHitObject palpableObject)
-                                if (twins)
+                                if (modBools[(int)ModBools.TC])
                                 {
                                     if (palpableObject.EffectiveX <= leftSidePlayfield) palpableObjectsLeft.Add(palpableObject);
                                     else palpableObjectsRight.Add(palpableObject);
@@ -542,7 +644,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         else
                         {
                             if (juice is PalpableCatchHitObject palpableObject && !(juice is TinyDroplet))
-                                if (twins)
+                                if (modBools[(int)ModBools.TC])
                                 {
                                     if (palpableObject.EffectiveX <= leftSidePlayfield) palpableObjectsLeft.Add(palpableObject);
                                     else palpableObjectsRight.Add(palpableObject);
@@ -553,45 +655,40 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 }
             }
 
-            if (twins)
+            if (modBools[(int)ModBools.TC])
             {
                 palpableObjectsLeft.Sort((h1, h2) => h1.StartTime.CompareTo(h2.StartTime));
                 palpableObjectsRight.Sort((h1, h2) => h1.StartTime.CompareTo(h2.StartTime));
             }
             else palpableObjects.Sort((h1, h2) => h1.StartTime.CompareTo(h2.StartTime)); //nomod
 
-            // Todo: This is wrong. osu!stable calculated hyperdashes using the full catcher size, excluding the margins.
-            // This should theoretically cause impossible scenarios, but practically, likely due to the size of the playfield, it doesn't seem possible.
-            // For now, to bring gameplay (and diffcalc!) completely in-line with stable, this code also uses the full catcher size.
-            halfCatcherWidth /= Catcher.ALLOWED_CATCH_RANGE;
-
-            if (twins)
+            if (modBools[(int)ModBools.TC])
             {
 
-                if (anotherEasy)
-                {
-                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthOriginalBeatmap, 0, palpableObjectsLeft, noDashStatus, spacingDifficulty); //Used to elaborate hyperdash from NM spacing (!) [Left]
-                    if (anotherEasyNewHyperdashes && noDashStatus == 0) elaborateNewHyperdashFromExistingPalpableCatchHitObject(halfCatcherWidthModifiedBeatmap, 0, palpableObjectsLeft, anotherEasyNewHyperdashes); //Only used to add hyperdash from new CS spacing OR calculate new SR with new CS (!) [Left]
+                //if (modBools[(int)ModBools.AE])
+                //{
+                //elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthList, lastDirectionList, palpableObjectsLeft, modBools, modValues); //Used to elaborate hyperdash from NM spacing (!) [Left]
+                //if (modBools[(int)ModBools.AE_NewHyperDashes] && movementStatus == (int)MovementType.NoChange) elaborateNewHyperdashFromExistingPalpableCatchHitObject(halfCatcherWidthModifiedBeatmap, 0, palpableObjectsLeft, isAnotherEasyEdgeReduction); //Only used to add hyperdash from new CS spacing OR calculate new SR with new CS (!) [Left]
 
-                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthOriginalBeatmap, 0, palpableObjectsRight, noDashStatus, spacingDifficulty); //Used to elaborate hyperdash from NM spacing (!) [Right]
-                    if (anotherEasyNewHyperdashes && noDashStatus == 0) elaborateNewHyperdashFromExistingPalpableCatchHitObject(halfCatcherWidthModifiedBeatmap, 0, palpableObjectsRight, anotherEasyNewHyperdashes); //Only used to add hyperdash from new CS spacing OR calculate new SR with new CS  (!) [Right]
-                }
+                //elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthList, lastDirectionList, palpableObjectsRight, modBools, modValues); //Used to elaborate hyperdash from NM spacing (!) [Right]
+                //if (modBools[(int)ModBools.AE_NewHyperDashes] && movementStatus == (int)MovementType.NoChange) elaborateNewHyperdashFromExistingPalpableCatchHitObject(halfCatcherWidthModifiedBeatmap, 0, palpableObjectsRight, isAnotherEasyEdgeReduction); //Only used to add hyperdash from new CS spacing OR calculate new SR with new CS  (!) [Right]
+                //}
 
-                else
-                {
-                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidth, 0, palpableObjectsLeft, noDashStatus, spacingDifficulty); //[Left]
-                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidth, 0, palpableObjectsRight, noDashStatus, spacingDifficulty); //[Right]
-                }
+                //else
+                //{
+                elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthList, palpableObjectsLeft, modBools, modValues); //[Left]
+                elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthList, palpableObjectsRight, modBools, modValues); //[Right]
+                //}
             }
             else
             {
-                if (anotherEasy)
-                {
-                    elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthOriginalBeatmap, 0, palpableObjects, noDashStatus, spacingDifficulty); //Used to elaborate hyperdash from NM spacing (!)
-                    if (anotherEasyNewHyperdashes && noDashStatus == 0) elaborateNewHyperdashFromExistingPalpableCatchHitObject(halfCatcherWidthModifiedBeatmap, 0, palpableObjects, anotherEasyNewHyperdashes); //Only used to add hyperdash from new CS spacing OR calculate new SR with new CS  (!)
-                }
+                //if (modBools[(int)ModBools.AE])
+                //{
+                elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthList, palpableObjects, modBools, modValues); // [Standard]
+                //if (modBools[(int)ModBools.AE_NewHyperDashes] && movementStatus == (int)MovementType.NoChange) elaborateNewHyperdashFromExistingPalpableCatchHitObject(halfCatcherWidthModifiedBeatmap, 0, palpableObjects, isAnotherEasyEdgeReduction); //Only used to add hyperdash from new CS spacing OR calculate new SR with new CS  (!)
+                //}
 
-                else elaborateHyperdashPalpableCatchHitObject(halfCatcherWidth, 0, palpableObjects, noDashStatus, spacingDifficulty); //This is the main hyperdash gen + other mods
+                //else elaborateHyperdashPalpableCatchHitObject(halfCatcherWidthList, lastDirectionList, palpableObjects, modBools, modValues); //This is the main hyperdash gen + other mods
             }
         }
     }

@@ -24,9 +24,6 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override ModType Type => ModType.Conversion;
         public override Type[] IncompatibleMods => new[] { typeof(CatchModAlwaysDash), typeof(CatchModNoHyperDash) };
 
-        [SettingSource("Special Hyper 'Walk' Dashes", "The hyper 'walk' dashes will generate.")]
-        public Bindable<bool> SpecialHyperWalkDashes { get; } = new BindableBool(false);
-
         [SettingSource("Edge Reduction", "Maximum distance from the center of the plate to the next note.")]
         public Bindable<float> EdgeReduction { get; } = new BindableFloat((float)0.50)
         {
