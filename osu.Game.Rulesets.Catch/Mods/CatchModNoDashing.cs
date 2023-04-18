@@ -22,7 +22,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override LocalisableString Description => "The catcher can't dash.";
         public override double ScoreMultiplier => 1;
         public override ModType Type => ModType.Conversion;
-        public override Type[] IncompatibleMods => new[] { typeof(CatchModAlwaysDash), typeof(CatchModNoHyperDash) };
+        public override Type[] IncompatibleMods => new[] { typeof(CatchModAlwaysDash), typeof(CatchModNoHyperDashing) };
 
         [SettingSource("Edge Reduction", "Maximum distance from the center of the plate to the next note.")]
         public Bindable<float> EdgeReduction { get; } = new BindableFloat((float)0.50)

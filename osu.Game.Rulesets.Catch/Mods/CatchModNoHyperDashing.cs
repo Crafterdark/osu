@@ -14,9 +14,9 @@ using System.Linq;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
-    public class CatchModNoHyperDash : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IApplicableToBeatmapProcessor
+    public class CatchModNoHyperDashing : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IApplicableToBeatmapProcessor
     {
-        public override string Name => "No Hyper Dash";
+        public override string Name => "No Hyper Dashing";
         public override string Acronym => "NH";
         public override LocalisableString Description => "No hyper dash will be found during gameplay.";
         public override double ScoreMultiplier => 1;
@@ -54,7 +54,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
         {
             var catchProcessor = (CatchBeatmapProcessor)beatmapProcessor;
-            catchProcessor.NoHyperOffsets = true;
+            catchProcessor.NoHyperDashingOffsets = true;
             catchProcessor.EdgeReduction = EdgeReduction.Value;
         }
 

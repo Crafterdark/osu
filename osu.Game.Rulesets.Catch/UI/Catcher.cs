@@ -156,6 +156,7 @@ namespace osu.Game.Rulesets.Catch.UI
         public bool AspireApplies { get; set; } = false!;
         public bool AspireSettingsTypeOne { get; set; } = false!;
         public bool AspireSettingsTypeTwo { get; set; } = false!;
+        public bool AspireSettingsTypeThree { get; set; } = false!;
 
         public Catcher(DroppedObjectContainer droppedObjectTarget, IBeatmapDifficultyInfo? difficulty = null)
         {
@@ -274,6 +275,7 @@ namespace osu.Game.Rulesets.Catch.UI
                 bool isAllowingHyperDash = true; //we allow hyper dash unless following conditions
 
                 if (AspireSettingsTypeTwo && hitObject.StartTime == target.StartTime) isAllowingHyperDash = false;
+                if (AspireSettingsTypeThree && Math.Abs(hitObject.EffectiveX - target.EffectiveX) <= CatchWidth) isAllowingHyperDash = false;
 
                 double timeDifference = target.StartTime - hitObject.StartTime;
                 double positionDifference = target.EffectiveX - X;

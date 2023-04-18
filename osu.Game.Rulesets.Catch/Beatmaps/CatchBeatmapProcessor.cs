@@ -23,7 +23,8 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         public bool AnotherEasyNewHyperDashes { get; set; }
         public bool TwinCatchersOffsets { get; set; }
         public bool NoDashingOffsets { get; set; }
-        public bool NoHyperOffsets { get; set; }
+        public bool NoHyperDashingOffsets { get; set; }
+        public bool AllHyperDashOffsets { get; set; }
 
         //Mod Values
         public float EdgeReduction { get; set; }
@@ -36,6 +37,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             TC, //3
             ND, //4
             NH, //5
+            AH, //6
         };
 
         public enum ModValues
@@ -99,7 +101,8 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                  AnotherEasyNewHyperDashes, //2
                  TwinCatchersOffsets, //3
                  NoDashingOffsets, //4
-                 NoHyperOffsets, //5
+                 NoHyperDashingOffsets, //5
+                 AllHyperDashOffsets, //6
             };
 
             List<double> modValues = new List<double>
@@ -335,7 +338,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         public int GetMovementStatus()
         {
             if (NoDashingOffsets) return 2; //Cannot use regular dash
-            else if (NoHyperOffsets) return 1; //Cannot use hypers
+            else if (NoHyperDashingOffsets) return 1; //Cannot use hypers
             return 0; //No difference
         }
 
@@ -477,7 +480,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         float distanceToHyperOriginalCatcher = (float)(timeToNext * catcherSpeed - distanceToNextWithOriginalCatcher);
 
                         //Hyper placement
-                        if (distanceToHyperOriginalCatcher < 0)
+                        if (distanceToHyperOriginalCatcher < 0 || modBools[(int)ModBools.AH])
                         {
                             currentObject.HyperDashTarget = nextObject;
                             lastExcessOriginalCatcher = halfCatcherWidthOriginalCatcher;
@@ -607,7 +610,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         if (modBools[(int)ModBools.AE]) removeExtraHyperCondition = Math.Abs(distanceToNextModifiedCatcher) <= 2 * halfCatcherWidthModifiedCatcher; //AE Generic Hyper Dashes removal condition
 
                         //Hyper placement
-                        if (distanceToHyperModifiedCatcher < 0)
+                        if (distanceToHyperModifiedCatcher < 0 || modBools[(int)ModBools.AH])
                         {
                             currentObject.HyperDashTarget = nextObject;
                             lastExcessModifiedCatcher = halfCatcherWidthModifiedCatcher;

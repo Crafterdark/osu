@@ -27,18 +27,23 @@ namespace osu.Game.Rulesets.Catch.Mods
         [SettingSource("Change 2#", "Hyper dashing will not apply if the target note falls at the exact same time of the hyper note.")]
         public Bindable<bool> AspireSettingsTwo { get; } = new BindableBool(false); //Stable default as "false"
 
+        [SettingSource("Change 3#", "Hyper dashing will not apply if the target note falls near the hyper note & both can be caught without movement.")]
+        public Bindable<bool> AspireSettingsThree { get; } = new BindableBool(false); //Stable default as "false"
+
         public override string SettingDescription
         {
             get
             {
                 string aspireSettingsOne_string = AspireSettingsOne.IsDefault ? string.Empty : string.Empty;
                 string aspireSettingsTwo_string = AspireSettingsTwo.IsDefault ? string.Empty : string.Empty;
+                string aspireSettingsThree_string = AspireSettingsTwo.IsDefault ? string.Empty : string.Empty;
 
                 return string.Join(", ", new[]
                 {
                     base.SettingDescription,
                     aspireSettingsOne_string,
                     aspireSettingsTwo_string,
+                    aspireSettingsThree_string,
                 }.Where(s => !string.IsNullOrEmpty(s)));
             }
         }
@@ -50,6 +55,7 @@ namespace osu.Game.Rulesets.Catch.Mods
             catchPlayfield.Catcher.AspireApplies = true;
             catchPlayfield.Catcher.AspireSettingsTypeOne = AspireSettingsOne.Value;
             catchPlayfield.Catcher.AspireSettingsTypeTwo = AspireSettingsTwo.Value;
+            catchPlayfield.Catcher.AspireSettingsTypeThree = AspireSettingsThree.Value;
         }
 
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
