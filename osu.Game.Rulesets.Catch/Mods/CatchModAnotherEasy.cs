@@ -25,24 +25,19 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override double ScoreMultiplier => 0.5;
         public override Type[] IncompatibleMods => new[] { typeof(CatchModEasy), typeof(CatchModHardRock), typeof(ModAccuracyChallenge), typeof(CatchModDifficultyAdjust) };
 
-        [SettingSource("Easier Edge Patterns", "Extra hyper dashes will generate by using the new Circle Size.")]
-        public Bindable<bool> AnotherEasyNewHyperDashes { get; } = new BindableBool(true);
-
-        [SettingSource("Edge Reduction", "Maximum distance from the center of the plate to trigger the new extra hyper dashes.")]
-        public Bindable<bool> IsAnotherEasyEdgeReduction { get; } = new BindableBool(true);
+        [SettingSource("Original Hyper Dashes", "Extra hyper dashes will generate by using the original beatmap Circle Size.")]
+        public Bindable<bool> AnotherEasyOriginalHyperDashes { get; } = new BindableBool(true);
 
         public override string SettingDescription
         {
             get
             {
-                string anotherEasyNewHyperDashes_string = AnotherEasyNewHyperDashes.IsDefault ? string.Empty : string.Empty;
-                string anotherEasyEdgeReduction_string = IsAnotherEasyEdgeReduction.IsDefault ? string.Empty : string.Empty;
+                string anotherEasyOriginalHyperDashes_string = AnotherEasyOriginalHyperDashes.IsDefault ? string.Empty : string.Empty;
 
                 return string.Join(", ", new[]
                 {
                     base.SettingDescription,
-                    anotherEasyNewHyperDashes_string,
-                    anotherEasyEdgeReduction_string,
+                    anotherEasyOriginalHyperDashes_string,
                 }.Where(s => !string.IsNullOrEmpty(s)));
             }
         }
@@ -65,8 +60,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         {
             var catchProcessor = (CatchBeatmapProcessor)beatmapProcessor;
             catchProcessor.AnotherEasyOffsets = true;
-            catchProcessor.AnotherEasyNewHyperDashes = AnotherEasyNewHyperDashes.Value;
-            catchProcessor.AnotherEasyEdgeReduction = IsAnotherEasyEdgeReduction.Value;
+            catchProcessor.AnotherEasyOriginalHyperDashes = AnotherEasyOriginalHyperDashes.Value;
         }
 
         public override LocalisableString Description => @"Larger fruits, more forgiving HP drain, less accuracy required, frequent hyperdashes and three lives!";
