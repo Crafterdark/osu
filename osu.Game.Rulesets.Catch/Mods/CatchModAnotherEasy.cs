@@ -15,9 +15,6 @@ namespace osu.Game.Rulesets.Catch.Mods
 {
     public class CatchModAnotherEasy : ModEasyWithExtraLives, IApplicableToDifficulty, IApplicableToBeatmapProcessor
     {
-
-        //TODO: Add an option for adding extra hyperdashes
-
         public override string Name => "Another Easy";
         public override string Acronym => "AE";
         public override IconUsage? Icon => null;
@@ -25,19 +22,19 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override double ScoreMultiplier => 0.5;
         public override Type[] IncompatibleMods => new[] { typeof(CatchModEasy), typeof(CatchModHardRock), typeof(ModAccuracyChallenge), typeof(CatchModDifficultyAdjust) };
 
-        [SettingSource("Original Hyper Dashes", "Extra hyper dashes will generate by using the original beatmap Circle Size.")]
-        public Bindable<bool> AnotherEasyOriginalHyperDashes { get; } = new BindableBool(true);
+        [SettingSource("New Hyper Dashes", "New hyper dashes generate by using the new Catcher plate.")]
+        public Bindable<bool> AnotherEasyNewHyperDashes { get; } = new BindableBool(true);
 
         public override string SettingDescription
         {
             get
             {
-                string anotherEasyOriginalHyperDashes_string = AnotherEasyOriginalHyperDashes.IsDefault ? string.Empty : string.Empty;
+                string anotherEasyNewHyperDashes_string = AnotherEasyNewHyperDashes.IsDefault ? string.Empty : string.Empty;
 
                 return string.Join(", ", new[]
                 {
                     base.SettingDescription,
-                    anotherEasyOriginalHyperDashes_string,
+                    anotherEasyNewHyperDashes_string,
                 }.Where(s => !string.IsNullOrEmpty(s)));
             }
         }
@@ -60,7 +57,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         {
             var catchProcessor = (CatchBeatmapProcessor)beatmapProcessor;
             catchProcessor.AnotherEasyOffsets = true;
-            catchProcessor.AnotherEasyOriginalHyperDashes = AnotherEasyOriginalHyperDashes.Value;
+            catchProcessor.AnotherEasyNewHyperDashes = AnotherEasyNewHyperDashes.Value;
         }
 
         public override LocalisableString Description => @"Larger fruits, more forgiving HP drain, less accuracy required, frequent hyperdashes and three lives!";

@@ -20,7 +20,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         //Mod Bools
         public bool HardRockOffsets { get; set; }
         public bool AnotherEasyOffsets { get; set; }
-        public bool AnotherEasyOriginalHyperDashes { get; set; }
+        public bool AnotherEasyNewHyperDashes { get; set; }
         public bool TwinCatchersOffsets { get; set; }
         public bool NoDashingOffsets { get; set; }
         public bool NoHyperOffsets { get; set; }
@@ -32,7 +32,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         {
             HR, //0
             AE, //1
-            AE_OriginalHyperDashes, //2
+            AE_NewHyperDashes, //2
             TC, //3
             ND, //4
             NH, //5
@@ -56,9 +56,6 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         //Used to generate a symmetrical pattern when objects fall in the middle of the Playfield
         public bool TC_InvertGen_Util;
-
-        //Map palpable object patterns
-        public static List<List<PalpableCatchHitObject>>? ListOfObjectsList;
 
         public CatchBeatmapProcessor(IBeatmap beatmap)
             : base(beatmap)
@@ -99,7 +96,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             {
                  HardRockOffsets, //0
                  AnotherEasyOffsets, //1
-                 AnotherEasyOriginalHyperDashes, //2
+                 AnotherEasyNewHyperDashes, //2
                  TwinCatchersOffsets, //3
                  NoDashingOffsets, //4
                  NoHyperOffsets, //5
@@ -342,7 +339,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             return 0; //No difference
         }
 
-        private static void initialiseHyperdashOnPalpableCatchHitObjects(List<double> halfCatcherWidthList, List<bool> modBools, List<double> modValues, bool checkOriginal)
+        private static void initialiseHyperdashOnPalpableCatchHitObjects(List<double> halfCatcherWidthList, List<bool> modBools, List<double> modValues, bool checkOriginal, bool checkModified, bool modifyOriginal, bool modifyModified, List<List<PalpableCatchHitObject>> ListOfObjectsList)
         {
             //Generic variables
             int movementStatus = (int)modValues[(int)ModValues.MovementStatus];
@@ -354,18 +351,18 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             //Extra mod-dependent variables
             bool edgeReduction = false;
             bool removeExtraHyperCondition = false;
-            bool checkWithOriginalCatcher = checkOriginal;
+            bool updateHyperWithOriginalCatcher = checkOriginal;
+            bool updateHyperWithModifiedCatcher = checkModified;
+            bool modifyOffsetsWithOriginalCatcher = modifyOriginal;
+            bool modifyOffsetsWithModifiedCatcher = modifyModified;
             float edgeReductionValue = 0;
             double halfCatcherWidthOriginalCatcher;
             double lastExcessOriginalCatcher;
             double distanceToNextWithOriginalCatcher;
 
             //Always initialized
-            double halfCatcherWidthModifiedCatcher = halfCatcherWidthList[0];
+            double halfCatcherWidthModifiedCatcher;
             double lastExcessModifiedCatcher;
-
-            //Apply edge reduction to the new modified map if the mod ND or NH were used
-            if (movementStatusChanged) edgeReductionValue = (float)(halfCatcherWidthModifiedCatcher * (float)modValues[(int)ModValues.EdgeReduction]);
 
             //Stop everything if the list is null
             if (ListOfObjectsList == null) return;
@@ -373,9 +370,87 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             for (int index = 0; index < ListOfObjectsList.Count; index++)
             {
 
-                //Does check all the map hitobjects with original catcher width when needed,
-                //since we can't use modified offsets from the next steps. (Due to the procedural pattern generation)
-                if (checkWithOriginalCatcher)
+                //Modify offsets for original Catcher
+                if (modifyOffsetsWithOriginalCatcher)
+                {
+                    //Always re-initialized
+                    halfCatcherWidthOriginalCatcher = halfCatcherWidthList[1];
+                    lastExcessOriginalCatcher = halfCatcherWidthList[1];
+                    //Last direction is always in common
+                    lastDirection = 0;
+
+                    //Apply edge reduction to the new modified map if the mod ND or NH were used
+                    if (movementStatusChanged) edgeReductionValue = (float)(halfCatcherWidthOriginalCatcher * (float)modValues[(int)ModValues.EdgeReduction]);
+
+                    //Here we'll actually modify offsets of the patterns when required.
+                    for (int i = 0; i < ListOfObjectsList[index].Count - 1; i++)
+                    {
+                        if (movementStatusChanged) edgeReduction = false;
+
+                        var currentObject = ListOfObjectsList[index][i];
+                        var nextObject = ListOfObjectsList[index][i + 1];
+
+                        int thisDirection = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
+                        double timeToNext = nextObject.StartTime - currentObject.StartTime - 1000f / 60f / 4; // 1/4th of a frame of grace time, taken from osu-stable
+
+                        distanceToNextWithOriginalCatcher = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcessOriginalCatcher : halfCatcherWidthOriginalCatcher);
+
+                        float distanceToHyperOriginalCatcher = (float)(timeToNext * catcherSpeed - distanceToNextWithOriginalCatcher);
+
+                        if (movementStatusChanged && distanceToHyperOriginalCatcher < edgeReductionValue) edgeReduction = true; //ND or NH edge reduction condition
+
+                        //Offset when Hyper pattern
+                        if (distanceToHyperOriginalCatcher < 0)
+                        {
+                            if (movementStatusChanged)
+                            {
+                                if (edgeReduction)
+                                {
+                                    nextObject.XOffset += (thisDirection == 1) ? distanceToHyperOriginalCatcher : -distanceToHyperOriginalCatcher;
+                                    nextObject.XOffset += (thisDirection == 1) ? -edgeReductionValue : edgeReductionValue;
+
+                                    currentObject.DistanceToHyperDash = edgeReductionValue;
+                                    lastExcessOriginalCatcher = Math.Clamp(edgeReductionValue, 0, halfCatcherWidthOriginalCatcher);
+                                }
+
+                                else
+                                {
+                                    nextObject.XOffset += (thisDirection == 1) ? distanceToHyperOriginalCatcher : -distanceToHyperOriginalCatcher;
+
+                                    lastExcessOriginalCatcher = 0;
+                                }
+                            }
+
+                        }
+
+                        //Offset when non-Hyper pattern
+                        else
+                        {
+                            if (movementStatusChanged)
+                            {
+
+                                if (edgeReduction)
+                                {
+                                    nextObject.XOffset += (thisDirection == 1) ? -(float)(edgeReductionValue - distanceToHyperOriginalCatcher) : (float)(edgeReductionValue - distanceToHyperOriginalCatcher);
+
+                                    currentObject.DistanceToHyperDash = edgeReductionValue;
+                                    lastExcessOriginalCatcher = Math.Clamp(edgeReductionValue, 0, halfCatcherWidthOriginalCatcher);
+                                }
+
+                                else
+                                {
+                                    currentObject.DistanceToHyperDash = distanceToHyperOriginalCatcher;
+                                    lastExcessOriginalCatcher = Math.Clamp(distanceToHyperOriginalCatcher, 0, halfCatcherWidthOriginalCatcher);
+                                }
+                            }
+                        }
+
+                        lastDirection = thisDirection;
+                    }
+                }
+
+                //Update hyper dashes for original Catcher
+                if (updateHyperWithOriginalCatcher)
                 {
 
                     //Always re-initialized
@@ -420,81 +495,131 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
                 }
 
-                //Always re-initialized
-                halfCatcherWidthModifiedCatcher = halfCatcherWidthList[0];
-                lastExcessModifiedCatcher = halfCatcherWidthList[0];
-                //Last direction is always in common
-                lastDirection = 0;
-
-                //Here we'll actually modify offsets of the patterns when required.
-                for (int i = 0; i < ListOfObjectsList[index].Count - 1; i++)
+                //Modify offsets for new MODDED Catcher
+                if (modifyOffsetsWithModifiedCatcher)
                 {
-                    if (movementStatusChanged) edgeReduction = false;
+                    //Always re-initialized
+                    halfCatcherWidthModifiedCatcher = halfCatcherWidthList[0];
+                    lastExcessModifiedCatcher = halfCatcherWidthList[0];
+                    //Last direction is always in common
+                    lastDirection = 0;
 
-                    var currentObject = ListOfObjectsList[index][i];
-                    var nextObject = ListOfObjectsList[index][i + 1];
+                    //Apply edge reduction to the new modified map if the mod ND or NH were used
+                    if (movementStatusChanged) edgeReductionValue = (float)(halfCatcherWidthModifiedCatcher * (float)modValues[(int)ModValues.EdgeReduction]);
 
-                    //Do not repeat this step if we already did a first check
-                    if (!checkWithOriginalCatcher)
+                    //Here we'll actually modify offsets of the patterns when required.
+                    for (int i = 0; i < ListOfObjectsList[index].Count - 1; i++)
                     {
-                        // Reset variables in-case values have changed (e.g. after applying HR)
-                        currentObject.HyperDashTarget = null;
-                        currentObject.DistanceToHyperDash = 0;
-                    }
+                        if (movementStatusChanged) edgeReduction = false;
 
-                    int thisDirection = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
-                    double timeToNext = nextObject.StartTime - currentObject.StartTime - 1000f / 60f / 4; // 1/4th of a frame of grace time, taken from osu-stable
+                        var currentObject = ListOfObjectsList[index][i];
+                        var nextObject = ListOfObjectsList[index][i + 1];
 
-                    distanceToNextModifiedCatcher = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcessModifiedCatcher : halfCatcherWidthModifiedCatcher);
+                        int thisDirection = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
+                        double timeToNext = nextObject.StartTime - currentObject.StartTime - 1000f / 60f / 4; // 1/4th of a frame of grace time, taken from osu-stable
 
-                    float distanceToHyperModifiedCatcher = (float)(timeToNext * catcherSpeed - distanceToNextModifiedCatcher);
+                        distanceToNextModifiedCatcher = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcessModifiedCatcher : halfCatcherWidthModifiedCatcher);
 
-                    if (modBools[(int)ModBools.AE]) removeExtraHyperCondition = Math.Abs(distanceToNextModifiedCatcher) <= 2 * halfCatcherWidthModifiedCatcher; //AE Generic Hyper Dashes removal condition
-                    if (movementStatusChanged && distanceToHyperModifiedCatcher < edgeReductionValue) edgeReduction = true; //ND or NH edge reduction condition
+                        float distanceToHyperModifiedCatcher = (float)(timeToNext * catcherSpeed - distanceToNextModifiedCatcher);
 
-                    //Mostly Hyper placement, unless catcher speed change
-                    if (distanceToHyperModifiedCatcher < 0)
-                    {
-                        if (movementStatusChanged)
+                        if (movementStatusChanged && distanceToHyperModifiedCatcher < edgeReductionValue) edgeReduction = true; //ND or NH edge reduction condition
+
+                        //Offset when Hyper pattern
+                        if (distanceToHyperModifiedCatcher < 0)
                         {
-                            if (edgeReduction)
+                            if (movementStatusChanged)
                             {
-                                nextObject.XOffset += (thisDirection == 1) ? distanceToHyperModifiedCatcher : -distanceToHyperModifiedCatcher;
-                                nextObject.XOffset += (thisDirection == 1) ? -edgeReductionValue : edgeReductionValue;
+                                if (edgeReduction)
+                                {
+                                    nextObject.XOffset += (thisDirection == 1) ? distanceToHyperModifiedCatcher : -distanceToHyperModifiedCatcher;
+                                    nextObject.XOffset += (thisDirection == 1) ? -edgeReductionValue : edgeReductionValue;
 
-                                currentObject.DistanceToHyperDash = edgeReductionValue;
-                                lastExcessModifiedCatcher = Math.Clamp(edgeReductionValue, 0, halfCatcherWidthModifiedCatcher);
-                            }
+                                    currentObject.DistanceToHyperDash = edgeReductionValue;
+                                    lastExcessModifiedCatcher = Math.Clamp(edgeReductionValue, 0, halfCatcherWidthModifiedCatcher);
+                                }
 
-                            else
-                            {
-                                nextObject.XOffset += (thisDirection == 1) ? distanceToHyperModifiedCatcher : -distanceToHyperModifiedCatcher;
+                                else
+                                {
+                                    nextObject.XOffset += (thisDirection == 1) ? distanceToHyperModifiedCatcher : -distanceToHyperModifiedCatcher;
 
-                                lastExcessModifiedCatcher = 0;
+                                    lastExcessModifiedCatcher = 0;
+                                }
                             }
 
                         }
 
+                        //Offset when non-Hyper pattern
                         else
+                        {
+                            if (movementStatusChanged)
+                            {
+
+                                if (edgeReduction)
+                                {
+                                    nextObject.XOffset += (thisDirection == 1) ? -(float)(edgeReductionValue - distanceToHyperModifiedCatcher) : (float)(edgeReductionValue - distanceToHyperModifiedCatcher);
+
+                                    currentObject.DistanceToHyperDash = edgeReductionValue;
+                                    lastExcessModifiedCatcher = Math.Clamp(edgeReductionValue, 0, halfCatcherWidthModifiedCatcher);
+                                }
+
+                                else
+                                {
+                                    currentObject.DistanceToHyperDash = distanceToHyperModifiedCatcher;
+                                    lastExcessModifiedCatcher = Math.Clamp(distanceToHyperModifiedCatcher, 0, halfCatcherWidthModifiedCatcher);
+                                }
+                            }
+                        }
+
+                        lastDirection = thisDirection;
+                    }
+                }
+
+                //Update hyper dashes for new MODDED Catcher
+                if (updateHyperWithModifiedCatcher)
+                {
+                    //Always re-initialized
+                    halfCatcherWidthModifiedCatcher = halfCatcherWidthList[0];
+                    lastExcessModifiedCatcher = halfCatcherWidthList[0];
+                    //Last direction is always in common
+                    lastDirection = 0;
+
+                    //Here we'll actually modify offsets of the patterns when required.
+                    for (int i = 0; i < ListOfObjectsList[index].Count - 1; i++)
+                    {
+                        var currentObject = ListOfObjectsList[index][i];
+                        var nextObject = ListOfObjectsList[index][i + 1];
+
+                        //Do not repeat this step if we already did it with the original catcher
+                        if (!updateHyperWithOriginalCatcher)
+                        {
+                            // Reset variables in-case values have changed (e.g. after applying HR)
+                            currentObject.HyperDashTarget = null;
+                            currentObject.DistanceToHyperDash = 0;
+                        }
+
+                        int thisDirection = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
+                        double timeToNext = nextObject.StartTime - currentObject.StartTime - 1000f / 60f / 4; // 1/4th of a frame of grace time, taken from osu-stable
+
+                        distanceToNextModifiedCatcher = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcessModifiedCatcher : halfCatcherWidthModifiedCatcher);
+
+                        float distanceToHyperModifiedCatcher = (float)(timeToNext * catcherSpeed - distanceToNextModifiedCatcher);
+
+                        if (modBools[(int)ModBools.AE]) removeExtraHyperCondition = Math.Abs(distanceToNextModifiedCatcher) <= 2 * halfCatcherWidthModifiedCatcher; //AE Generic Hyper Dashes removal condition
+
+                        //Hyper placement
+                        if (distanceToHyperModifiedCatcher < 0)
                         {
                             currentObject.HyperDashTarget = nextObject;
                             lastExcessModifiedCatcher = halfCatcherWidthModifiedCatcher;
                         }
 
-                    }
-
-                    //Mostly non-Hyper placement, unless catcher speed change
-                    else
-                    {
-                        if (movementStatusChanged)
+                        //Non-Hyper placement
+                        else
                         {
 
-                            if (edgeReduction)
+                            if (modBools[(int)ModBools.AE] && !removeExtraHyperCondition && currentObject.HyperDashTarget != null)
                             {
-                                nextObject.XOffset += (thisDirection == 1) ? -(float)(edgeReductionValue - distanceToHyperModifiedCatcher) : (float)(edgeReductionValue - distanceToHyperModifiedCatcher);
-
-                                currentObject.DistanceToHyperDash = edgeReductionValue;
-                                lastExcessModifiedCatcher = Math.Clamp(edgeReductionValue, 0, halfCatcherWidthModifiedCatcher);
+                                lastExcessModifiedCatcher = halfCatcherWidthModifiedCatcher;
                             }
 
                             else
@@ -502,22 +627,11 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                                 currentObject.DistanceToHyperDash = distanceToHyperModifiedCatcher;
                                 lastExcessModifiedCatcher = Math.Clamp(distanceToHyperModifiedCatcher, 0, halfCatcherWidthModifiedCatcher);
                             }
+
                         }
 
-                        else if (modBools[(int)ModBools.AE] && !removeExtraHyperCondition && currentObject.HyperDashTarget != null)
-                        {
-                            lastExcessModifiedCatcher = halfCatcherWidthModifiedCatcher;
-                        }
-
-                        else
-                        {
-                            currentObject.DistanceToHyperDash = distanceToHyperModifiedCatcher;
-                            lastExcessModifiedCatcher = Math.Clamp(distanceToHyperModifiedCatcher, 0, halfCatcherWidthModifiedCatcher);
-                        }
-
+                        lastDirection = thisDirection;
                     }
-
-                    lastDirection = thisDirection;
                 }
             }
         }
@@ -529,7 +643,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
             List<PalpableCatchHitObject> palpableObjectsRightSide = new List<PalpableCatchHitObject>();
 
-            ListOfObjectsList = new List<List<PalpableCatchHitObject>>();
+            List<List<PalpableCatchHitObject>> ListOfObjectsList = new List<List<PalpableCatchHitObject>>();
 
             List<double> halfCatcherWidthList = new List<double>();
 
@@ -538,7 +652,13 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             double halfCatcherWidthOriginalBeatmap = 0;
             double halfCatcherWidthModifiedBeatmap = 0;
 
-            bool checkOriginalCatcher = false;
+            bool updateHyperWithOriginalCatcher = false;
+
+            bool updateHyperWithModifiedCatcher = true;
+
+            bool modifyOffsetsWithOriginalCatcher = false;
+
+            bool modifyOffsetsWithModifiedCatcher = true;
 
             int movementStatus = (int)modValues[(int)ModValues.MovementStatus];
 
@@ -570,7 +690,10 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 halfCatcherWidthList.Add(halfCatcherWidthModifiedBeatmap); //0
                 halfCatcherWidthList.Add(halfCatcherWidthOriginalBeatmap); //1
 
-                checkOriginalCatcher = (movementStatus == (int)MovementType.NoChange) ? true : false;
+                updateHyperWithOriginalCatcher = (movementStatus == (int)MovementType.NoChange) ? true : false; //Only use the original hyper dashes if it is a valid movement type
+                updateHyperWithModifiedCatcher = (movementStatus == (int)MovementType.NoChange) ? modBools[(int)ModBools.AE_NewHyperDashes] : false; //Only use the new CS hyper dashes if it is a valid movement type and the option is selected
+                modifyOffsetsWithOriginalCatcher = true;  //The map should be modified only with the original CS
+                modifyOffsetsWithModifiedCatcher = false; //The map shouldn't change with the new CS
             }
 
             else
@@ -586,7 +709,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
             foreach (var currentObject in beatmap.HitObjects)
             {
-                AddHitObjectToCorrectList((CatchHitObject)currentObject, modBools, modValues, Catcher.CalculateCatchWidth(beatmap.Difficulty) / 2);
+                AddHitObjectToCorrectList((CatchHitObject)currentObject, modBools, modValues, Catcher.CalculateCatchWidth(beatmap.Difficulty) / 2, ListOfObjectsList);
             }
 
             if (modBools[(int)ModBools.TC])
@@ -599,11 +722,11 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 ListOfObjectsList[0].Sort((h1, h2) => h1.StartTime.CompareTo(h2.StartTime));
             }
 
-            initialiseHyperdashOnPalpableCatchHitObjects(halfCatcherWidthList, modBools, modValues, checkOriginalCatcher);
+            initialiseHyperdashOnPalpableCatchHitObjects(halfCatcherWidthList, modBools, modValues, updateHyperWithOriginalCatcher, updateHyperWithModifiedCatcher, modifyOffsetsWithOriginalCatcher, modifyOffsetsWithModifiedCatcher, ListOfObjectsList);
 
         }
 
-        public static void AddHitObjectToCorrectList(CatchHitObject currentObject, List<bool> modBools, List<double> modValues, double halfCatcherWidth)
+        public static void AddHitObjectToCorrectList(CatchHitObject currentObject, List<bool> modBools, List<double> modValues, double halfCatcherWidth, List<List<PalpableCatchHitObject>> ListOfObjectsList)
         {
             double halfPlayfield = CatchPlayfield.WIDTH / 2;
             double leftSidePlayfield = halfPlayfield - halfCatcherWidth;
