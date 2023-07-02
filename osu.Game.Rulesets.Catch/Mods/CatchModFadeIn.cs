@@ -3,9 +3,11 @@
 
 using System;
 using System.Linq;
+using osu.Framework.Bindables;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
+using osu.Game.Configuration;
 using osu.Game.Rulesets.Catch.Objects.Drawables;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Objects.Drawables;
@@ -24,8 +26,15 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override LocalisableString Description => @"Play with fading fruits.";
         public override double ScoreMultiplier => UsesDefaultConfiguration ? 1.06 : 1;
 
-        private const double fade_in_offset_multiplier = 0.76;
-        private const double fade_in_duration_multiplier = 0.6;
+        [SettingSource("Fade In Distance", "The distance to apply the fade in")]
+        public BindableFloat SizeMultiplier { get; } = new BindableFloat(0.76f)
+        {
+            MinValue = 0.50f,
+            MaxValue = 0.76f,
+            Precision = 0.01f
+        };
+
+        private const double fade_in_duration_multiplier = 0.16; //Maybe make this value lower?
 
         protected override void ApplyIncreasedVisibilityState(DrawableHitObject hitObject, ArmedState state)
             => ApplyNormalVisibilityState(hitObject, state);
@@ -51,9 +60,11 @@ namespace osu.Game.Rulesets.Catch.Mods
         {
             var hitObject = drawable.HitObject;
 
-            double offset = hitObject.TimePreempt * fade_in_offset_multiplier;
+            double offset = hitObject.TimePreempt * SizeMultiplier.Value;
             double duration = offset - hitObject.TimePreempt * fade_in_duration_multiplier;
-            using (drawable.BeginAbsoluteSequence(0))
+            double initialFadeOutTime = -1 * offset; //Seems necessary for low AR
+
+            using (drawable.BeginAbsoluteSequence(initialFadeOutTime))
                 drawable.FadeOut(0);
             using (drawable.BeginAbsoluteSequence(hitObject.StartTime - offset))
                 drawable.FadeIn(duration);
