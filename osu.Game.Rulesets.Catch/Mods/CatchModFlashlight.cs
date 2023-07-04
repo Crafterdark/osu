@@ -1,6 +1,8 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System.Linq;
+using System;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics;
 using osu.Game.Rulesets.Catch.Objects;
@@ -21,6 +23,8 @@ namespace osu.Game.Rulesets.Catch.Mods
             MaxValue = 1.5f,
             Precision = 0.1f
         };
+
+        public override Type[] IncompatibleMods => base.IncompatibleMods.Append(typeof(CatchModFadeIn)).ToArray();
 
         public override BindableBool ComboBasedSize { get; } = new BindableBool(true);
 

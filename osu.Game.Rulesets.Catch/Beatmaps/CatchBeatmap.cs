@@ -10,6 +10,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 {
     public class CatchBeatmap : Beatmap<CatchHitObject>
     {
+        public bool CatchModFadeInApplied { get; set; }
+        public bool CatchModHiddenApplied { get; set; }
+
         public override IEnumerable<BeatmapStatistic> GetStatistics()
         {
             int fruits = HitObjects.Count(s => s is Fruit);
