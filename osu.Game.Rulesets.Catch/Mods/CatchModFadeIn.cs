@@ -27,10 +27,10 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override double ScoreMultiplier => UsesDefaultConfiguration ? 1.06 : 1;
 
         [SettingSource("Fade In Distance", "The distance to apply the fade in")]
-        public BindableDouble FadeInDistance { get; } = new BindableDouble(0.76d)
+        public BindableDouble FadeInDistance { get; } = new BindableDouble(0.86d)
         {
-            MinValue = 0.60d,
-            MaxValue = 0.76d,
+            MinValue = 0.70d,
+            MaxValue = 0.96d,
             Precision = 0.01d
         };
 
