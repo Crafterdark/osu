@@ -30,10 +30,10 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override double ScoreMultiplier => 0.5;
 
         [SettingSource("New Fruit Size", "The new size for fruits")]
-        public BindableDouble NewFruitsSize { get; } = new BindableDouble(1.25d)
+        public BindableDouble NewFruitsSize { get; } = new BindableDouble(1.10d)
         {
             MinValue = 1.01d,
-            MaxValue = 1.50d,
+            MaxValue = 1.20d,
             Precision = 0.01d
         };
 
@@ -60,19 +60,19 @@ namespace osu.Game.Rulesets.Catch.Mods
             switch (catchObject)
             {
                 case Fruit fruit:
-                    fruit.Scale *= (float)NewFruitsSize.Value;
+                    fruit.Scale *= (float)(NewFruitsSize.Value + 0.1);
                     break;
 
                 case Droplet droplet:
-                    droplet.Scale *= (float)(NewFruitsSize.Value + 0.1);
+                    droplet.Scale *= (float)(NewFruitsSize.Value + 0.050);
                     break;
 
                 case JuiceStream juiceStream:
                     foreach (var nested in juiceStream.NestedHitObjects.Cast<CatchHitObject>())
                     {
-                        if (nested is Fruit) nested.Scale *= (float)NewFruitsSize.Value;
-                        if (nested is Droplet) nested.Scale *= (float)(NewFruitsSize.Value + 0.1);
-                        if (nested is TinyDroplet) nested.Scale *= (float)(NewFruitsSize.Value + 0.2);
+                        if (nested is Fruit) nested.Scale *= (float)(NewFruitsSize.Value + 0.1);
+                        if (nested is Droplet) nested.Scale *= (float)(NewFruitsSize.Value + 0.050);
+                        if (nested is TinyDroplet) nested.Scale *= (float)(NewFruitsSize.Value + 0.025);
                     }
                     break;
             }

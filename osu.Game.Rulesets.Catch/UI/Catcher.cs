@@ -216,9 +216,9 @@ namespace osu.Game.Rulesets.Catch.UI
             {
                 double updatedHalfCatchWidth = halfCatchWidth;
 
-                if (fruit is Fruit) updatedHalfCatchWidth *= CatchBiggerFruitsSize;
-                if (fruit is Droplet) updatedHalfCatchWidth *= CatchBiggerFruitsSize + 0.1;
-                if (fruit is TinyDroplet) updatedHalfCatchWidth *= CatchBiggerFruitsSize + 0.2;
+                if (fruit is Fruit) updatedHalfCatchWidth *= CatchBiggerFruitsSize + 0.1;
+                if (fruit is Droplet) updatedHalfCatchWidth *= CatchBiggerFruitsSize + 0.050;
+                if (fruit is TinyDroplet) updatedHalfCatchWidth *= CatchBiggerFruitsSize + 0.025;
 
                 return fruit.EffectiveX >= X - updatedHalfCatchWidth &&
                        fruit.EffectiveX <= X + updatedHalfCatchWidth;
