@@ -57,6 +57,16 @@ namespace osu.Game.Rulesets.Catch.UI
         public bool CatchFruitOnPlate { get; set; } = true;
 
         /// <summary>
+        /// Whether <see cref="DrawablePalpableCatchHitObject"/> fruit should have a "line hitbox".
+        /// </summary>
+        public bool CatchBiggerFruits { get; set; } = false;
+
+        /// <summary>
+        /// The new multiplier size of the fruits.
+        /// </summary>
+        public double CatchBiggerFruitsSize { get; set; }
+
+        /// <summary>
         /// The speed of the catcher when the catcher is dashing.
         /// </summary>
         public const double BASE_DASH_SPEED = 1.0;
@@ -201,6 +211,19 @@ namespace osu.Game.Rulesets.Catch.UI
                 return false;
 
             float halfCatchWidth = CatchWidth * 0.5f;
+
+            if (CatchBiggerFruits)
+            {
+                double updatedHalfCatchWidth = halfCatchWidth;
+
+                if (fruit is Fruit) updatedHalfCatchWidth *= CatchBiggerFruitsSize;
+                if (fruit is Droplet) updatedHalfCatchWidth *= CatchBiggerFruitsSize + 0.1;
+                if (fruit is TinyDroplet) updatedHalfCatchWidth *= CatchBiggerFruitsSize + 0.2;
+
+                return fruit.EffectiveX >= X - updatedHalfCatchWidth &&
+                       fruit.EffectiveX <= X + updatedHalfCatchWidth;
+            }
+
             return fruit.EffectiveX >= X - halfCatchWidth &&
                    fruit.EffectiveX <= X + halfCatchWidth;
         }
