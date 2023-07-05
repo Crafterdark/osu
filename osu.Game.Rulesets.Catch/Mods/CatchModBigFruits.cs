@@ -30,10 +30,10 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override double ScoreMultiplier => 0.5;
 
         [SettingSource("New Fruit Size", "The new size for fruits")]
-        public BindableDouble NewFruitsSize { get; } = new BindableDouble(1.10d)
+        public BindableDouble NewFruitsSize { get; } = new BindableDouble(1.25d)
         {
             MinValue = 1.01d,
-            MaxValue = 1.20d,
+            MaxValue = 1.50d,
             Precision = 0.01d
         };
 
