@@ -21,7 +21,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override IconUsage? Icon => null;
         public override ModType Type => ModType.DifficultyIncrease;
         public override LocalisableString Description => @"Playing as a ... Ghost? Spooky!";
-        public override double ScoreMultiplier => UsesDefaultConfiguration ? 1.06 : 1;
+        public override double ScoreMultiplier => UsesDefaultConfiguration ? 1.02 : 1;
 
         [SettingSource("Ghost Invisibility", "The percentage of visibility for the ghost")]
         public BindableDouble GhostInvisibility { get; } = new BindableDouble(0.25d)
