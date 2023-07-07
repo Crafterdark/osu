@@ -114,6 +114,7 @@ namespace osu.Game.Rulesets.Catch
                         new MultiMod(new CatchModDoubleTime(), new CatchModNightcore()),
                         new MultiMod(new CatchModHidden(), new CatchModFadeIn()),
                         new CatchModFlashlight(),
+                        new CatchModGhostMode(),
                         new ModAccuracyChallenge(),
                     };
 

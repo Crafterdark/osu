@@ -70,12 +70,12 @@ namespace osu.Game.Rulesets.Catch.UI
         public void OnNewResult(DrawableCatchHitObject hitObject, JudgementResult result)
         {
             Catcher.OnNewResult(hitObject, result);
-            comboDisplay.OnNewResult(hitObject, result);
+            if (!Catcher.IsGhost) comboDisplay.OnNewResult(hitObject, result);
         }
 
         public void OnRevertResult(JudgementResult result)
         {
-            comboDisplay.OnRevertResult(result);
+            if (!Catcher.IsGhost) comboDisplay.OnRevertResult(result);
             Catcher.OnRevertResult(result);
         }
 
@@ -94,7 +94,7 @@ namespace osu.Game.Rulesets.Catch.UI
         {
             base.UpdateAfterChildren();
 
-            comboDisplay.X = Catcher.X;
+            if (!Catcher.IsGhost) comboDisplay.X = Catcher.X;
 
             if (Time.Elapsed <= 0)
             {
@@ -105,14 +105,14 @@ namespace osu.Game.Rulesets.Catch.UI
             }
 
             if (!lastHyperDashState && Catcher.HyperDashing)
-                displayCatcherTrail(CatcherTrailAnimation.HyperDashAfterImage);
+                if (!Catcher.IsGhost) displayCatcherTrail(CatcherTrailAnimation.HyperDashAfterImage);
 
             if (Catcher.Dashing || Catcher.HyperDashing)
             {
                 double generationInterval = Catcher.HyperDashing ? 25 : 50;
 
                 if (Time.Current - catcherTrails.LastDashTrailTime >= generationInterval)
-                    displayCatcherTrail(Catcher.HyperDashing ? CatcherTrailAnimation.HyperDashing : CatcherTrailAnimation.Dashing);
+                    if (!Catcher.IsGhost) displayCatcherTrail(Catcher.HyperDashing ? CatcherTrailAnimation.HyperDashing : CatcherTrailAnimation.Dashing);
             }
 
             lastHyperDashState = Catcher.HyperDashing;

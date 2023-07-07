@@ -19,6 +19,8 @@ namespace osu.Game.Rulesets.Catch.Objects.Drawables
     {
         public bool IsCatcherDodging { get; set; } = false;
 
+        public bool IsCatcherGhost { get; set; } = false;
+
         public readonly Bindable<float> OriginalXBindable = new Bindable<float>();
         public readonly Bindable<float> XOffsetBindable = new Bindable<float>();
 
@@ -87,6 +89,8 @@ namespace osu.Game.Rulesets.Catch.Objects.Drawables
         {
             if (IsCatcherDodging && newState != ArmedState.Idle)
                 newState = (newState == ArmedState.Hit) ? ArmedState.Miss : ArmedState.Hit;
+            if (IsCatcherGhost && newState != ArmedState.Idle)
+                newState = ArmedState.Miss;
             return newState;
         }
 

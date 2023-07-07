@@ -57,6 +57,11 @@ namespace osu.Game.Rulesets.Catch.UI
         public bool CatchFruitOnPlate { get; set; } = true;
 
         /// <summary>
+        /// Whether <see cref="DrawablePalpableCatchHitObject"/> fruit should cause the lighting effect on the plate.
+        /// </summary>
+        public bool CatchLighting { get; set; } = true;
+
+        /// <summary>
         /// Whether <see cref="DrawablePalpableCatchHitObject"/> fruit should have a "line hitbox".
         /// </summary>
         public bool CatchBiggerFruits { get; set; } = false;
@@ -111,6 +116,11 @@ namespace osu.Game.Rulesets.Catch.UI
         /// Whether the catcher is currently dashing.
         /// </summary>
         public bool Dashing { get; set; }
+
+        /// <summary>
+        /// Whether the catcher is a ghost.
+        /// </summary>
+        public bool IsGhost { get; set; } = false;
 
         /// <summary>
         /// The currently facing direction.
@@ -259,7 +269,7 @@ namespace osu.Game.Rulesets.Catch.UI
                     if (CatchFruitOnPlate)
                         placeCaughtObject(palpableObject, positionInStack);
 
-                    if (hitLighting.Value)
+                    if (hitLighting.Value && CatchLighting)
                         addLighting(result, drawableObject.AccentColour.Value, positionInStack.X);
                 }
 
@@ -289,7 +299,7 @@ namespace osu.Game.Rulesets.Catch.UI
                 if (CatchFruitOnPlate)
                     placeCaughtObject(palpableObject, positionInStack);
 
-                if (hitLighting.Value)
+                if (hitLighting.Value && CatchLighting)
                     addLighting(result, drawableObject.AccentColour.Value, positionInStack.X);
             }
 
@@ -379,7 +389,7 @@ namespace osu.Game.Rulesets.Catch.UI
 
         private void runHyperDashStateTransition(bool hyperDashing)
         {
-            this.FadeColour(hyperDashing ? hyperDashColour : Color4.White, HYPER_DASH_TRANSITION_DURATION, Easing.OutQuint);
+            if (!IsGhost) this.FadeColour(hyperDashing ? hyperDashColour : Color4.White, HYPER_DASH_TRANSITION_DURATION, Easing.OutQuint);
         }
 
         protected override void SkinChanged(ISkinSource skin)
