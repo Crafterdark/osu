@@ -11,6 +11,16 @@ namespace osu.Game.Rulesets.Scoring
     public abstract partial class HealthProcessor : JudgementProcessor
     {
         /// <summary>
+        /// Whether health processor should reverse its functionality. (Certain rulesets could use this)
+        /// </summary>
+        public bool IsReversed = false;
+
+        /// <summary>
+        /// Multiplier used to reduce health from judgements. (Certain rulesets could use this)
+        /// </summary>
+        public double ReverseHealthReduction { get; set; }
+
+        /// <summary>
         /// Invoked when the <see cref="ScoreProcessor"/> is in a failed state.
         /// Return true if the fail was permitted.
         /// </summary>
@@ -48,7 +58,13 @@ namespace osu.Game.Rulesets.Scoring
             if (HasFailed)
                 return;
 
-            Health.Value += GetHealthIncreaseFor(result);
+            if (IsReversed)
+            {
+                double currentHealthChange = GetHealthIncreaseFor(result);
+                Health.Value += (currentHealthChange < 0) ? (1 + ReverseHealthReduction) * currentHealthChange : currentHealthChange;
+            }
+            else
+                Health.Value += GetHealthIncreaseFor(result);
 
             if (meetsAnyFailCondition(result))
                 TriggerFailure();

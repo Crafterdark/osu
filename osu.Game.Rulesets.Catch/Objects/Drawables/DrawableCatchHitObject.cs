@@ -17,6 +17,8 @@ namespace osu.Game.Rulesets.Catch.Objects.Drawables
 {
     public abstract partial class DrawableCatchHitObject : DrawableHitObject<CatchHitObject>
     {
+        public bool IsCatcherDodging { get; set; } = false;
+
         public readonly Bindable<float> OriginalXBindable = new Bindable<float>();
         public readonly Bindable<float> XOffsetBindable = new Bindable<float>();
 
@@ -68,7 +70,7 @@ namespace osu.Game.Rulesets.Catch.Objects.Drawables
 
         protected override void UpdateHitStateTransforms(ArmedState state)
         {
-            switch (state)
+            switch (ApplyNewStateChangeFromRuleset(state))
             {
                 case ArmedState.Miss:
                     this.FadeOut(250).RotateTo(Rotation * 2, 250, Easing.Out);
@@ -79,5 +81,14 @@ namespace osu.Game.Rulesets.Catch.Objects.Drawables
                     break;
             }
         }
+
+
+        public ArmedState ApplyNewStateChangeFromRuleset(ArmedState newState)
+        {
+            if (IsCatcherDodging && newState != ArmedState.Idle)
+                newState = (newState == ArmedState.Hit) ? ArmedState.Miss : ArmedState.Hit;
+            return newState;
+        }
+
     }
 }

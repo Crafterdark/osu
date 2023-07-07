@@ -67,6 +67,11 @@ namespace osu.Game.Rulesets.Catch.UI
         public double CatchBiggerFruitsSize { get; set; }
 
         /// <summary>
+        /// Whether the catcher must dodge fruits
+        /// </summary>
+        public bool CatchDodging = false;
+
+        /// <summary>
         /// The speed of the catcher when the catcher is dashing.
         /// </summary>
         public const double BASE_DASH_SPEED = 1.0;
@@ -210,22 +215,27 @@ namespace osu.Game.Rulesets.Catch.UI
             if (!(hitObject is PalpableCatchHitObject fruit))
                 return false;
 
-            float halfCatchWidth = CatchWidth * 0.5f;
+            float CurrentCatchWidth = CatchWidth * 0.5f;
 
             if (CatchBiggerFruits)
             {
-                double updatedHalfCatchWidth = halfCatchWidth;
-
-                if (fruit is Fruit) updatedHalfCatchWidth *= CatchBiggerFruitsSize + 0.1;
-                if (fruit is Droplet) updatedHalfCatchWidth *= CatchBiggerFruitsSize + 0.050;
-                if (fruit is TinyDroplet) updatedHalfCatchWidth *= CatchBiggerFruitsSize + 0.025;
-
-                return fruit.EffectiveX >= X - updatedHalfCatchWidth &&
-                       fruit.EffectiveX <= X + updatedHalfCatchWidth;
+                if (fruit is Fruit) CurrentCatchWidth *= (float)(CatchBiggerFruitsSize + 0.1);
+                else if (fruit is Droplet) CurrentCatchWidth *= (float)(CatchBiggerFruitsSize + 0.050);
+                else if (fruit is TinyDroplet) CurrentCatchWidth *= (float)(CatchBiggerFruitsSize + 0.025);
             }
 
-            return fruit.EffectiveX >= X - halfCatchWidth &&
-                   fruit.EffectiveX <= X + halfCatchWidth;
+            return CanCatchRangeCheck(fruit.EffectiveX, X, CurrentCatchWidth);
+        }
+
+        public bool CanCatchRangeCheck(float fruitX, float catcherX, float catchWidth)
+        {
+
+            bool IsRange = fruitX >= catcherX - catchWidth &&
+                       fruitX <= catcherX + catchWidth;
+
+            if (CatchDodging) return !IsRange;
+
+            return IsRange;
         }
 
         public void OnNewResult(DrawableCatchHitObject drawableObject, JudgementResult result)
@@ -238,6 +248,39 @@ namespace osu.Game.Rulesets.Catch.UI
             if (!(drawableObject is DrawablePalpableCatchHitObject palpableObject)) return;
 
             var hitObject = palpableObject.HitObject;
+
+            if (CatchDodging)
+            {
+                //Note: Dodge Fruits mod "miss" => "IsHit = false" => Catching a fruit 
+                if (!result.IsHit)
+                {
+                    var positionInStack = computePositionInStack(new Vector2(palpableObject.X - X, 0), palpableObject.DisplaySize.X);
+
+                    if (CatchFruitOnPlate)
+                        placeCaughtObject(palpableObject, positionInStack);
+
+                    if (hitLighting.Value)
+                        addLighting(result, drawableObject.AccentColour.Value, positionInStack.X);
+                }
+
+                // droplet doesn't affect the catcher state
+                if (hitObject is TinyDroplet) return;
+
+                if (result.IsHit)
+                    CurrentState = hitObject.Kiai ? CatcherAnimationState.Kiai : CatcherAnimationState.Idle;
+                else if (!(hitObject is Banana))
+                    CurrentState = CatcherAnimationState.Fail;
+
+                if (palpableObject.HitObject.LastInCombo)
+                {
+                    if (result.Judgement is CatchJudgement catchJudgement && catchJudgement.ShouldExplodeFor(result))
+                        Explode();
+                    else
+                        Drop();
+                }
+
+                return;
+            }
 
             if (result.IsHit)
             {

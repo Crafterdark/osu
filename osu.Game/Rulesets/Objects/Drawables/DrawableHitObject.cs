@@ -288,12 +288,16 @@ namespace osu.Game.Rulesets.Objects.Drawables
 
         private void updateStateFromResult()
         {
+            ArmedState armedState;
+
             if (Result.IsHit)
-                updateState(ArmedState.Hit, true);
+                armedState = ArmedState.Hit;
             else if (Result.HasResult)
-                updateState(ArmedState.Miss, true);
+                armedState = ArmedState.Miss;
             else
-                updateState(ArmedState.Idle, true);
+                armedState = ArmedState.Idle;
+
+            updateState(armedState, true);
         }
 
         protected sealed override void OnFree(HitObjectLifetimeEntry entry)
