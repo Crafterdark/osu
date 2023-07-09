@@ -145,7 +145,7 @@ namespace osu.Game.Rulesets.Catch.UI
                     return true;
 
                 case CatchAction.Dash:
-                    Catcher.Dashing = true;
+                    if (!Catcher.IsAutoDashing) Catcher.Dashing = true;
                     return true;
             }
 
@@ -165,7 +165,7 @@ namespace osu.Game.Rulesets.Catch.UI
                     break;
 
                 case CatchAction.Dash:
-                    Catcher.Dashing = false;
+                    if (!Catcher.IsAutoDashing) Catcher.Dashing = false;
                     break;
             }
         }

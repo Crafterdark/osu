@@ -1,6 +1,8 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System.Linq;
+using System;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
@@ -22,12 +24,13 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override ModType Type => ModType.DifficultyIncrease;
         public override LocalisableString Description => @"Playing as a ... Ghost? Spooky!";
         public override double ScoreMultiplier => UsesDefaultConfiguration ? 1.02 : 1;
+        public override Type[] IncompatibleMods => base.IncompatibleMods.Append(typeof(CatchModHidden)).ToArray();
 
-        [SettingSource("Ghost Invisibility", "The percentage of visibility for the ghost")]
-        public BindableDouble GhostInvisibility { get; } = new BindableDouble(0.25d)
+        [SettingSource("Ghost Invisibility", "The maximum percentage of visibility for the ghost")]
+        public BindableDouble GhostInvisibility { get; } = new BindableDouble(0.50d)
         {
-            MinValue = 0.01d,
-            MaxValue = 0.50d,
+            MinValue = 0.10d,
+            MaxValue = 0.60d,
             Precision = 0.01d
         };
 

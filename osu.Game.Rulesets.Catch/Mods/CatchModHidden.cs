@@ -1,6 +1,8 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System.Linq;
+using System;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
@@ -24,6 +26,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override ModType Type => ModType.DifficultyIncrease;
         public override LocalisableString Description => @"Play with fading fruits.";
         public override double ScoreMultiplier => UsesDefaultConfiguration ? 1.06 : 1;
+        public override Type[] IncompatibleMods => base.IncompatibleMods.Append(typeof(CatchModGhostMode)).ToArray();
 
         [SettingSource("Hidden Distance", "The distance to apply Hidden")]
         public BindableDouble HiddenDistance { get; } = new BindableDouble(0.60d)
