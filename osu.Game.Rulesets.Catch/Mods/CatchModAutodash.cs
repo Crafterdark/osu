@@ -41,8 +41,9 @@ namespace osu.Game.Rulesets.Catch.Mods
         {
             double halfCatcherWidth = catcher.CatchWidth / 2;
             int directionToNext = (catcher.X - incomingCatchObject.EffectiveX < 0) ? 0 : 1; //0 is left, 1 is right
+            bool isObjectInPlate = CheckObjectInPlate(catcher.X, halfCatcherWidth, incomingCatchObject.EffectiveX);
             double correctCatcherX = (directionToNext > 0) ? catcher.X + halfCatcherWidth : catcher.X - halfCatcherWidth;
-            double totalDistanceToReachObject = Math.Abs(correctCatcherX - incomingCatchObject.EffectiveX);
+            double totalDistanceToReachObject = isObjectInPlate ? 0 : Math.Abs(correctCatcherX - incomingCatchObject.EffectiveX);
             double totalTimeLeft = incomingCatchObject.GetEndTime() - exactTime;
             if (totalTimeLeft * Catcher.BASE_WALK_SPEED < totalDistanceToReachObject)
             {
@@ -52,6 +53,11 @@ namespace osu.Game.Rulesets.Catch.Mods
             {
                 catcher.Dashing = false;
             }
+        }
+
+        public bool CheckObjectInPlate(double catcherX, double halfCatcherX, double catchObjectX)
+        {
+            return catchObjectX <= catcherX + halfCatcherX && catchObjectX >= catcherX - halfCatcherX;
         }
 
         public void Update(Playfield playfield)
