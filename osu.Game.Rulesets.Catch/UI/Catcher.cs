@@ -123,6 +123,11 @@ namespace osu.Game.Rulesets.Catch.UI
         public bool IsAutoDashing { get; set; } = false;
 
         /// <summary>
+        /// Whether the catcher is moving automatically.
+        /// </summary>
+        public bool IsAutopilot { get; set; } = false;
+
+        /// <summary>
         /// Whether the catcher is a ghost.
         /// </summary>
         public bool IsGhost { get; set; } = false;
