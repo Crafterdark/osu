@@ -132,6 +132,7 @@ namespace osu.Game.Rulesets.Catch
                     {
                         new MultiMod(new CatchModAutoplay(), new CatchModCinema()),
                         new CatchModAutodash(),
+                        new CatchModAutopilot(),
                         new CatchModRelax(),
                     };
 

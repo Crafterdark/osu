@@ -46,6 +46,8 @@ namespace osu.Game.Rulesets.Catch.UI
         // TODO: support replay rewind
         private bool lastHyperDashState;
 
+        public int CurrentDirectionFromMod { get; set; }
+
         /// <remarks>
         /// <see cref="Catcher"/> must be set before loading.
         /// </remarks>
@@ -88,7 +90,7 @@ namespace osu.Game.Rulesets.Catch.UI
 
             SetCatcherPosition(
                 replayState?.CatcherX ??
-                (float)(Catcher.X + Catcher.Speed * currentDirection * Clock.ElapsedFrameTime));
+                (float)(Catcher.X + Catcher.Speed * GetCurrentDirection() * Clock.ElapsedFrameTime));
         }
 
         protected override void UpdateAfterChildren()
@@ -137,11 +139,11 @@ namespace osu.Game.Rulesets.Catch.UI
             switch (e.Action)
             {
                 case CatchAction.MoveLeft:
-                    currentDirection--;
+                    if (!Catcher.IsAutopilot) currentDirection--;
                     return true;
 
                 case CatchAction.MoveRight:
-                    currentDirection++;
+                    if (!Catcher.IsAutopilot) currentDirection++;
                     return true;
 
                 case CatchAction.Dash:
@@ -152,16 +154,22 @@ namespace osu.Game.Rulesets.Catch.UI
             return false;
         }
 
+        public int GetCurrentDirection()
+        {
+            if (!Catcher.IsAutopilot) return currentDirection;
+            else return CurrentDirectionFromMod;
+        }
+
         public void OnReleased(KeyBindingReleaseEvent<CatchAction> e)
         {
             switch (e.Action)
             {
                 case CatchAction.MoveLeft:
-                    currentDirection++;
+                    if (!Catcher.IsAutopilot) currentDirection++;
                     break;
 
                 case CatchAction.MoveRight:
-                    currentDirection--;
+                    if (!Catcher.IsAutopilot) currentDirection--;
                     break;
 
                 case CatchAction.Dash:
