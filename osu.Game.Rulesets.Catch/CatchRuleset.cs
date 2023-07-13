@@ -91,6 +91,9 @@ namespace osu.Game.Rulesets.Catch
 
             if (mods.HasFlagFast(LegacyMods.Relax))
                 yield return new CatchModRelax();
+
+            if (mods.HasFlagFast(LegacyMods.ScoreV2))
+                yield return new ModScoreV2();
         }
 
         public override IEnumerable<Mod> GetModsFor(ModType type)
@@ -148,6 +151,12 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModDodgeFruits(),
                         new CatchModTwinCatchers(),
                         new CatchModWraparound(),
+                    };
+
+                case ModType.System:
+                    return new Mod[]
+                    {
+                        new ModScoreV2(),
                     };
 
                 default:
