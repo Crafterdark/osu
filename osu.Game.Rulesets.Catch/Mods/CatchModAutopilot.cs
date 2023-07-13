@@ -18,7 +18,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override string Acronym => "AP";
         public override IconUsage? Icon => OsuIcon.ModAutopilot;
         public override ModType Type => ModType.Automation;
-        public override LocalisableString Description => @"Automatic catcher movement - Dash when necessary.";
+        public override LocalisableString Description => @"Automatic catcher movement - Change the type of plate when necessary.";
         public override double ScoreMultiplier => 0.1;
         public override Type[] IncompatibleMods => new[] { typeof(CatchModAutodash), typeof(CatchModRelax) };
 

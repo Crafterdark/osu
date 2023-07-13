@@ -18,7 +18,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override string Acronym => "AD";
         public override IconUsage? Icon => null;
         public override ModType Type => ModType.Automation;
-        public override LocalisableString Description => "Every form of dashing will be handled automatically.";
+        public override LocalisableString Description => "Dashing will be handled automatically.";
         public override double ScoreMultiplier => 0.5;
         public override Type[] IncompatibleMods => new[] { typeof(CatchModRelax), typeof(CatchModAutopilot) };
 

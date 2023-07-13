@@ -20,8 +20,8 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override string Name => "Dodge Fruits";
         public override string Acronym => "DF";
         public override IconUsage? Icon => null;
-        public override ModType Type => ModType.Conversion;
-        public override LocalisableString Description => @"Dodge the beat!";
+        public override ModType Type => ModType.Fun;
+        public override LocalisableString Description => @"Dodge the beat! Do not catch fruits.";
         public override double ScoreMultiplier => UsesDefaultConfiguration ? 0.1 : 0.1;
 
         [SettingSource("Extra Health Reduction", "The health reduction penalty from catching fruits.")]

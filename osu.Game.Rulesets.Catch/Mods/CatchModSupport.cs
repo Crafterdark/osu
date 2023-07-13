@@ -3,6 +3,7 @@
 
 using System;
 using osu.Framework.Graphics;
+using osu.Framework.Graphics.Sprites;
 using osu.Framework.Input;
 using osu.Framework.Input.Bindings;
 using osu.Framework.Input.Events;
@@ -16,12 +17,17 @@ using osuTK;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
-    public partial class CatchModRelax : ModRelax, IApplicableToDrawableRuleset<CatchHitObject>, IApplicableToPlayer
+    public partial class CatchModSupport : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IApplicableToPlayer
     {
-        public override LocalisableString Description => @"Use the mouse to control the catcher.";
+        public override string Name => "Support";
+        public override string Acronym => "ST";
+        public override LocalisableString Description => @"Use the mouse to control the fruits. Follow the catcher.";
+        public override IconUsage? Icon => null;
+        public override ModType Type => ModType.Automation;
 
         private DrawableCatchRuleset drawableRuleset = null!;
-        public override Type[] IncompatibleMods => new[] { typeof(CatchModAutodash), typeof(CatchModAutopilot) };
+        public override double ScoreMultiplier => 0.1;
+        public override Type[] IncompatibleMods => new[] { typeof(CatchModAutoplay), typeof(CatchModAutodash), typeof(CatchModAutopilot), typeof(CatchModRelax), typeof(CatchModCinema) };
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {
@@ -46,7 +52,6 @@ namespace osu.Game.Rulesets.Catch.Mods
             public MouseInputHelper(CatcherArea catcherArea)
             {
                 this.catcherArea = catcherArea;
-
                 RelativeSizeAxes = Axes.Both;
             }
 

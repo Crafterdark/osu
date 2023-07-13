@@ -21,9 +21,9 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override string Name => "Ghost Mode";
         public override string Acronym => "GM";
         public override IconUsage? Icon => null;
-        public override ModType Type => ModType.DifficultyIncrease;
-        public override LocalisableString Description => @"Playing as a ... Ghost? Spooky!";
-        public override double ScoreMultiplier => UsesDefaultConfiguration ? 1.02 : 1;
+        public override ModType Type => ModType.Fun;
+        public override LocalisableString Description => @"Playing as a ... Ghost?! Spooky!";
+        public override double ScoreMultiplier => UsesDefaultConfiguration ? 1 : 1;
         public override Type[] IncompatibleMods => base.IncompatibleMods.Append(typeof(CatchModHidden)).ToArray();
 
         [SettingSource("Ghost Invisibility", "The maximum percentage of visibility for the ghost")]
@@ -39,7 +39,10 @@ namespace osu.Game.Rulesets.Catch.Mods
             var drawableCatchRuleset = (DrawableCatchRuleset)drawableRuleset;
             var catchPlayfield = (CatchPlayfield)drawableCatchRuleset.Playfield;
 
-            catchPlayfield.Catcher.CatchFruitOnPlate = false;
+            //Just in case, the mod looks better with this
+            catchPlayfield.Catcher.CatchFruitOnPlate = true;
+
+            //Everything ghost related
             catchPlayfield.Catcher.CatchLighting = false;
             catchPlayfield.Catcher.IsGhost = true;
             catchPlayfield.Catcher.Alpha = (float)GhostInvisibility.Value;

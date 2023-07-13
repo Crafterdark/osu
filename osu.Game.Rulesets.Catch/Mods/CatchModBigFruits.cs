@@ -21,7 +21,7 @@ namespace osu.Game.Rulesets.Catch.Mods
 
         public override string Name => "Big Fruits";
 
-        public override LocalisableString Description => "Every fruit is slightly bigger and easier to catch.";
+        public override LocalisableString Description => "Fruits are slightly bigger and easier to catch.";
         //Note: This does not affect Circle Size, but it affects player catching ranges!
         public override IconUsage? Icon => null;
 

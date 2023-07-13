@@ -114,7 +114,6 @@ namespace osu.Game.Rulesets.Catch
                         new MultiMod(new CatchModDoubleTime(), new CatchModNightcore()),
                         new MultiMod(new CatchModHidden(), new CatchModFadeIn()),
                         new CatchModFlashlight(),
-                        new CatchModGhostMode(),
                         new ModAccuracyChallenge(),
                     };
 
@@ -124,7 +123,8 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModDifficultyAdjust(),
                         new CatchModClassic(),
                         new CatchModMirror(),
-                        new CatchModDodgeFruits()
+                        new CatchModStroller(),
+                        new CatchModTeleport(),
                     };
 
                 case ModType.Automation:
@@ -133,6 +133,7 @@ namespace osu.Game.Rulesets.Catch
                         new MultiMod(new CatchModAutoplay(), new CatchModCinema()),
                         new CatchModAutodash(),
                         new CatchModAutopilot(),
+                        new CatchModSupport(),
                         new CatchModRelax(),
                     };
 
@@ -143,6 +144,10 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModFloatingFruits(),
                         new CatchModMuted(),
                         new CatchModNoScope(),
+                        new CatchModGhostMode(),
+                        new CatchModDodgeFruits(),
+                        new CatchModTwinCatchers(),
+                        new CatchModWraparound(),
                     };
 
                 default:
