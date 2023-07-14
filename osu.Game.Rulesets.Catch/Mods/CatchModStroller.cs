@@ -4,11 +4,13 @@
 using System;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
+using osu.Game.Beatmaps;
+using osu.Game.Rulesets.Catch.Beatmaps;
 using osu.Game.Rulesets.Mods;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
-    public class CatchModStroller : Mod, IApplicableMod
+    public class CatchModStroller : Mod, IApplicableToBeatmapProcessor
     {
         public override string Name => "Stroller";
         public override string Acronym => "SR";
@@ -18,6 +20,11 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override double ScoreMultiplier => 1.0;
         public override Type[] IncompatibleMods => new[] { typeof(CatchModAutodash), typeof(CatchModRelax), typeof(CatchModTeleport) };
 
+        public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
+        {
+            var catchProcessor = (CatchBeatmapProcessor)beatmapProcessor;
+            catchProcessor.StrollerOffsets = true;
+        }
 
     }
 }

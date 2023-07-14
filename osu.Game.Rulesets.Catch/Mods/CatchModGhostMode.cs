@@ -39,9 +39,6 @@ namespace osu.Game.Rulesets.Catch.Mods
             var drawableCatchRuleset = (DrawableCatchRuleset)drawableRuleset;
             var catchPlayfield = (CatchPlayfield)drawableCatchRuleset.Playfield;
 
-            //Just in case, the mod looks better with this
-            catchPlayfield.Catcher.CatchFruitOnPlate = true;
-
             //Everything ghost related
             catchPlayfield.Catcher.CatchLighting = false;
             catchPlayfield.Catcher.IsGhost = true;

@@ -73,12 +73,12 @@ namespace osu.Game.Rulesets.Catch.UI
         public void OnNewResult(DrawableCatchHitObject hitObject, JudgementResult result)
         {
             Catcher.OnNewResult(hitObject, result);
-            if (!Catcher.IsGhost) comboDisplay.OnNewResult(hitObject, result);
+            comboDisplay.OnNewResult(hitObject, result);
         }
 
         public void OnRevertResult(JudgementResult result)
         {
-            if (!Catcher.IsGhost) comboDisplay.OnRevertResult(result);
+            comboDisplay.OnRevertResult(result);
             Catcher.OnRevertResult(result);
         }
 
@@ -97,7 +97,9 @@ namespace osu.Game.Rulesets.Catch.UI
         {
             base.UpdateAfterChildren();
 
-            if (!Catcher.IsGhost) comboDisplay.X = Catcher.X;
+            if (Catcher.IsGhost) comboDisplay.Alpha = Catcher.Alpha;
+
+            comboDisplay.X = Catcher.X;
 
             if ((Clock as IGameplayClock)?.IsRewinding == true)
             {
