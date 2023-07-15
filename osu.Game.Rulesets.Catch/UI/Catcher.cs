@@ -294,9 +294,14 @@ namespace osu.Game.Rulesets.Catch.UI
                 if (palpableObject.HitObject.LastInCombo)
                 {
                     if (result.Judgement is CatchJudgement catchJudgement && catchJudgement.ShouldExplodeFor(result))
-                        Explode();
+                    {
+                        if (!IsGhost) Explode();
+                        else Drop();
+                    }
                     else
-                        Drop();
+                    {
+                        if (!IsGhost) Drop();
+                    }
                 }
 
                 return;
@@ -335,9 +340,14 @@ namespace osu.Game.Rulesets.Catch.UI
             if (palpableObject.HitObject.LastInCombo)
             {
                 if (result.Judgement is CatchJudgement catchJudgement && catchJudgement.ShouldExplodeFor(result))
-                    Explode();
+                {
+                    if (!IsGhost) Explode();
+                    else Drop();
+                }
                 else
-                    Drop();
+                {
+                    if (!IsGhost) Drop();
+                }
             }
         }
 
@@ -530,6 +540,9 @@ namespace osu.Game.Rulesets.Catch.UI
 
         private void applyDropAnimation(Drawable d, DroppedObjectAnimation animation)
         {
+            //Ghost Mode
+            d.Alpha = Alpha;
+
             switch (animation)
             {
                 case DroppedObjectAnimation.Drop:

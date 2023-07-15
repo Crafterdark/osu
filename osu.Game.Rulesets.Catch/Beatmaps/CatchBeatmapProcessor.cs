@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NuGet.Protocol.Plugins;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.UI;
@@ -52,7 +51,6 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             var rng = new LegacyRandom(RNG_SEED);
 
             float? lastPosition = null;
-            float? lastOffset = null;
             double lastStartTime = 0;
 
             foreach (var obj in beatmap.HitObjects.OfType<CatchHitObject>())
@@ -64,8 +62,6 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                     case Fruit fruit:
                         if (HardRockOffsets)
                             applyHardRockOffset(fruit, ref lastPosition, ref lastStartTime, rng);
-                        if (StrollerOffsets)
-                            applyStrollerOffset(fruit, ref lastPosition, ref lastOffset, ref lastStartTime, beatmap);
                         break;
 
                     case BananaShower bananaShower:
@@ -86,15 +82,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         // Todo: BUG!! Stable attempted to use the end time of the stream, but referenced it too early in execution and used the start time instead.
                         lastStartTime = juiceStream.StartTime;
 
-                        if (StrollerOffsets)
-                            applyStrollerOffset(juiceStream, ref lastPosition, ref lastOffset, ref lastStartTime, beatmap);
-
                         foreach (var nested in juiceStream.NestedHitObjects)
                         {
                             var catchObject = (CatchHitObject)nested;
-
-                            if (StrollerOffsets)
-                                applyStrollerOffset(catchObject, ref lastPosition, ref lastOffset, ref lastStartTime, beatmap);
 
                             catchObject.XOffset = 0;
 
@@ -102,91 +92,16 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                                 catchObject.XOffset = Math.Clamp(rng.Next(-20, 20), -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
                             else if (catchObject is Droplet)
                                 rng.Next(); // osu!stable retrieved a random droplet rotation
-
                         }
 
                         break;
                 }
             }
 
-            if (!StrollerOffsets) initialiseHyperDash(beatmap);
+            initialiseHyperDash(beatmap);
+
         }
 
-        private static void applyStrollerOffset(CatchHitObject hitObject, ref float? lastPosition, ref float? lastOffset, ref double lastStartTime, IBeatmap beatmap)
-        {
-            //This function must consider HR being already applied
-            float offsetPosition = hitObject.OriginalX;
-            float offset = hitObject.XOffset;
-            double startTime = hitObject.StartTime;
-
-            if (lastPosition == null || lastOffset == null)
-            {
-                lastPosition = offsetPosition;
-                lastOffset = offset;
-                lastStartTime = startTime;
-
-                return;
-            }
-
-            float effectivePosition = hitObject.OriginalX + hitObject.XOffset;
-            float lastEffectivePosition = lastPosition.Value + lastOffset.Value;
-
-            float positionDiff = effectivePosition - lastEffectivePosition; //right > 0, left < 0, same = 0
-
-            // Todo: BUG!! Stable calculated time deltas as ints, which affects randomisation. This should be changed to a double.
-            int timeDiff = (int)(startTime - lastStartTime);
-
-            double CatcherWidth = Catcher.CalculateCatchWidth(beatmap.Difficulty);
-
-            int currentJumpDirection = (positionDiff >= 0) ? (positionDiff == 0 ? 0 : 1) : -1;
-
-            if (currentJumpDirection == 0)
-            {
-
-                lastPosition = hitObject.OriginalX;
-                lastOffset = hitObject.XOffset;
-                lastStartTime = startTime;
-
-                return;
-            }
-
-            double totalDistanceCatcherWalk = timeDiff * Catcher.BASE_WALK_SPEED;
-
-            //This is used to consider pixel walk jump
-            double minimumDistanceToReachNextObject = Math.Abs(positionDiff);
-
-            //Impossible jump/walk
-            if (totalDistanceCatcherWalk < minimumDistanceToReachNextObject)
-            {
-                double distanceLeftToReachNextObject = minimumDistanceToReachNextObject - totalDistanceCatcherWalk;
-                if (currentJumpDirection > 0)
-                {
-                    //Current Jump direction [lastPosition] -> [offsetPosition]
-                    //To fill the gap, [offsetPosition] must go closer to [lastPosition] (<-)
-
-                    hitObject.XOffset += -(float)distanceLeftToReachNextObject;
-
-                }
-                else
-                {
-                    //Current Jump direction [offsetPosition] <- [lastPosition]
-                    //To fill the gap, [offsetPosition] must go closer to [lastPosition] (->)
-
-                    hitObject.XOffset += (float)distanceLeftToReachNextObject;
-
-                }
-            }
-
-            //Possible jump/walk
-            else
-            {
-
-            }
-
-            lastPosition = hitObject.OriginalX;
-            lastOffset = hitObject.XOffset;
-            lastStartTime = startTime;
-        }
 
         private static void applyHardRockOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime, LegacyRandom rng)
         {

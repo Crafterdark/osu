@@ -27,7 +27,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override Type[] IncompatibleMods => base.IncompatibleMods.Append(typeof(CatchModHidden)).ToArray();
 
         [SettingSource("Ghost Invisibility", "The maximum percentage of visibility for the ghost")]
-        public BindableDouble GhostInvisibility { get; } = new BindableDouble(0.50d)
+        public BindableDouble GhostInvisibility { get; } = new BindableDouble(0.25d)
         {
             MinValue = 0.10d,
             MaxValue = 0.60d,
