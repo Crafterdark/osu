@@ -1,10 +1,9 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
-#nullable disable
-
 using osu.Framework.Allocation;
 using osu.Framework.Bindables;
+using osu.Framework.Extensions.ObjectExtensions;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Game.Rulesets.Judgements;
@@ -22,7 +21,7 @@ namespace osu.Game.Screens.Play.HUD
         private readonly Bindable<bool> showHealthBar = new Bindable<bool>(true);
 
         [Resolved]
-        protected HealthProcessor HealthProcessor { get; private set; }
+        protected HealthProcessor HealthProcessor { get; private set; } = null!;
 
         public Bindable<double> Current { get; } = new BindableDouble(1)
         {
@@ -30,12 +29,24 @@ namespace osu.Game.Screens.Play.HUD
             MaxValue = 1
         };
 
+        /// <summary>
+        /// Triggered when a <see cref="Judgement"/> is a successful hit, signaling the health display to perform a flash animation (if designed to do so).
+        /// </summary>
+        /// <param name="result">The judgement result.</param>
         protected virtual void Flash(JudgementResult result)
         {
         }
 
-        [Resolved(canBeNull: true)]
-        private HUDOverlay hudOverlay { get; set; }
+        /// <summary>
+        /// Triggered when a <see cref="Judgement"/> resulted in the player losing health.
+        /// </summary>
+        /// <param name="result">The judgement result.</param>
+        protected virtual void Miss(JudgementResult result)
+        {
+        }
+
+        [Resolved]
+        private HUDOverlay? hudOverlay { get; set; }
 
         protected override void LoadComplete()
         {
@@ -55,13 +66,15 @@ namespace osu.Game.Screens.Play.HUD
         {
             if (judgement.IsHit && judgement.Type != HitResult.IgnoreHit)
                 Flash(judgement);
+            else if (judgement.Judgement.HealthIncreaseFor(judgement) < 0)
+                Miss(judgement);
         }
 
         protected override void Dispose(bool isDisposing)
         {
             base.Dispose(isDisposing);
 
-            if (HealthProcessor != null)
+            if (HealthProcessor.IsNotNull())
                 HealthProcessor.NewJudgement -= onNewJudgement;
         }
     }

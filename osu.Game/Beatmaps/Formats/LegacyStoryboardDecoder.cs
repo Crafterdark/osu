@@ -1,8 +1,6 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,10 +17,10 @@ namespace osu.Game.Beatmaps.Formats
 {
     public class LegacyStoryboardDecoder : LegacyDecoder<Storyboard>
     {
-        private StoryboardSprite storyboardSprite;
-        private CommandTimelineGroup timelineGroup;
+        private StoryboardSprite? storyboardSprite;
+        private CommandTimelineGroup? timelineGroup;
 
-        private Storyboard storyboard;
+        private Storyboard storyboard = null!;
 
         private readonly Dictionary<string, string> variables = new Dictionary<string, string>();
 
@@ -114,7 +112,7 @@ namespace osu.Game.Beatmaps.Formats
                         //
                         // This avoids potential weird crashes when ffmpeg attempts to parse an image file as a video
                         // (see https://github.com/ppy/osu/issues/22829#issuecomment-1465552451).
-                        if (!OsuGameBase.VIDEO_EXTENSIONS.Contains(Path.GetExtension(path)))
+                        if (!OsuGameBase.VIDEO_EXTENSIONS.Contains(Path.GetExtension(path).ToLowerInvariant()))
                             break;
 
                         storyboard.GetLayer("Video").Add(new StoryboardVideo(path, offset));
