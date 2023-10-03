@@ -44,6 +44,11 @@ namespace osu.Game.Rulesets.Edit
     public abstract partial class HitObjectComposer<TObject> : HitObjectComposer, IPlacementHandler
         where TObject : HitObject
     {
+        /// <summary>
+        /// Whether the playfield should be centered horizontally. Should be disabled for playfields which span the full horizontal width.
+        /// </summary>
+        protected virtual bool ApplyHorizontalCentering => true;
+
         protected IRulesetConfigManager Config { get; private set; }
 
         // Provides `Playfield`
@@ -82,6 +87,8 @@ namespace osu.Game.Rulesets.Edit
         private IBindable<bool> hasTiming;
         private Bindable<bool> autoSeekOnPlacement;
 
+        protected DrawableRuleset<TObject> DrawableRuleset { get; private set; }
+
         protected HitObjectComposer(Ruleset ruleset)
             : base(ruleset)
         {
@@ -99,7 +106,8 @@ namespace osu.Game.Rulesets.Edit
 
             try
             {
-                drawableRulesetWrapper = new DrawableEditorRulesetWrapper<TObject>(CreateDrawableRuleset(Ruleset, EditorBeatmap.PlayableBeatmap, new[] { Ruleset.GetAutoplayMod() }))
+                DrawableRuleset = CreateDrawableRuleset(Ruleset, EditorBeatmap.PlayableBeatmap, new[] { Ruleset.GetAutoplayMod() });
+                drawableRulesetWrapper = new DrawableEditorRulesetWrapper<TObject>(DrawableRuleset)
                 {
                     Clock = EditorClock,
                     ProcessCustomClock = false
@@ -119,8 +127,6 @@ namespace osu.Game.Rulesets.Edit
                 {
                     Name = "Playfield content",
                     RelativeSizeAxes = Axes.Y,
-                    Anchor = Anchor.Centre,
-                    Origin = Anchor.Centre,
                     Children = new Drawable[]
                     {
                         // layers below playfield
@@ -241,8 +247,23 @@ namespace osu.Game.Rulesets.Edit
         {
             base.Update();
 
-            // Ensure that the playfield is always centered but also doesn't get cut off by toolboxes.
-            PlayfieldContentContainer.Width = Math.Max(1024, DrawWidth) - TOOLBOX_CONTRACTED_SIZE_RIGHT * 2;
+            if (ApplyHorizontalCentering)
+            {
+                PlayfieldContentContainer.Anchor = Anchor.Centre;
+                PlayfieldContentContainer.Origin = Anchor.Centre;
+
+                // Ensure that the playfield is always centered but also doesn't get cut off by toolboxes.
+                PlayfieldContentContainer.Width = Math.Max(1024, DrawWidth) - TOOLBOX_CONTRACTED_SIZE_RIGHT * 2;
+                PlayfieldContentContainer.X = 0;
+            }
+            else
+            {
+                PlayfieldContentContainer.Anchor = Anchor.CentreLeft;
+                PlayfieldContentContainer.Origin = Anchor.CentreLeft;
+
+                PlayfieldContentContainer.Width = Math.Max(1024, DrawWidth) - (TOOLBOX_CONTRACTED_SIZE_LEFT + TOOLBOX_CONTRACTED_SIZE_RIGHT);
+                PlayfieldContentContainer.X = TOOLBOX_CONTRACTED_SIZE_LEFT;
+            }
         }
 
         public override Playfield Playfield => drawableRulesetWrapper.Playfield;
@@ -286,7 +307,7 @@ namespace osu.Game.Rulesets.Edit
         /// <param name="beatmap">The loaded beatmap.</param>
         /// <param name="mods">The mods to be applied.</param>
         /// <returns>An editor-relevant <see cref="DrawableRuleset{TObject}"/>.</returns>
-        protected virtual DrawableRuleset<TObject> CreateDrawableRuleset(Ruleset ruleset, IBeatmap beatmap, IReadOnlyList<Mod> mods = null)
+        protected virtual DrawableRuleset<TObject> CreateDrawableRuleset(Ruleset ruleset, IBeatmap beatmap, IReadOnlyList<Mod> mods)
             => (DrawableRuleset<TObject>)ruleset.CreateDrawableRulesetWith(beatmap, mods);
 
         #region Tool selection logic

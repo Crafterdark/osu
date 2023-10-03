@@ -66,7 +66,7 @@ namespace osu.Game.Screens.Edit
 
         public override bool DisallowExternalBeatmapRulesetChanges => true;
 
-        public override bool? AllowTrackAdjustments => false;
+        public override bool? ApplyModTrackAdjustments => false;
 
         protected override bool PlayExitSound => !ExitConfirmed && !switchingDifficulty;
 
@@ -199,6 +199,8 @@ namespace osu.Game.Screens.Edit
 
             if (loadableBeatmap is DummyWorkingBeatmap)
             {
+                Logger.Log("Editor was loaded without a valid beatmap; creating a new beatmap.");
+
                 isNewBeatmap = true;
 
                 loadableBeatmap = beatmapManager.CreateNew(Ruleset.Value, api.LocalUser.Value);
@@ -425,7 +427,8 @@ namespace osu.Game.Screens.Edit
             {
                 dialogOverlay.Push(new SaveBeforeGameplayTestDialog(() =>
                 {
-                    Save();
+                    if (!Save()) return;
+
                     pushEditorPlayer();
                 }));
             }
@@ -711,8 +714,11 @@ namespace osu.Game.Screens.Edit
                 }
 
                 // if the dialog is already displayed, block exiting until the user explicitly makes a decision.
-                if (dialogOverlay.CurrentDialog is PromptForSaveDialog)
+                if (dialogOverlay.CurrentDialog is PromptForSaveDialog saveDialog)
+                {
+                    saveDialog.Flash();
                     return true;
+                }
 
                 if (isNewBeatmap || HasUnsavedChanges)
                 {
@@ -764,7 +770,7 @@ namespace osu.Game.Screens.Edit
 
         private void confirmExitWithSave()
         {
-            Save();
+            if (!Save()) return;
 
             ExitConfirmed = true;
             this.Exit();
@@ -1021,13 +1027,15 @@ namespace osu.Game.Screens.Edit
 
         private void exportBeatmap()
         {
-            Save();
+            if (!Save()) return;
+
             beatmapManager.Export(Beatmap.Value.BeatmapSetInfo);
         }
 
         private void exportLegacyBeatmap()
         {
-            Save();
+            if (!Save()) return;
+
             beatmapManager.ExportLegacy(Beatmap.Value.BeatmapSetInfo);
         }
 

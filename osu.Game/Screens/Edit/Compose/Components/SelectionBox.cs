@@ -3,6 +3,8 @@
 
 using System;
 using osu.Framework.Allocation;
+using osu.Framework.Bindables;
+using osu.Framework.Extensions.EnumExtensions;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Graphics.Shapes;
@@ -22,7 +24,9 @@ namespace osu.Game.Screens.Edit.Compose.Components
 
         private const float button_padding = 5;
 
-        public Func<float, bool>? OnRotation;
+        [Resolved]
+        private SelectionRotationHandler? rotationHandler { get; set; }
+
         public Func<Vector2, Anchor, bool>? OnScale;
         public Func<Direction, bool, bool>? OnFlip;
         public Func<bool>? OnReverse;
@@ -51,22 +55,7 @@ namespace osu.Game.Screens.Edit.Compose.Components
             }
         }
 
-        private bool canRotate;
-
-        /// <summary>
-        /// Whether rotation support should be enabled.
-        /// </summary>
-        public bool CanRotate
-        {
-            get => canRotate;
-            set
-            {
-                if (canRotate == value) return;
-
-                canRotate = value;
-                recreate();
-            }
-        }
+        private readonly IBindable<bool> canRotate = new BindableBool();
 
         private bool canScaleX;
 
@@ -161,7 +150,13 @@ namespace osu.Game.Screens.Edit.Compose.Components
         private OsuColour colours { get; set; } = null!;
 
         [BackgroundDependencyLoader]
-        private void load() => recreate();
+        private void load()
+        {
+            if (rotationHandler != null)
+                canRotate.BindTo(rotationHandler.CanRotate);
+
+            canRotate.BindValueChanged(_ => recreate(), true);
+        }
 
         protected override bool OnKeyDown(KeyDownEvent e)
         {
@@ -174,10 +169,10 @@ namespace osu.Game.Screens.Edit.Compose.Components
                     return CanReverse && reverseButton?.TriggerClick() == true;
 
                 case Key.Comma:
-                    return CanRotate && rotateCounterClockwiseButton?.TriggerClick() == true;
+                    return canRotate.Value && rotateCounterClockwiseButton?.TriggerClick() == true;
 
                 case Key.Period:
-                    return CanRotate && rotateClockwiseButton?.TriggerClick() == true;
+                    return canRotate.Value && rotateClockwiseButton?.TriggerClick() == true;
             }
 
             return base.OnKeyDown(e);
@@ -254,14 +249,14 @@ namespace osu.Game.Screens.Edit.Compose.Components
             if (CanScaleY) addYScaleComponents();
             if (CanFlipX) addXFlipComponents();
             if (CanFlipY) addYFlipComponents();
-            if (CanRotate) addRotationComponents();
+            if (canRotate.Value) addRotationComponents();
             if (CanReverse) reverseButton = addButton(FontAwesome.Solid.Backward, "Reverse pattern (Ctrl-G)", () => OnReverse?.Invoke());
         }
 
         private void addRotationComponents()
         {
-            rotateCounterClockwiseButton = addButton(FontAwesome.Solid.Undo, "Rotate 90 degrees counter-clockwise (Ctrl-<)", () => OnRotation?.Invoke(-90));
-            rotateClockwiseButton = addButton(FontAwesome.Solid.Redo, "Rotate 90 degrees clockwise (Ctrl->)", () => OnRotation?.Invoke(90));
+            rotateCounterClockwiseButton = addButton(FontAwesome.Solid.Undo, "Rotate 90 degrees counter-clockwise (Ctrl-<)", () => rotationHandler?.Rotate(-90));
+            rotateClockwiseButton = addButton(FontAwesome.Solid.Redo, "Rotate 90 degrees clockwise (Ctrl->)", () => rotationHandler?.Rotate(90));
 
             addRotateHandle(Anchor.TopLeft);
             addRotateHandle(Anchor.TopRight);
@@ -313,6 +308,25 @@ namespace osu.Game.Screens.Edit.Compose.Components
             return button;
         }
 
+        /// <remarks>
+        /// This method should be called when a selection needs to be flipped
+        /// because of an ongoing scale handle drag that would otherwise cause width or height to go negative.
+        /// </remarks>
+        public void PerformFlipFromScaleHandles(Axes axes)
+        {
+            if (axes.HasFlagFast(Axes.X))
+            {
+                dragHandles.FlipScaleHandles(Direction.Horizontal);
+                OnFlip?.Invoke(Direction.Horizontal, false);
+            }
+
+            if (axes.HasFlagFast(Axes.Y))
+            {
+                dragHandles.FlipScaleHandles(Direction.Vertical);
+                OnFlip?.Invoke(Direction.Vertical, false);
+            }
+        }
+
         private void addScaleHandle(Anchor anchor)
         {
             var handle = new SelectionBoxScaleHandle
@@ -331,7 +345,6 @@ namespace osu.Game.Screens.Edit.Compose.Components
             var handle = new SelectionBoxRotationHandle
             {
                 Anchor = anchor,
-                HandleRotate = angle => OnRotation?.Invoke(angle)
             };
 
             handle.OperationStarted += operationStarted;
