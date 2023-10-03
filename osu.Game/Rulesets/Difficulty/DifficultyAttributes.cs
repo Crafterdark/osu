@@ -3,10 +3,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Newtonsoft.Json;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Mods;
+using osu.Game.Rulesets.Scoring;
 
 namespace osu.Game.Rulesets.Difficulty
 {
@@ -46,6 +46,22 @@ namespace osu.Game.Rulesets.Difficulty
         public int MaxCombo { get; set; }
 
         /// <summary>
+        /// The accuracy portion of the legacy (ScoreV1) total score.
+        /// </summary>
+        public int LegacyAccuracyScore { get; set; }
+
+        /// <summary>
+        /// The combo-multiplied portion of the legacy (ScoreV1) total score.
+        /// </summary>
+        public int LegacyComboScore { get; set; }
+
+        /// <summary>
+        /// A ratio of <c>new_bonus_score / old_bonus_score</c> for converting the bonus score of legacy scores to the new scoring.
+        /// This is made up of all judgements that would be <see cref="HitResult.SmallBonus"/> or <see cref="HitResult.LargeBonus"/>.
+        /// </summary>
+        public double LegacyBonusScoreRatio { get; set; }
+
+        /// <summary>
         /// Creates new <see cref="DifficultyAttributes"/>.
         /// </summary>
         public DifficultyAttributes()
@@ -69,7 +85,10 @@ namespace osu.Game.Rulesets.Difficulty
         /// <remarks>
         /// See: osu_difficulty_attribs table.
         /// </remarks>
-        public virtual IEnumerable<(int attributeId, object value)> ToDatabaseAttributes() => Enumerable.Empty<(int, object)>();
+        public virtual IEnumerable<(int attributeId, object value)> ToDatabaseAttributes()
+        {
+            yield return (ATTRIB_ID_MAX_COMBO, MaxCombo);
+        }
 
         /// <summary>
         /// Reads osu-web database attribute mappings into this <see cref="DifficultyAttributes"/> object.
@@ -78,6 +97,7 @@ namespace osu.Game.Rulesets.Difficulty
         /// <param name="onlineInfo">The <see cref="IBeatmapOnlineInfo"/> where more information about the beatmap may be extracted from (such as AR/CS/OD/etc).</param>
         public virtual void FromDatabaseAttributes(IReadOnlyDictionary<int, double> values, IBeatmapOnlineInfo onlineInfo)
         {
+            MaxCombo = (int)values[ATTRIB_ID_MAX_COMBO];
         }
     }
 }

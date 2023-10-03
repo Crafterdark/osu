@@ -33,6 +33,7 @@ using osu.Game.Rulesets.Mania.UI;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Replays.Types;
 using osu.Game.Rulesets.Scoring;
+using osu.Game.Rulesets.Scoring.Legacy;
 using osu.Game.Rulesets.UI;
 using osu.Game.Scoring;
 using osu.Game.Screens.Edit.Setup;
@@ -157,6 +158,9 @@ namespace osu.Game.Rulesets.Mania
 
             if (mods.HasFlagFast(LegacyMods.Mirror))
                 yield return new ManiaModMirror();
+
+            if (mods.HasFlagFast(LegacyMods.ScoreV2))
+                yield return new ModScoreV2();
         }
 
         public override LegacyMods ConvertToLegacyMods(Mod[] mods)
@@ -285,6 +289,12 @@ namespace osu.Game.Rulesets.Mania
                         new ModAdaptiveSpeed()
                     };
 
+                case ModType.System:
+                    return new Mod[]
+                    {
+                        new ModScoreV2(),
+                    };
+
                 default:
                     return Array.Empty<Mod>();
             }
@@ -301,6 +311,8 @@ namespace osu.Game.Rulesets.Mania
         public override DifficultyCalculator CreateDifficultyCalculator(IWorkingBeatmap beatmap) => new ManiaDifficultyCalculator(RulesetInfo, beatmap);
 
         public int LegacyID => 3;
+
+        public ILegacyScoreSimulator CreateLegacyScoreSimulator() => new ManiaLegacyScoreSimulator();
 
         public override IConvertibleReplayFrame CreateConvertibleReplayFrame() => new ManiaReplayFrame();
 
@@ -389,41 +401,23 @@ namespace osu.Game.Rulesets.Mania
             return base.GetDisplayNameForHitResult(result);
         }
 
-        public override StatisticRow[] CreateStatisticsForScore(ScoreInfo score, IBeatmap playableBeatmap) => new[]
+        public override StatisticItem[] CreateStatisticsForScore(ScoreInfo score, IBeatmap playableBeatmap) => new[]
         {
-            new StatisticRow
+            new StatisticItem("Performance Breakdown", () => new PerformanceBreakdownChart(score, playableBeatmap)
             {
-                Columns = new[]
-                {
-                    new StatisticItem("Performance Breakdown", () => new PerformanceBreakdownChart(score, playableBeatmap)
-                    {
-                        RelativeSizeAxes = Axes.X,
-                        AutoSizeAxes = Axes.Y
-                    }),
-                }
-            },
-            new StatisticRow
+                RelativeSizeAxes = Axes.X,
+                AutoSizeAxes = Axes.Y
+            }),
+            new StatisticItem("Timing Distribution", () => new HitEventTimingDistributionGraph(score.HitEvents)
             {
-                Columns = new[]
-                {
-                    new StatisticItem("Timing Distribution", () => new HitEventTimingDistributionGraph(score.HitEvents)
-                    {
-                        RelativeSizeAxes = Axes.X,
-                        Height = 250
-                    }, true),
-                }
-            },
-            new StatisticRow
+                RelativeSizeAxes = Axes.X,
+                Height = 250
+            }, true),
+            new StatisticItem("Statistics", () => new SimpleStatisticTable(2, new SimpleStatisticItem[]
             {
-                Columns = new[]
-                {
-                    new StatisticItem(string.Empty, () => new SimpleStatisticTable(3, new SimpleStatisticItem[]
-                    {
-                        new AverageHitError(score.HitEvents),
-                        new UnstableRate(score.HitEvents)
-                    }), true)
-                }
-            }
+                new AverageHitError(score.HitEvents),
+                new UnstableRate(score.HitEvents)
+            }), true)
         };
 
         public override IRulesetFilterCriteria CreateRulesetFilterCriteria()
@@ -432,6 +426,8 @@ namespace osu.Game.Rulesets.Mania
         }
 
         public override RulesetSetupSection CreateEditorSetupSection() => new ManiaSetupSection();
+
+        public override DifficultySection CreateEditorDifficultySection() => new ManiaDifficultySection();
     }
 
     public enum PlayfieldType

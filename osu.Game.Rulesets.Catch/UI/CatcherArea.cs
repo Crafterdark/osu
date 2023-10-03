@@ -12,6 +12,7 @@ using osu.Game.Rulesets.Catch.Objects.Drawables;
 using osu.Game.Rulesets.Catch.Replays;
 using osu.Game.Rulesets.Judgements;
 using osu.Game.Rulesets.UI;
+using osu.Game.Screens.Play;
 using osuTK;
 
 namespace osu.Game.Rulesets.Catch.UI
@@ -186,7 +187,7 @@ namespace osu.Game.Rulesets.Catch.UI
             GetCatchComboDisplay(Catcher).X = Catcher.X;
             if (TwinCatchersApplies) GetCatchComboDisplay(Twin).X = Twin.X;
 
-            if (Time.Elapsed <= 0)
+            if ((Clock as IGameplayClock)?.IsRewinding == true)
             {
                 // This is probably a wrong value, but currently the true value is not recorded.
                 // Setting `true` will prevent generation of false-positive after-images (with more false-negatives).

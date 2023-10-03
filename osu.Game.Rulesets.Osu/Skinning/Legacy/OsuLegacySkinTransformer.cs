@@ -4,6 +4,7 @@
 using System;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics;
+using osu.Game.Rulesets.Osu.Objects;
 using osu.Game.Skinning;
 using osuTK;
 
@@ -20,7 +21,7 @@ namespace osu.Game.Rulesets.Osu.Skinning.Legacy
         /// Their hittable area is 128px, but the actual circle portion is 118px.
         /// We must account for some gameplay elements such as slider bodies, where this padding is not present.
         /// </summary>
-        public const float LEGACY_CIRCLE_RADIUS = 64 - 5;
+        public const float LEGACY_CIRCLE_RADIUS = OsuHitObject.OBJECT_RADIUS - 5;
 
         public OsuLegacySkinTransformer(ISkin skin)
             : base(skin)
@@ -41,14 +42,14 @@ namespace osu.Game.Rulesets.Osu.Skinning.Legacy
                         return this.GetAnimation("sliderscorepoint", false, false);
 
                     case OsuSkinComponents.SliderFollowCircle:
-                        var followCircleContent = this.GetAnimation("sliderfollowcircle", true, true, true);
+                        var followCircleContent = this.GetAnimation("sliderfollowcircle", true, true, true, maxSize: new Vector2(308f));
                         if (followCircleContent != null)
                             return new LegacyFollowCircle(followCircleContent);
 
                         return null;
 
                     case OsuSkinComponents.SliderBall:
-                        var sliderBallContent = this.GetAnimation("sliderb", true, true, animationSeparator: "");
+                        var sliderBallContent = this.GetAnimation("sliderb", true, true, animationSeparator: "", maxSize: OsuHitObject.OBJECT_DIMENSIONS);
 
                         // todo: slider ball has a custom frame delay based on velocity
                         // Math.Max((150 / Velocity) * GameBase.SIXTY_FRAME_TIME, GameBase.SIXTY_FRAME_TIME);
@@ -100,6 +101,28 @@ namespace osu.Game.Rulesets.Osu.Skinning.Legacy
 
                         return null;
 
+                    case OsuSkinComponents.CursorRipple:
+                        if (GetTexture("cursor-ripple") != null)
+                        {
+                            var ripple = this.GetAnimation("cursor-ripple", false, false);
+
+                            // In stable this element was scaled down to 50% and opacity 20%, but this makes the elements WAY too big and inflexible.
+                            // If anyone complains about these not being applied, this can be uncommented.
+                            //
+                            // But if no one complains I'd rather fix this in lazer. Wiki documentation doesn't mention size,
+                            // so we might be okay.
+                            //
+                            // if (ripple != null)
+                            // {
+                            //     ripple.Scale = new Vector2(0.5f);
+                            //     ripple.Alpha = 0.2f;
+                            // }
+
+                            return ripple;
+                        }
+
+                        return null;
+
                     case OsuSkinComponents.CursorParticles:
                         if (GetTexture("star2") != null)
                             return new LegacyCursorParticles();
@@ -116,7 +139,7 @@ namespace osu.Game.Rulesets.Osu.Skinning.Legacy
                         if (!this.HasFont(LegacyFont.HitCircle))
                             return null;
 
-                        return new LegacySpriteText(LegacyFont.HitCircle)
+                        return new LegacySpriteText(LegacyFont.HitCircle, OsuHitObject.OBJECT_DIMENSIONS)
                         {
                             // stable applies a blanket 0.8x scale to hitcircle fonts
                             Scale = new Vector2(0.8f),

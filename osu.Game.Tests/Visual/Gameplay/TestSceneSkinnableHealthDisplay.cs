@@ -1,13 +1,12 @@
-// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
+﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
-
-#nullable disable
 
 using NUnit.Framework;
 using osu.Framework.Allocation;
 using osu.Framework.Graphics;
 using osu.Framework.Testing;
 using osu.Game.Rulesets.Judgements;
+using osu.Game.Rulesets.Objects;
 using osu.Game.Rulesets.Osu.Judgements;
 using osu.Game.Rulesets.Osu.Objects;
 using osu.Game.Rulesets.Scoring;
@@ -21,6 +20,7 @@ namespace osu.Game.Tests.Visual.Gameplay
         [Cached(typeof(HealthProcessor))]
         private HealthProcessor healthProcessor = new DrainingHealthProcessor(0);
 
+        protected override Drawable CreateArgonImplementation() => new ArgonHealthDisplay();
         protected override Drawable CreateDefaultImplementation() => new DefaultHealthDisplay();
         protected override Drawable CreateLegacyImplementation() => new LegacyHealthDisplay();
 
@@ -30,15 +30,21 @@ namespace osu.Game.Tests.Visual.Gameplay
             AddStep(@"Reset all", delegate
             {
                 healthProcessor.Health.Value = 1;
+                healthProcessor.Failed += () => false; // health won't be updated if the processor gets into a "fail" state.
             });
         }
 
         [Test]
         public void TestHealthDisplayIncrementing()
         {
-            AddRepeatStep(@"decrease hp", delegate
+            AddRepeatStep("apply miss judgement", delegate
             {
-                healthProcessor.Health.Value -= 0.08f;
+                healthProcessor.ApplyResult(new JudgementResult(new HitObject(), new Judgement()) { Type = HitResult.Miss });
+            }, 5);
+
+            AddRepeatStep(@"decrease hp slightly", delegate
+            {
+                healthProcessor.Health.Value -= 0.01f;
             }, 10);
 
             AddRepeatStep(@"increase hp without flash", delegate
