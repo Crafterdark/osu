@@ -240,8 +240,11 @@ namespace osu.Game.Rulesets.Catch.UI
                     scaling_factor = (double)1 / 8;
                 }
 
+                //There is no greater effect for OD higher than 10
+                double localCatchAccuracy = Math.Clamp(CatchAccuracy, double.NegativeInfinity, 10);
+
                 //CatchAccuracy is calculated before starting the beatmap. (See CatchModAccuracy.cs)
-                double accuracyDistanceExtension = ((double)Math.Abs(CatchAccuracy - 10) / 10) * halfCatchWidth * scaling_factor * fruitCatcherScale;
+                double accuracyDistanceExtension = ((double)Math.Abs(localCatchAccuracy - 10) / 10) * halfCatchWidth * scaling_factor * fruitCatcherScale;
 
                 //Logger.Log("Current OD:" + CatchAccuracy);
 
