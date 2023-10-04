@@ -57,6 +57,11 @@ namespace osu.Game.Rulesets.Catch.UI
         public bool CatchFruitOnPlate { get; set; } = true;
 
         /// <summary>
+        /// Whether <see cref="DrawablePalpableCatchHitObject"/> fruit should have variable leniency.
+        /// </summary>
+        public bool CatchFruitAccuracy { get; set; } = false;
+
+        /// <summary>
         /// The speed of the catcher when the catcher is dashing.
         /// </summary>
         public const double BASE_DASH_SPEED = 1.0;
@@ -113,7 +118,7 @@ namespace osu.Game.Rulesets.Catch.UI
         /// Width of the area that can be used to attempt catches during gameplay.
         /// </summary>
         public readonly float CatchWidth;
-
+        public double CatchAccuracy;
         private readonly SkinnableCatcher body;
 
         private Color4 hyperDashColour = DEFAULT_HYPER_DASH_COLOUR;
@@ -201,6 +206,49 @@ namespace osu.Game.Rulesets.Catch.UI
                 return false;
 
             float halfCatchWidth = CatchWidth * 0.5f;
+
+            if (CatchFruitAccuracy)
+            {
+
+                // [Can work?] Fruits leniency is rescaled to 2/3 of the catcher plate.
+                double fruitCatcherScale = (double)2 / 3;
+
+                // Fruits, droplet, tiny droplet and banana require different scaling.
+                double scaling_factor = 0;
+
+                if (hitObject is Fruit)
+                {
+                    //Fruit leniency
+                    scaling_factor = 1;
+                }
+
+                if (hitObject is Droplet)
+                {
+                    //Droplet leniency
+                    scaling_factor = (double)1 / 2;
+                }
+
+                if (hitObject is Banana)
+                {
+                    //Banana leniency
+                    scaling_factor = (double)1 / 4;
+                }
+
+                if (hitObject is TinyDroplet)
+                {
+                    //Tiny Droplet leniency
+                    scaling_factor = (double)1 / 8;
+                }
+
+                //CatchAccuracy is calculated before starting the beatmap. (See CatchModAccuracy.cs)
+                double accuracyDistanceExtension = ((double)Math.Abs(CatchAccuracy - 10) / 10) * halfCatchWidth * scaling_factor * fruitCatcherScale;
+
+                //Logger.Log("Current OD:" + CatchAccuracy);
+
+                return fruit.EffectiveX >= X - (halfCatchWidth + accuracyDistanceExtension) &&
+                  fruit.EffectiveX <= X + (halfCatchWidth + accuracyDistanceExtension);
+            }
+
             return fruit.EffectiveX >= X - halfCatchWidth &&
                    fruit.EffectiveX <= X + halfCatchWidth;
         }
