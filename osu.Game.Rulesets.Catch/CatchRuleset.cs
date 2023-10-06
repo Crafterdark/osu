@@ -15,6 +15,7 @@ using osu.Game.Rulesets.Catch.Beatmaps;
 using osu.Game.Rulesets.Catch.Difficulty;
 using osu.Game.Rulesets.Catch.Edit;
 using osu.Game.Rulesets.Catch.Mods;
+using osu.Game.Rulesets.Catch.Mods.Debug_Mods;
 using osu.Game.Rulesets.Catch.Replays;
 using osu.Game.Rulesets.Catch.Scoring;
 using osu.Game.Rulesets.Catch.Skinning.Argon;
@@ -108,7 +109,10 @@ namespace osu.Game.Rulesets.Catch
                     {
                         new CatchModEasy(),
                         new CatchModNoFail(),
-                        new MultiMod(new CatchModHalfTime(), new CatchModDaycore())
+                        new MultiMod(new CatchModHalfTime(), new CatchModDaycore()),
+
+                        //Debug Mods
+                        new CatchModLowPrecision(),
                     };
 
                 case ModType.DifficultyIncrease:
@@ -128,9 +132,6 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModDifficultyAdjust(),
                         new CatchModClassic(),
                         new CatchModMirror(),
-
-                        //Debug Mods
-                        new CatchModAccuracy(),
                     };
 
                 case ModType.Automation:
@@ -138,6 +139,9 @@ namespace osu.Game.Rulesets.Catch
                     {
                         new MultiMod(new CatchModAutoplay(), new CatchModCinema()),
                         new CatchModRelax(),
+
+                        //Debug Mods
+                        new CatchModAutodash(),
                     };
 
                 case ModType.Fun:

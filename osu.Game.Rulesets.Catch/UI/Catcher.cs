@@ -210,46 +210,40 @@ namespace osu.Game.Rulesets.Catch.UI
             if (CatchFruitAccuracy)
             {
 
-                // [Can work?] Fruits leniency is rescaled to 2/3 of the catcher plate.
-                double fruitCatcherScale = (double)2 / 3;
-
-                // Fruits, droplet, tiny droplet and banana require different scaling.
-                double scaling_factor = 0;
+                double rescale_factor = 0;
 
                 if (hitObject is Fruit)
                 {
-                    //Fruit leniency
-                    scaling_factor = 1;
+                    rescale_factor = 1;
                 }
 
                 if (hitObject is Droplet)
                 {
-                    //Droplet leniency
-                    scaling_factor = (double)1 / 2;
+                    rescale_factor = 0.8;
                 }
 
                 if (hitObject is Banana)
                 {
-                    //Banana leniency
-                    scaling_factor = (double)1 / 4;
+                    rescale_factor = 0.6;
                 }
 
                 if (hitObject is TinyDroplet)
                 {
-                    //Tiny Droplet leniency
-                    scaling_factor = (double)1 / 8;
+                    rescale_factor = 0.4;
                 }
 
                 //There is no greater effect for OD higher than 10
                 double localCatchAccuracy = Math.Clamp(CatchAccuracy, double.NegativeInfinity, 10);
 
                 //CatchAccuracy is calculated before starting the beatmap. (See CatchModAccuracy.cs)
-                double accuracyDistanceExtension = ((double)Math.Abs(localCatchAccuracy - 10) / 10) * halfCatchWidth * scaling_factor * fruitCatcherScale;
+                //160 is the current maximum size of fruits.
+                double accuracyDistance = (double)Math.Abs(localCatchAccuracy - 10) / 10 * fruit.Scale * rescale_factor * (160 / 2);
 
                 //Logger.Log("Current OD:" + CatchAccuracy);
+                //Logger.Log("Current Extension:" + accuracyDistance);
 
-                return fruit.EffectiveX >= X - (halfCatchWidth + accuracyDistanceExtension) &&
-                  fruit.EffectiveX <= X + (halfCatchWidth + accuracyDistanceExtension);
+                return fruit.EffectiveX >= X - (halfCatchWidth + accuracyDistance) &&
+                  fruit.EffectiveX <= X + (halfCatchWidth + accuracyDistance);
             }
 
             return fruit.EffectiveX >= X - halfCatchWidth &&

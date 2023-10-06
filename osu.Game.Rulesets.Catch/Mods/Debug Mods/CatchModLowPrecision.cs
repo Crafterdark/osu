@@ -10,23 +10,29 @@ using osu.Game.Rulesets.UI;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
-    public class CatchModAccuracy : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IApplicableToBeatmap
+    public class CatchModLowPrecision : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IApplicableToBeatmap, IApplicableToDifficulty
     {
-        public override string Name => "Accuracy";
+        public override string Name => "Low Precision";
 
-        public override string Acronym => "AY";
+        public override string Acronym => "LP";
 
-        public override LocalisableString Description => "Implementation of Accuracy value to all fruits.";
+        public override LocalisableString Description => "Less accuracy required. Everything becomes easier to catch...";
 
-        public override double ScoreMultiplier => 1;
+        public override double ScoreMultiplier => 0.5;
 
-        public override ModType Type => ModType.Conversion;
+        public override ModType Type => ModType.DifficultyReduction;
 
         public double FinalCatcherAccuracy;
 
         public void ApplyToBeatmap(IBeatmap beatmap)
         {
             FinalCatcherAccuracy = beatmap.Difficulty.OverallDifficulty;
+        }
+
+        public virtual void ApplyToDifficulty(BeatmapDifficulty difficulty)
+        {
+            const float ratio = 2.0f;
+            difficulty.OverallDifficulty /= ratio;
         }
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
@@ -39,5 +45,8 @@ namespace osu.Game.Rulesets.Catch.Mods
             catchPlayfield.Catcher.CatchAccuracy = FinalCatcherAccuracy;
 
         }
+
+        //TO DO: (Visual only) Fix caught objects being placed outside the catcher plate hitbox.
+
     }
 }
