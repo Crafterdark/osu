@@ -232,8 +232,8 @@ namespace osu.Game.Rulesets.Catch.UI
                     rescale_factor = 0.4;
                 }
 
-                //There is no greater effect for OD higher than 10
-                double localCatchAccuracy = Math.Clamp(CatchAccuracy, double.NegativeInfinity, 10);
+                //OD must stay in range [0,10] (Temporary)
+                double localCatchAccuracy = Math.Clamp(CatchAccuracy, 0.0d, 10.0d);
 
                 //CatchAccuracy is calculated before starting the beatmap. (See CatchModAccuracy.cs)
                 //160 is the current maximum size of fruits.
@@ -264,6 +264,8 @@ namespace osu.Game.Rulesets.Catch.UI
             if (result.IsHit)
             {
                 var positionInStack = computePositionInStack(new Vector2(palpableObject.X - X, 0), palpableObject.DisplaySize.X);
+
+                if (CatchFruitAccuracy) positionInStack = computePositionInStack(new Vector2(Math.Clamp(palpableObject.X - X, -1 * CatchWidth / 2, CatchWidth / 2), 0), palpableObject.DisplaySize.X);
 
                 if (CatchFruitOnPlate)
                     placeCaughtObject(palpableObject, positionInStack);

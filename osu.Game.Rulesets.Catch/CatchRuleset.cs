@@ -112,7 +112,8 @@ namespace osu.Game.Rulesets.Catch
                         new MultiMod(new CatchModHalfTime(), new CatchModDaycore()),
 
                         //Debug Mods
-                        new CatchModLowPrecision(),
+                        new CatchModLowPrecisionTypeA(),
+                        new CatchModLowPrecisionTypeB(),
                     };
 
                 case ModType.DifficultyIncrease:
@@ -141,7 +142,7 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModRelax(),
 
                         //Debug Mods
-                        new CatchModAutodash(),
+                        new CatchModAutoDash(),
                     };
 
                 case ModType.Fun:

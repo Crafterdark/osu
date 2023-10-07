@@ -8,7 +8,7 @@ using osu.Game.Rulesets.UI;
 
 namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
 {
-    public class CatchModAutodash : Mod, IApplicableToDrawableRuleset<CatchHitObject>
+    public class CatchModAutoDash : Mod, IApplicableToDrawableRuleset<CatchHitObject>
     {
         public override string Name => "Autodash";
 
