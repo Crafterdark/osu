@@ -3,6 +3,7 @@
 
 using osu.Framework.Localisation;
 using osu.Game.Rulesets.Catch.Objects;
+using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.UI;
 
@@ -22,6 +23,10 @@ namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {
+            var drawableCatchRuleset = (DrawableCatchRuleset)drawableRuleset;
+            var catchRuleset = (CatchPlayfield)drawableCatchRuleset.Playfield;
+
+            catchRuleset.CatcherArea.DisabledDashing = true;
 
         }
     }

@@ -28,6 +28,8 @@ namespace osu.Game.Rulesets.Catch.UI
             set => catcherContainer.Child = catcher = value;
         }
 
+        public bool DisabledDashing { get; set; } = false;
+
         private readonly Container<Catcher> catcherContainer;
 
         private readonly CatchComboDisplay comboDisplay;
@@ -145,6 +147,7 @@ namespace osu.Game.Rulesets.Catch.UI
                     return true;
 
                 case CatchAction.Dash:
+                    if (DisabledDashing) return false;
                     Catcher.Dashing = true;
                     return true;
             }
@@ -165,6 +168,7 @@ namespace osu.Game.Rulesets.Catch.UI
                     break;
 
                 case CatchAction.Dash:
+                    if (DisabledDashing) break;
                     Catcher.Dashing = false;
                     break;
             }
