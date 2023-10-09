@@ -13,6 +13,7 @@ using osu.Framework.Utils;
 using osu.Game.Beatmaps;
 using osu.Game.Configuration;
 using osu.Game.Rulesets.Catch.Judgements;
+using osu.Game.Rulesets.Catch.Mods;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.Objects.Drawables;
 using osu.Game.Rulesets.Catch.Skinning;
@@ -59,7 +60,7 @@ namespace osu.Game.Rulesets.Catch.UI
         /// <summary>
         /// Whether <see cref="DrawablePalpableCatchHitObject"/> fruit should have variable leniency.
         /// </summary>
-        public bool CatchFruitAccuracy { get; set; } = false;
+        public bool CatchFruitLeniency { get; set; } = false;
 
         /// <summary>
         /// The speed of the catcher when the catcher is dashing.
@@ -118,7 +119,7 @@ namespace osu.Game.Rulesets.Catch.UI
         /// Width of the area that can be used to attempt catches during gameplay.
         /// </summary>
         public readonly float CatchWidth;
-        public double CatchAccuracy;
+        public double CatchLeniencySlider;
         private readonly SkinnableCatcher body;
 
         private Color4 hyperDashColour = DEFAULT_HYPER_DASH_COLOUR;
@@ -207,43 +208,15 @@ namespace osu.Game.Rulesets.Catch.UI
 
             float halfCatchWidth = CatchWidth * 0.5f;
 
-            if (CatchFruitAccuracy)
+            if (CatchFruitLeniency)
             {
 
-                double rescale_factor = 0;
+                double leniencyValue = CatchModLowPrecision.CalculateHalfLeniencyDistanceForHitObject(hitObject, CatchLeniencySlider);
 
-                if (hitObject is Fruit)
-                {
-                    rescale_factor = 1;
-                }
+                //Logger.Log("Current Leniency:" + leniencyValue);
 
-                if (hitObject is Droplet)
-                {
-                    rescale_factor = 0.8;
-                }
-
-                if (hitObject is Banana)
-                {
-                    rescale_factor = 0.6;
-                }
-
-                if (hitObject is TinyDroplet)
-                {
-                    rescale_factor = 0.4;
-                }
-
-                //OD must stay in range [0,10] (Temporary)
-                double localCatchAccuracy = Math.Clamp(CatchAccuracy, 0.0d, 10.0d);
-
-                //CatchAccuracy is calculated before starting the beatmap. (See CatchModAccuracy.cs)
-                //160 is the current maximum size of fruits.
-                double accuracyDistance = (double)Math.Abs(localCatchAccuracy - 10) / 10 * fruit.Scale * rescale_factor * (160 / 2);
-
-                //Logger.Log("Current OD:" + CatchAccuracy);
-                //Logger.Log("Current Extension:" + accuracyDistance);
-
-                return fruit.EffectiveX >= X - (halfCatchWidth + accuracyDistance) &&
-                  fruit.EffectiveX <= X + (halfCatchWidth + accuracyDistance);
+                return fruit.EffectiveX >= X - (halfCatchWidth + leniencyValue) &&
+                  fruit.EffectiveX <= X + (halfCatchWidth + leniencyValue);
             }
 
             return fruit.EffectiveX >= X - halfCatchWidth &&
@@ -263,9 +236,11 @@ namespace osu.Game.Rulesets.Catch.UI
 
             if (result.IsHit)
             {
-                var positionInStack = computePositionInStack(new Vector2(palpableObject.X - X, 0), palpableObject.DisplaySize.X);
+                float objectX = palpableObject.X - X;
 
-                if (CatchFruitAccuracy) positionInStack = computePositionInStack(new Vector2(Math.Clamp(palpableObject.X - X, -1 * CatchWidth / 2, CatchWidth / 2), 0), palpableObject.DisplaySize.X);
+                if (CatchFruitLeniency) objectX = Math.Clamp(palpableObject.X - X, -1 * CatchWidth / 2, CatchWidth / 2);
+
+                var positionInStack = computePositionInStack(new Vector2(objectX, 0), palpableObject.DisplaySize.X);
 
                 if (CatchFruitOnPlate)
                     placeCaughtObject(palpableObject, positionInStack);

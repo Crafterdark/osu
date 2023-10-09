@@ -52,7 +52,7 @@ namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
 
             double accuracyDistance = 0;
 
-            if (catcher.CatchFruitAccuracy)
+            if (catcher.CatchFruitLeniency)
             {
 
                 double rescale_factor = 0;
@@ -77,7 +77,7 @@ namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
                     rescale_factor = 0.4;
                 }
 
-                accuracyDistance = (double)Math.Abs(catcher.CatchAccuracy - 10) / 10 * hitObject.Scale * rescale_factor * (160 / 2);
+                accuracyDistance = (double)Math.Abs(catcher.CatchLeniencySlider - 10) / 10 * hitObject.Scale * rescale_factor * (160 / 2);
             }
 
             return hitObject.EffectiveX <= catcher.X + (halfCatchWidth + accuracyDistance) && hitObject.EffectiveX >= catcher.X - (halfCatchWidth + accuracyDistance);

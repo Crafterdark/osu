@@ -23,9 +23,9 @@ namespace osu.Game.Rulesets.Catch.Difficulty
 
         private float halfCatcherWidth;
 
-        private bool lowPrecisionStatus = false;
+        private bool modLP_status = false;
 
-        private double lowPrecisionValue;
+        private double modLP_leniencyValue;
 
         public override int Version => 20220701;
 
@@ -74,38 +74,9 @@ namespace osu.Game.Rulesets.Catch.Difficulty
 
                     double accuracyDistance = 0;
 
-                    if (lowPrecisionStatus)
+                    if (modLP_status)
                     {
-
-                        double rescale_factor = 0;
-
-                        if (hitObject is Fruit)
-                        {
-                            rescale_factor = 1;
-                        }
-
-                        if (hitObject is Droplet)
-                        {
-                            rescale_factor = 0.8;
-                        }
-
-                        if (hitObject is Banana)
-                        {
-                            rescale_factor = 0.6;
-                        }
-
-                        if (hitObject is TinyDroplet)
-                        {
-                            rescale_factor = 0.4;
-                        }
-
-                        //OD must stay in range [0,10] (Temporary)
-                        double localCatchAccuracy = Math.Clamp(lowPrecisionValue, 0.0d, 10.0d);
-
-                        //CatchAccuracy is calculated before starting the beatmap. (See CatchModAccuracy.cs)
-                        //160 is the current maximum size of fruits.
-                        accuracyDistance = (double)Math.Abs(localCatchAccuracy - 10) / 10 * hitObject.Scale * rescale_factor * (160 / 2);
-
+                        accuracyDistance = CatchModLowPrecision.CalculateHalfLeniencyDistanceForHitObject(hitObject, modLP_leniencyValue);
                         accuracyDistance *= 1 - (Math.Max(0, beatmap.Difficulty.CircleSize - 5.5f) * 0.0625f);
                     }
 
@@ -127,16 +98,10 @@ namespace osu.Game.Rulesets.Catch.Difficulty
 
             for (int index = 0; index < mods.Length; index++)
             {
-                if (mods[index] is CatchModLowPrecisionTypeA)
+                if (mods[index] is CatchModLowPrecision modLP)
                 {
-                    lowPrecisionStatus = true;
-                    lowPrecisionValue = beatmap.Difficulty.OverallDifficulty;
-                    break;
-                }
-                if (mods[index] is CatchModLowPrecisionTypeB)
-                {
-                    lowPrecisionStatus = true;
-                    lowPrecisionValue = 0.0d;
+                    modLP_status = true;
+                    modLP_leniencyValue = modLP.Leniency.Value;
                     break;
                 }
             }
