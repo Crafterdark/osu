@@ -26,7 +26,6 @@ namespace osu.Game.Rulesets.Catch.Mods
 
         public override Type[] IncompatibleMods => new[] { typeof(CatchModLowPrecisionTypeA) };
 
-
         public double FinalCatcherAccuracy;
 
         public void ApplyToBeatmap(IBeatmap beatmap)
