@@ -17,7 +17,6 @@ namespace osu.Game.Rulesets.Catch.Mods
 {
     public class CatchModLowPrecision : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IApplicableToDifficulty
     {
-        //(1.00 - 0.75 * slider ) score, min(OD, 10 * (1-slider)), slider dependency -> rescale maximum fruit hitbox with the slider value.
         public override string Name => "Low Precision";
 
         public override string Acronym => "LP";
@@ -25,6 +24,8 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override LocalisableString Description => "Less precision required. Everything becomes easier to catch...";
 
         public override ModType Type => ModType.DifficultyReduction;
+
+        //Leniency slider dependency -> rescale the current fruit hitbox with the leniency slider value.
 
         [SettingSource("Maximum leniency", "The maximum leniency to apply", SettingControlType = typeof(MultiplierSettingsSlider))]
         public BindableNumber<double> Leniency { get; } = new BindableDouble(1.00)
@@ -34,12 +35,16 @@ namespace osu.Game.Rulesets.Catch.Mods
             Precision = 0.01,
         };
 
-        public override double ScoreMultiplier => 1.00 - Leniency.Value * 0.50;
+        public override double ScoreMultiplier => 1.00 - Leniency.Value * 0.75;
+
+        //Current maximum allowed size of fruits.
+
+        public const int MAX_HITBOX_FRUIT = 160;
 
         public virtual void ApplyToDifficulty(BeatmapDifficulty difficulty)
         {
-            //OverallDifficulty will go [OD/2 -> OD] based on the leniency.
-            difficulty.OverallDifficulty = (float)(difficulty.OverallDifficulty * (1 - Leniency.Value / 2));
+            //OverallDifficulty will go [OD/4 -> OD] based on the leniency.
+            difficulty.OverallDifficulty = (float)(difficulty.OverallDifficulty * (1 - 3 * Leniency.Value / 4));
         }
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
@@ -79,8 +84,7 @@ namespace osu.Game.Rulesets.Catch.Mods
 
             double difficultyValue = 10 * (1 - leniencySliderValue);
 
-            //160 is the current maximum size of fruits.
-            return (double)Math.Abs(difficultyValue - 10) / 10 * ((CatchHitObject)hitObject).Scale * rescale_factor * (160 / 2);
+            return (double)Math.Abs(difficultyValue - 10) / 10 * ((CatchHitObject)hitObject).Scale * rescale_factor * (MAX_HITBOX_FRUIT / 2);
 
         }
 
