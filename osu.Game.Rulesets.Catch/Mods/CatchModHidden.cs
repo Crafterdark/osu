@@ -1,9 +1,11 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System;
 using System.Linq;
 using osu.Framework.Graphics;
 using osu.Framework.Localisation;
+using osu.Game.Rulesets.Catch.Mods.Debug_Mods;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.Objects.Drawables;
 using osu.Game.Rulesets.Catch.UI;
@@ -20,6 +22,8 @@ namespace osu.Game.Rulesets.Catch.Mods
 
         private const double fade_out_offset_multiplier = 0.6;
         private const double fade_out_duration_multiplier = 0.44;
+
+        public override Type[] IncompatibleMods => new[] { typeof(CatchModFadeIn) };
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {

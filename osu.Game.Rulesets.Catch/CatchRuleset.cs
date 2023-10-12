@@ -111,7 +111,7 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModNoFail(),
                         new MultiMod(new CatchModHalfTime(), new CatchModDaycore()),
 
-                        //Debug Mods
+                        //Debug Mod 1#:
                         new CatchModLowPrecision(),
                     };
 
@@ -121,7 +121,8 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModHardRock(),
                         new MultiMod(new CatchModSuddenDeath(), new CatchModPerfect()),
                         new MultiMod(new CatchModDoubleTime(), new CatchModNightcore()),
-                        new CatchModHidden(),
+                        //Debug Mod 3#:
+                        new MultiMod(new CatchModHidden(), new CatchModFadeIn()),
                         new CatchModFlashlight(),
                         new ModAccuracyChallenge(),
                     };
@@ -140,7 +141,7 @@ namespace osu.Game.Rulesets.Catch
                         new MultiMod(new CatchModAutoplay(), new CatchModCinema()),
                         new CatchModRelax(),
 
-                        //Debug Mods
+                        //Debug Mod 2#:
                         new CatchModAutoDash(),
                     };
 
