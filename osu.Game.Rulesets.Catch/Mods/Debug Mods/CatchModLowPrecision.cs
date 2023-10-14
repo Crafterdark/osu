@@ -27,7 +27,7 @@ namespace osu.Game.Rulesets.Catch.Mods
 
         //Leniency slider dependency -> rescale the current fruit hitbox with the leniency slider value.
 
-        [SettingSource("Maximum leniency", "The maximum leniency to apply", SettingControlType = typeof(MultiplierSettingsSlider))]
+        [SettingSource("Maximum Leniency", "The catch leniency to apply", SettingControlType = typeof(MultiplierSettingsSlider))]
         public BindableNumber<double> Leniency { get; } = new BindableDouble(1.00)
         {
             MinValue = 0.01,
@@ -35,7 +35,7 @@ namespace osu.Game.Rulesets.Catch.Mods
             Precision = 0.01,
         };
 
-        public override double ScoreMultiplier => 1.00 - Leniency.Value * 0.75;
+        public override double ScoreMultiplier => 1.00 - (Leniency.Value * 0.75);
 
         //Current maximum allowed size of fruits.
 

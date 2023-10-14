@@ -12,41 +12,22 @@ using osu.Game.Rulesets.Objects.Drawables;
 using osu.Game.Rulesets.UI;
 using osu.Framework.Graphics;
 using System;
-using osu.Framework.Bindables;
-using osu.Game.Configuration;
-using osu.Game.Overlays.Settings;
+using osu.Game.Rulesets.Scoring;
+using osu.Game.Scoring;
 
 namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
 {
-    public class CatchModFadeIn : ModWithVisibilityAdjustment, IApplicableToDrawableRuleset<CatchHitObject>
+    public class CatchModFadeIn : ModWithVisibilityAdjustment, IApplicableToDrawableRuleset<CatchHitObject>, IApplicableToScoreProcessor
     {
         public override LocalisableString Description => @"Play with fading fruits.";
-
         public override string Name => "Fade In";
+        public override double ScoreMultiplier => UsesDefaultConfiguration ? 1.06 : 1;
 
+        private const double fade_in_offset_multiplier = 0.76;
+        private const double fade_in_duration_multiplier = 0.60;
         public override string Acronym => "FI";
         public override ModType Type => ModType.DifficultyIncrease;
-
         public override Type[] IncompatibleMods => new[] { typeof(CatchModHidden), typeof(CatchModFlashlight) };
-
-        [SettingSource("Fading duration", "Speed of the fading effect", SettingControlType = typeof(MultiplierSettingsSlider))]
-        public BindableNumber<double> FadeInDurationMultiplier { get; } = new BindableDouble(0.50)
-        {
-            MinValue = 0.30,
-            MaxValue = 0.50,
-            Precision = 0.01,
-        };
-
-        [SettingSource("Fading height", "Height where fading fruits start to be visible", SettingControlType = typeof(MultiplierSettingsSlider))]
-        public BindableNumber<double> FadeInHeightOffset { get; } = new BindableDouble(0.86)
-        {
-            MinValue = 0.60,
-            MaxValue = 0.86,
-            Precision = 0.01,
-        };
-
-        public override double ScoreMultiplier => 1.09 - 0.07 * ((FadeInHeightOffset.Value - 0.60) / 0.26) - 0.01 * (Math.Abs(FadeInDurationMultiplier.Value - 0.50) / 0.20);
-
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {
@@ -54,6 +35,7 @@ namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
             var catchPlayfield = (CatchPlayfield)drawableCatchRuleset.Playfield;
 
             catchPlayfield.Catcher.CatchFruitOnPlate = true;
+
         }
 
         protected override void ApplyIncreasedVisibilityState(DrawableHitObject hitObject, ArmedState state)
@@ -80,14 +62,44 @@ namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
         {
             var hitObject = drawable.HitObject;
 
-            double offset = hitObject.TimePreempt * FadeInHeightOffset.Value;
-            double duration = hitObject.TimePreempt * FadeInDurationMultiplier.Value;
+            bool isLowApproachRate = hitObject.TimePreempt >= 1200 ? true : false;
 
+            double lanecover_multiplier = 1.0;
+            if (isLowApproachRate) lanecover_multiplier = 4.0 / 7.0;
+
+            double offset = hitObject.TimePreempt * (fade_in_offset_multiplier * lanecover_multiplier);
+            double duration = offset - hitObject.TimePreempt * (fade_in_duration_multiplier * lanecover_multiplier);
+
+            //Instant fade out
             drawable.FadeOut(0);
 
             using (drawable.BeginAbsoluteSequence(hitObject.StartTime - offset))
                 drawable.FadeIn(duration);
 
         }
+
+
+        public void ApplyToScoreProcessor(ScoreProcessor scoreProcessor)
+        {
+            // Default value of ScoreProcessor's Rank in Fade In Mod should be SS+
+            scoreProcessor.Rank.Value = ScoreRank.XH;
+        }
+
+        public ScoreRank AdjustRank(ScoreRank rank, double accuracy)
+        {
+            switch (rank)
+            {
+                case ScoreRank.X:
+                    return ScoreRank.XH;
+
+                case ScoreRank.S:
+                    return ScoreRank.SH;
+
+                default:
+                    return rank;
+            }
+        }
     }
+
+
 }
