@@ -16,6 +16,7 @@ using System.Linq;
 using osu.Framework.Bindables;
 using osu.Game.Configuration;
 using osu.Game.Overlays.Settings;
+//using osu.Framework.Logging;
 
 namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
 {
@@ -58,8 +59,12 @@ namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
 
             float mapApproachRate = drawableCatchRuleset.Beatmap.Difficulty.ApproachRate;
 
+            //Usually from Overdose+/Top Diffs and above
+            if (mapApproachRate > 9.4)
+                target_approach_rate = 10.5f;
+
             //Usually from Rain and above
-            if (mapApproachRate > 8.6)
+            else if (mapApproachRate <= 9.4 && mapApproachRate > 8.6)
                 target_approach_rate = 10.0f;
 
             //Most Platter belong here
@@ -81,6 +86,8 @@ namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
 
             //The final value of visibility that we are enforcing to low approach rate maps
             FinalVisibility = mapApproachRateTimeTarget / mapApproachRateTime;
+
+            //Logger.Log("Final Visibility After Time" + FinalVisibility);
 
             if (FinalVisibility > InitialVisibility.Value)
                 FinalVisibility = (float)InitialVisibility.Value;
