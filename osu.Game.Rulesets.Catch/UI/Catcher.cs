@@ -70,6 +70,13 @@ namespace osu.Game.Rulesets.Catch.UI
         public bool CatchFruitLeniency { get; set; } = false;
 
         /// <summary>
+        /// Whether <see cref="DrawablePalpableCatchHitObject"/> fruit should stay on the plate.
+        /// </summary>
+        public bool CatchFruitPile { get; set; } = false;
+
+        public Random CatchFruitRandomPile = null!;
+
+        /// <summary>
         /// The speed of the catcher when the catcher is dashing.
         /// </summary>
         public const double BASE_DASH_SPEED = 1.0;
@@ -273,9 +280,13 @@ namespace osu.Game.Rulesets.Catch.UI
             if (result.IsHit)
                 CurrentState = hitObject.Kiai ? CatcherAnimationState.Kiai : CatcherAnimationState.Idle;
             else if (!(hitObject is Banana))
+            {
                 CurrentState = CatcherAnimationState.Fail;
+                if (CatchFruitPile)
+                    Drop();
+            }
 
-            if (palpableObject.HitObject.LastInCombo)
+            if (palpableObject.HitObject.LastInCombo && !CatchFruitPile)
             {
                 if (result.Judgement is CatchJudgement catchJudgement && catchJudgement.ShouldExplodeFor(result))
                     Explode();
@@ -405,8 +416,16 @@ namespace osu.Game.Rulesets.Catch.UI
 
             while (caughtObjectContainer.Any(f => Vector2Extensions.DistanceSquared(f.Position, position) < checkDistance))
             {
-                position.X += RNG.NextSingle(-adjustedRadius, adjustedRadius);
-                position.Y -= RNG.NextSingle(0, 5);
+                if (!CatchFruitPile)
+                {
+                    position.X += RNG.NextSingle(-adjustedRadius, adjustedRadius);
+                    position.Y -= RNG.NextSingle(0, 5);
+                }
+                else
+                {
+                    position.X += Math.Clamp((CatchFruitRandomPile.NextSingle() * 2 - 1.0f) * adjustedRadius, -adjustedRadius, adjustedRadius);
+                    position.Y -= Math.Clamp(CatchFruitRandomPile.NextSingle() * 5, 0, 5);
+                }
             }
 
             return position;

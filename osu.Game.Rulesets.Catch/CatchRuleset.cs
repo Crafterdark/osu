@@ -125,6 +125,8 @@ namespace osu.Game.Rulesets.Catch
                         new MultiMod(new CatchModHidden(), new CatchModFadeIn()),
                         new CatchModFlashlight(),
                         new ModAccuracyChallenge(),
+                        //Debug Mod 5#:
+                        new CatchModPile(),
                     };
 
                 case ModType.Conversion:
@@ -133,6 +135,9 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModDifficultyAdjust(),
                         new CatchModClassic(),
                         new CatchModMirror(),
+
+                        //Debug Mod 4# (WIP):
+                        //new CatchModUnlockedDirection(),
                     };
 
                 case ModType.Automation:
@@ -141,8 +146,8 @@ namespace osu.Game.Rulesets.Catch
                         new MultiMod(new CatchModAutoplay(), new CatchModCinema()),
                         new CatchModRelax(),
 
-                        //Debug Mod 2#:
-                        new CatchModAutoDash(),
+                        //Debug Mod 2# (WIP):
+                        //new CatchModAutoDash(),
                     };
 
                 case ModType.Fun:

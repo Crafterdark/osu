@@ -23,7 +23,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         private const double fade_out_offset_multiplier = 0.6;
         private const double fade_out_duration_multiplier = 0.44;
 
-        public override Type[] IncompatibleMods => new[] { typeof(CatchModFadeIn) };
+        public override Type[] IncompatibleMods => new[] { typeof(CatchModFadeIn), typeof(CatchModPile) };
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {
