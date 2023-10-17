@@ -18,6 +18,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         public bool HardRockOffsets { get; set; }
 
+        //SpeedChange, BASE_WALK_SPEED, BASE_DASH_SPEED
+        public double[] CustomMultipliers = new double[3] { 1.00, 0.50, 1.00 };
+
         public CatchBeatmapProcessor(IBeatmap beatmap)
             : base(beatmap)
         {
@@ -95,7 +98,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 }
             }
 
-            initialiseHyperDash(beatmap);
+            initialiseHyperDash(beatmap, CustomMultipliers);
         }
 
         private static void applyHardRockOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime, LegacyRandom rng)
@@ -190,7 +193,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             }
         }
 
-        private static void initialiseHyperDash(IBeatmap beatmap)
+        private static void initialiseHyperDash(IBeatmap beatmap, double[] customMultipliers)
         {
             List<PalpableCatchHitObject> palpableObjects = new List<PalpableCatchHitObject>();
 
@@ -233,7 +236,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 int thisDirection = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
                 double timeToNext = nextObject.StartTime - currentObject.StartTime - 1000f / 60f / 4; // 1/4th of a frame of grace time, taken from osu-stable
                 double distanceToNext = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcess : halfCatcherWidth);
-                float distanceToHyper = (float)(timeToNext * Catcher.BASE_DASH_SPEED - distanceToNext);
+                float distanceToHyper = (float)(timeToNext * Catcher.GetCatcherSpeed(Catcher.MoveType.Dash, customMultipliers) - distanceToNext);
 
                 if (distanceToHyper < 0)
                 {

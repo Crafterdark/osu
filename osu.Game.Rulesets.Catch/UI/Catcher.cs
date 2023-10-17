@@ -76,7 +76,9 @@ namespace osu.Game.Rulesets.Catch.UI
 
         public Random CatchFruitRandomPile = null!;
 
-        public double[] CustomMultipliers = new double[2] { 0.50, 1.00 };
+        //SpeedChange, BASE_WALK_SPEED, BASE_DASH_SPEED
+        public double[] CustomMultipliers = new double[3] { 1.00, 0.50, 1.00 };
+
 
 
         /// <summary>
@@ -91,12 +93,30 @@ namespace osu.Game.Rulesets.Catch.UI
 
         public static double GetCatcherSpeed(MoveType status, double[] customMultipliers)
         {
-            if (status == MoveType.Walk)
-                return BASE_WALK_SPEED * customMultipliers[0];
+            double rate = customMultipliers[0];
 
-            if (status == MoveType.Dash)
-                return BASE_DASH_SPEED * customMultipliers[1];
+            //Regular nomod walking speed
+            if (status == MoveType.Walk && customMultipliers[1] == 0.50)
+                return BASE_WALK_SPEED / rate;
 
+            //Regular nomod dashing speed
+            else if (status == MoveType.Dash && customMultipliers[2] == 1.00)
+                return BASE_DASH_SPEED / rate;
+
+
+
+            //Custom walking speed
+            else if (status == MoveType.Walk && customMultipliers[1] != 0.50)
+                //CustomWalkSpeed
+                return customMultipliers[1] / rate;
+
+            //Custom dashing speed
+            else if (status == MoveType.Dash && customMultipliers[2] != 1.00)
+                //CustomDashSpeed
+                return customMultipliers[2] / rate;
+
+
+            //If this happens, something went wrong somewhere else...
             return 0;
         }
 
