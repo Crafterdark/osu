@@ -76,6 +76,9 @@ namespace osu.Game.Rulesets.Catch.UI
 
         public Random CatchFruitRandomPile = null!;
 
+        public double[] CustomMultipliers = new double[2] { 1.0, 1.0 };
+
+
         /// <summary>
         /// The speed of the catcher when the catcher is dashing.
         /// </summary>
@@ -86,10 +89,29 @@ namespace osu.Game.Rulesets.Catch.UI
         /// </summary>
         public const double BASE_WALK_SPEED = 0.5;
 
+        public static double GetCatcherSpeed(MoveType status, double[] customMultipliers)
+        {
+            if (status == MoveType.Walk)
+                return BASE_WALK_SPEED * customMultipliers[0];
+
+            if (status == MoveType.Dash)
+                return BASE_DASH_SPEED * customMultipliers[1];
+
+            return 0;
+        }
+
+        public enum MoveType
+        {
+            Walk,
+            Dash,
+        }
+
+
+
         /// <summary>
         /// The current speed of the catcher with the hyper-dash modifier applied.
         /// </summary>
-        public double Speed => (Dashing ? BASE_DASH_SPEED : BASE_WALK_SPEED) * hyperDashModifier;
+        public double Speed => (Dashing ? GetCatcherSpeed(MoveType.Dash, CustomMultipliers) : GetCatcherSpeed(MoveType.Walk, CustomMultipliers)) * hyperDashModifier;
 
         /// <summary>
         /// The amount by which caught fruit should be scaled down to fit on the plate.
@@ -272,7 +294,7 @@ namespace osu.Game.Rulesets.Catch.UI
                 double positionDifference = target.EffectiveX - X;
                 double velocity = positionDifference / Math.Max(1.0, timeDifference - 1000.0 / 60.0);
 
-                SetHyperDashState(Math.Abs(velocity) / BASE_DASH_SPEED, target.EffectiveX);
+                SetHyperDashState(Math.Abs(velocity) / GetCatcherSpeed(MoveType.Dash, CustomMultipliers), target.EffectiveX);
             }
             else
                 SetHyperDashState();

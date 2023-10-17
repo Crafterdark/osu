@@ -138,6 +138,9 @@ namespace osu.Game.Rulesets.Catch
 
                         //Debug Mod 4# (WIP):
                         //new CatchModUnlockedDirection(),
+
+                        //Debug Mod 6#:
+                        new CatchModSpeedRun(),
                     };
 
                 case ModType.Automation:
