@@ -76,7 +76,7 @@ namespace osu.Game.Rulesets.Catch.UI
 
         public Random CatchFruitRandomPile = null!;
 
-        public double[] CustomMultipliers = new double[2] { 1.0, 1.0 };
+        public double[] CustomMultipliers = new double[2] { 0.50, 1.00 };
 
 
         /// <summary>
