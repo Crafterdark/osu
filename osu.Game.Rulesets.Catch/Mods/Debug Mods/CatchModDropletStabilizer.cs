@@ -23,7 +23,7 @@ namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
 
         public override double ScoreMultiplier => 0.90;
 
-        public override ModType Type => ModType.DifficultyReduction;
+        public override ModType Type => ModType.Conversion;
 
         [SettingSource("Stabilizer Power", "The actual stability to apply", SettingControlType = typeof(MultiplierSettingsSlider))]
         public BindableNumber<double> StabilizerPower { get; } = new BindableDouble(1.00)

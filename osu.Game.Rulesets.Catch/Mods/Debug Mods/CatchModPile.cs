@@ -25,7 +25,7 @@ namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
 
         public override double ScoreMultiplier => 1.03;
 
-        public override ModType Type => ModType.DifficultyIncrease;
+        public override ModType Type => ModType.Fun;
 
         public override Type[] IncompatibleMods => new[] { typeof(CatchModHidden) };
 

@@ -113,8 +113,6 @@ namespace osu.Game.Rulesets.Catch
 
                         //Debug Mod 1#:
                         new CatchModLowPrecision(),
-                        //Debug Mod 7#:
-                        new CatchModDropletStabilizer(),
                     };
 
                 case ModType.DifficultyIncrease:
@@ -127,8 +125,6 @@ namespace osu.Game.Rulesets.Catch
                         new MultiMod(new CatchModHidden(), new CatchModFadeIn()),
                         new CatchModFlashlight(),
                         new ModAccuracyChallenge(),
-                        //Debug Mod 5#:
-                        new CatchModPile(),
                     };
 
                 case ModType.Conversion:
@@ -143,6 +139,8 @@ namespace osu.Game.Rulesets.Catch
 
                         //Debug Mod 6#:
                         new CatchModSpeedRun(),
+                        //Debug Mod 7#:
+                        new CatchModDropletStabilizer(),
                     };
 
                 case ModType.Automation:
@@ -162,6 +160,8 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModFloatingFruits(),
                         new CatchModMuted(),
                         new CatchModNoScope(),
+                        //Debug Mod 5#:
+                        new CatchModPile(),
                     };
 
                 case ModType.System:
