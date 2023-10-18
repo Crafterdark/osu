@@ -47,8 +47,7 @@ namespace osu.Game.Rulesets.Catch.Replays
                 bool dashRequired = speedRequired > Catcher.BASE_WALK_SPEED;
                 bool impossibleJump = speedRequired > Catcher.BASE_DASH_SPEED;
 
-                // todo: get correct catcher size, based on difficulty CS.
-                const float catcher_width_half = Catcher.BASE_SIZE * 0.3f * 0.5f;
+                float catcher_width_half = Catcher.CalculateCatchWidth(Beatmap.Difficulty) / 2;
 
                 if (lastPosition - catcher_width_half < h.EffectiveX && lastPosition + catcher_width_half > h.EffectiveX)
                 {

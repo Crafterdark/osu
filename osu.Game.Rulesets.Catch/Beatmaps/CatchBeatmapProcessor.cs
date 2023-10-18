@@ -18,6 +18,10 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         public bool HardRockOffsets { get; set; }
 
+        public bool IsDropletStabilized { get; set; } = false;
+
+        public double StabilizerPower { get; set; }
+
         //SpeedChange, BASE_WALK_SPEED, BASE_DASH_SPEED
         public double[] CustomMultipliers = new double[3] { 1.00, 0.50, 1.00 };
 
@@ -89,7 +93,16 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                             catchObject.XOffset = 0;
 
                             if (catchObject is TinyDroplet)
-                                catchObject.XOffset = Math.Clamp(rng.Next(-20, 20), -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
+                            {
+                                if (IsDropletStabilized)
+                                {
+                                    int mod_offset = StabilizerPower == 1.00 ? 0 : rng.Next(-20 * (1 - StabilizerPower), 20 * (1 - StabilizerPower));
+                                    catchObject.XOffset = Math.Clamp(mod_offset, -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
+                                }
+                                else
+                                    catchObject.XOffset = Math.Clamp(rng.Next(-20, 20), -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
+
+                            }
                             else if (catchObject is Droplet)
                                 rng.Next(); // osu!stable retrieved a random droplet rotation
                         }

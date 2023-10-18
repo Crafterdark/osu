@@ -113,6 +113,8 @@ namespace osu.Game.Rulesets.Catch
 
                         //Debug Mod 1#:
                         new CatchModLowPrecision(),
+                        //Debug Mod 7#:
+                        new CatchModDropletStabilizer(),
                     };
 
                 case ModType.DifficultyIncrease:

@@ -433,6 +433,10 @@ namespace osu.Game.Rulesets.Catch.UI
 
         private void placeCaughtObject(DrawablePalpableCatchHitObject drawableObject, Vector2 position)
         {
+            if (CatchFruitPile && (drawableObject.HitObject is Banana || caughtObjectContainer.Count >= 500))
+                return;
+
+
             var caughtObject = getCaughtObject(drawableObject.HitObject);
 
             if (caughtObject == null) return;
