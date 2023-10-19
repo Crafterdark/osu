@@ -96,13 +96,13 @@ namespace osu.Game.Rulesets.Catch.Difficulty
             // For circle sizes above 5.5, reduce the catcher width further to simulate imperfect gameplay.
             halfCatcherWidth *= 1 - (Math.Max(0, beatmap.Difficulty.CircleSize - 5.5f) * 0.0625f);
 
+            // Check if there's any mod to apply effects here
             for (int index = 0; index < mods.Length; index++)
             {
                 if (mods[index] is CatchModLowPrecision modLP)
                 {
                     modLP_status = true;
                     modLP_leniencyValue = modLP.Leniency.Value;
-                    break;
                 }
             }
 
