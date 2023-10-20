@@ -4,8 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using osu.Framework.Logging;
-using osu.Game.Rulesets.Catch.Mods;
 using osu.Game.Rulesets.Difficulty;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Scoring;
@@ -130,13 +128,10 @@ namespace osu.Game.Rulesets.Catch.Difficulty
                 0.95 + comboRatio * (0.05 * Math.Min(1.0, lengthFactor) +
                 (lengthFactor > 1.0 ? Math.Log10(lengthFactor) * longLengthBonus : 0.0));
 
-            Logger.Log("drainTime: " + drainTime);
-
-            Logger.Log("lengthFactor: " + lengthFactor);
-
-            Logger.Log("lengthBonus: " + lengthBonus);
-
-            Logger.Log("comboRatio: " + comboRatio);
+            //Logger.Log("drainTime: " + drainTime);
+            //Logger.Log("lengthFactor: " + lengthFactor);
+            //Logger.Log("lengthBonus: " + lengthBonus);
+            //Logger.Log("comboRatio: " + comboRatio);
 
             return lengthBonus;
         }
