@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using osu.Framework.Logging;
+using osu.Game.Rulesets.Catch.Mods;
 using osu.Game.Rulesets.Difficulty;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Scoring;
@@ -98,6 +99,16 @@ namespace osu.Game.Rulesets.Catch.Difficulty
         public double NewRework_lengthBonus(ScoreInfo score)
         {
             double drainTime = score.BeatmapInfo == null ? 0 : score.BeatmapInfo.Length / 1000;
+
+            // Check if there's any rate adjust mod to for reducing or increasing drainTime
+            for (int index = 0; index < score.Mods.Length; index++)
+            {
+                if (score.Mods[index] is ModRateAdjust modRA)
+                {
+                    drainTime /= modRA.SpeedChange.Value;
+                    break;
+                }
+            }
 
             int maxfruitsHit = score.MaximumStatistics.GetValueOrDefault(HitResult.Great);
             int maxticksHit = score.MaximumStatistics.GetValueOrDefault(HitResult.LargeTickHit);
