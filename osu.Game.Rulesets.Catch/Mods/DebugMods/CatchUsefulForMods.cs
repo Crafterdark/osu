@@ -5,7 +5,7 @@
 
 using osu.Game.Beatmaps;
 
-namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
+namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 {
     public class CatchUsefulForMods
     {

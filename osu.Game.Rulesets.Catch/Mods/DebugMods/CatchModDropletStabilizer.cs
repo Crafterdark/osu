@@ -10,7 +10,7 @@ using osu.Game.Overlays.Settings;
 using osu.Game.Rulesets.Catch.Beatmaps;
 using osu.Game.Rulesets.Mods;
 
-namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
+namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 {
     public class CatchModDropletStabilizer : Mod, IApplicableToBeatmapProcessor
 

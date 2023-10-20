@@ -12,7 +12,7 @@ using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.UI;
 
-namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
+namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 {
     public class CatchModPile : Mod, IApplicableToDrawableRuleset<CatchHitObject>
     {

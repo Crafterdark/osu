@@ -16,9 +16,10 @@ using System.Linq;
 using osu.Framework.Bindables;
 using osu.Game.Configuration;
 using osu.Game.Overlays.Settings;
+using osu.Game.Rulesets.Objects.Drawables;
 //using osu.Framework.Logging;
 
-namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
+namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 {
     public class CatchModFadeIn : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IApplicableToScoreProcessor, IUpdatableByPlayfield
     {
@@ -136,7 +137,7 @@ namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
         {
             CatchPlayfield cpf = (CatchPlayfield)playfield;
 
-            foreach (DrawableCatchHitObject hitObject in cpf.AllHitObjects)
+            foreach (DrawableHitObject hitObject in cpf.AllHitObjects)
             {
 
                 if (!(hitObject is DrawableCatchHitObject catchDrawable))
@@ -152,7 +153,7 @@ namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
                     }
                 }
                 else
-                    fadeInHitObject(hitObject, cpf);
+                    fadeInHitObject((DrawableCatchHitObject)hitObject, cpf);
             }
 
 

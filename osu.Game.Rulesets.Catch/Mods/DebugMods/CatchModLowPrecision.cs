@@ -13,7 +13,7 @@ using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Objects;
 using osu.Game.Rulesets.UI;
 
-namespace osu.Game.Rulesets.Catch.Mods
+namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 {
     public class CatchModLowPrecision : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IApplicableToDifficulty
     {

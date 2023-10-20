@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-
 using osu.Framework.Localisation;
 using osu.Framework.Logging;
 using osu.Game.Rulesets.Catch.Objects;
@@ -13,7 +12,7 @@ using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Objects.Drawables;
 using osu.Game.Rulesets.UI;
 
-namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
+namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 {
     public class CatchModAutoDash : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IUpdatableByPlayfield
 
