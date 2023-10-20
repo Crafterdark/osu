@@ -26,7 +26,7 @@ namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
         public override string Name => "Fade In";
         public override double ScoreMultiplier => UsesDefaultConfiguration ? 1.06 : 1;
 
-        [SettingSource("Visibility", "The percentage of playfield height that will stay visible.", SettingControlType = typeof(MultiplierSettingsSlider))]
+        [SettingSource("Visibility", "The percentage of playfield height that will be visible.", SettingControlType = typeof(MultiplierSettingsSlider))]
 
         public BindableNumber<double> InitialVisibility { get; } = new BindableDouble(0.9)
         {

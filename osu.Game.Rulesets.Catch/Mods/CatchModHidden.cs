@@ -3,8 +3,11 @@
 
 using System;
 using System.Linq;
+using osu.Framework.Bindables;
 using osu.Framework.Graphics;
 using osu.Framework.Localisation;
+using osu.Game.Configuration;
+using osu.Game.Overlays.Settings;
 using osu.Game.Rulesets.Catch.Mods.Debug_Mods;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.Objects.Drawables;
@@ -20,8 +23,16 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override LocalisableString Description => @"Play with fading fruits.";
         public override double ScoreMultiplier => UsesDefaultConfiguration ? 1.06 : 1;
 
-        private const double fade_out_offset_multiplier = 0.6;
-        private const double fade_out_duration_multiplier = 0.44;
+        [SettingSource("Invisibility", "The percentage of playfield height that will be invisible.", SettingControlType = typeof(MultiplierSettingsSlider))]
+
+        public BindableNumber<double> InitialInvisibility { get; } = new BindableDouble(0.6)
+        {
+            MinValue = 0.4,
+            MaxValue = 0.8,
+            Precision = 0.1,
+        };
+
+        private const double fade_out_duration_multiplier = 0.16;
 
         public override Type[] IncompatibleMods => new[] { typeof(CatchModFadeIn), typeof(CatchModPile) };
 
@@ -57,8 +68,8 @@ namespace osu.Game.Rulesets.Catch.Mods
         {
             var hitObject = drawable.HitObject;
 
-            double offset = hitObject.TimePreempt * fade_out_offset_multiplier;
-            double duration = offset - hitObject.TimePreempt * fade_out_duration_multiplier;
+            double offset = hitObject.TimePreempt * InitialInvisibility.Value;
+            double duration = hitObject.TimePreempt * fade_out_duration_multiplier;
 
             using (drawable.BeginAbsoluteSequence(hitObject.StartTime - offset))
                 drawable.FadeOut(duration);

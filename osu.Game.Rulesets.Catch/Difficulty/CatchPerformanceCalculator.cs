@@ -113,11 +113,11 @@ namespace osu.Game.Rulesets.Catch.Difficulty
 
             double longLengthBonus = 0.475;
 
-            double lengthBonus =
-                0.95 + 0.05 * Math.Min(1.0, lengthFactor) +
-                (lengthFactor > 1.0 ? Math.Log10(lengthFactor) * longLengthBonus : 0.0);
+            double comboRatio = (double)totalSuccessfulComboHits() / maxCombo;
 
-            lengthBonus *= totalComboHits() > 0 ? (double)totalSuccessfulComboHits() / maxCombo : 0;
+            double lengthBonus =
+                0.95 + comboRatio * (0.05 * Math.Min(1.0, lengthFactor) +
+                (lengthFactor > 1.0 ? Math.Log10(lengthFactor) * longLengthBonus : 0.0));
 
             Logger.Log("drainTime: " + drainTime);
 
@@ -125,7 +125,7 @@ namespace osu.Game.Rulesets.Catch.Difficulty
 
             Logger.Log("lengthBonus: " + lengthBonus);
 
-            Logger.Log("maxCombo: " + maxCombo);
+            Logger.Log("comboRatio: " + comboRatio);
 
             return lengthBonus;
         }

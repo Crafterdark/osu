@@ -27,18 +27,10 @@ namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
 
         public override ModType Type => ModType.Conversion;
 
-        [SettingSource("Walking speed", "The actual walk speed to apply", SettingControlType = typeof(MultiplierSettingsSlider))]
-        public BindableNumber<double> WalkSpeed { get; } = new BindableDouble(1.50)
+        [SettingSource("Walking and dashing speed", "The actual speed to apply", SettingControlType = typeof(MultiplierSettingsSlider))]
+        public BindableNumber<double> CatcherSpeed { get; } = new BindableDouble(1.50)
         {
-            MinValue = 1.00,
-            MaxValue = 2.00,
-            Precision = 0.01,
-        };
-
-        [SettingSource("Dashing speed", "The actual dash speed to apply", SettingControlType = typeof(MultiplierSettingsSlider))]
-        public BindableNumber<double> DashSpeed { get; } = new BindableDouble(1.50)
-        {
-            MinValue = 1.00,
+            MinValue = 1.01,
             MaxValue = 2.00,
             Precision = 0.01,
         };
@@ -48,16 +40,16 @@ namespace osu.Game.Rulesets.Catch.Mods.Debug_Mods
             var drawableCatchRuleset = (DrawableCatchRuleset)drawableRuleset;
             var catchPlayfield = (CatchPlayfield)drawableCatchRuleset.Playfield;
 
-            catchPlayfield.Catcher.CustomMultipliers[1] = WalkSpeed.Value / 2;
-            catchPlayfield.Catcher.CustomMultipliers[2] = DashSpeed.Value;
+            catchPlayfield.Catcher.CustomMultipliers[1] = CatcherSpeed.Value / 2;
+            catchPlayfield.Catcher.CustomMultipliers[2] = CatcherSpeed.Value;
 
         }
 
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
         {
             var catchBeatmapProcessor = (CatchBeatmapProcessor)beatmapProcessor;
-            catchBeatmapProcessor.CustomMultipliers[1] = WalkSpeed.Value / 2;
-            catchBeatmapProcessor.CustomMultipliers[2] = DashSpeed.Value;
+            catchBeatmapProcessor.CustomMultipliers[1] = CatcherSpeed.Value / 2;
+            catchBeatmapProcessor.CustomMultipliers[2] = CatcherSpeed.Value;
         }
     }
 }
