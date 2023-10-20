@@ -37,7 +37,6 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
             var catchRuleset = (CatchPlayfield)drawableCatchRuleset.Playfield;
 
             catchRuleset.CatcherArea.DisabledDashing = true;
-
         }
 
         public bool CatcherDashingUpdate(Catcher catcher, CatchHitObject incomingCatchObject, double exactTime)
@@ -53,30 +52,29 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 
             if (catcher.CatchFruitLeniency)
             {
-
-                double rescale_factor = 0;
+                double rescaleFactor = 0;
 
                 if (hitObject is Fruit)
                 {
-                    rescale_factor = 1;
+                    rescaleFactor = 1;
                 }
 
                 if (hitObject is Droplet)
                 {
-                    rescale_factor = 0.8;
+                    rescaleFactor = 0.8;
                 }
 
                 if (hitObject is Banana)
                 {
-                    rescale_factor = 0.6;
+                    rescaleFactor = 0.6;
                 }
 
                 if (hitObject is TinyDroplet)
                 {
-                    rescale_factor = 0.4;
+                    rescaleFactor = 0.4;
                 }
 
-                accuracyDistance = (double)Math.Abs(catcher.CatchLeniencySlider - 10) / 10 * hitObject.Scale * rescale_factor * (160 / 2);
+                accuracyDistance = Math.Abs(catcher.CatchLeniencySlider - 10) / 10 * (double)hitObject.Scale * rescaleFactor * (CatchModLowPrecision.MAX_HITBOX_FRUIT / 2.0);
             }
 
             return hitObject.EffectiveX <= catcher.X + (halfCatchWidth + accuracyDistance) && hitObject.EffectiveX >= catcher.X - (halfCatchWidth + accuracyDistance);
@@ -90,13 +88,13 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
             double exactTime = currentTime - currentElapsed;
 
             FindIncomingCatchHitObjects(catchPlayfield, catchPlayfield.Catcher, exactTime);
-
         }
 
         public void FindIncomingCatchHitObjects(CatchPlayfield catchPlayfield, Catcher catcher, double exactTime)
         {
             double countBananaShower = 0;
             double countJuiceStream = 0;
+
             foreach (DrawableHitObject hitObject in catchPlayfield.AllHitObjects)
             {
                 if ((DrawableCatchHitObject)hitObject is DrawableBananaShower) countBananaShower++;

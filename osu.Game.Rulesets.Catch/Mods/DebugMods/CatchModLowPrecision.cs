@@ -55,38 +55,35 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
             catchPlayfield.Catcher.CatchFruitLeniency = true;
 
             catchPlayfield.Catcher.CatchLeniencySlider = Leniency.Value;
-
         }
 
         public static double CalculateHalfLeniencyDistanceForHitObject(HitObject hitObject, double leniencySliderValue)
         {
-            double rescale_factor = 0;
+            double rescaleFactor = 0;
 
             if (hitObject is Fruit)
             {
-                rescale_factor = 1;
+                rescaleFactor = 1;
             }
 
             if (hitObject is Droplet)
             {
-                rescale_factor = 0.8;
+                rescaleFactor = 0.8;
             }
 
             if (hitObject is Banana)
             {
-                rescale_factor = 0.6;
+                rescaleFactor = 0.6;
             }
 
             if (hitObject is TinyDroplet)
             {
-                rescale_factor = 0.4;
+                rescaleFactor = 0.4;
             }
 
             double difficultyValue = 10 * (1 - leniencySliderValue);
 
-            return (double)Math.Abs(difficultyValue - 10) / 10 * ((CatchHitObject)hitObject).Scale * rescale_factor * (MAX_HITBOX_FRUIT / 2);
-
+            return Math.Abs(difficultyValue - 10) / 10 * (double)((CatchHitObject)hitObject).Scale * rescaleFactor * (MAX_HITBOX_FRUIT / 2.0);
         }
-
     }
 }

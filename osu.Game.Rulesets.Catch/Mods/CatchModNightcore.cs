@@ -14,7 +14,6 @@ namespace osu.Game.Rulesets.Catch.Mods
 {
     public class CatchModNightcore : ModNightcore<CatchHitObject>, IApplicableToDrawableRuleset<CatchHitObject>, IApplicableToBeatmapProcessor
     {
-
         [SettingSource("Change catcher speed based on rate", "Adjust the catcher movement to fit new speed changes.")]
         public BindableBool AdjustCatcherSpeed { get; } = new BindableBool(true);
 

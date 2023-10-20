@@ -47,9 +47,9 @@ namespace osu.Game.Rulesets.Catch.Replays
                 bool dashRequired = speedRequired > Catcher.BASE_WALK_SPEED;
                 bool impossibleJump = speedRequired > Catcher.BASE_DASH_SPEED;
 
-                float catcher_width_half = Catcher.CalculateCatchWidth(Beatmap.Difficulty) / 2;
+                float catcherWidthHalf = Catcher.CalculateCatchWidth(Beatmap.Difficulty) / 2;
 
-                if (lastPosition - catcher_width_half < h.EffectiveX && lastPosition + catcher_width_half > h.EffectiveX)
+                if (lastPosition - catcherWidthHalf < h.EffectiveX && lastPosition + catcherWidthHalf > h.EffectiveX)
                 {
                     // we are already in the correct range.
                     lastTime = h.StartTime;

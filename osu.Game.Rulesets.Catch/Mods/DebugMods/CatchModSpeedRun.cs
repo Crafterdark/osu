@@ -42,7 +42,6 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 
             catchPlayfield.Catcher.CustomMultipliers[1] = CatcherSpeed.Value / 2;
             catchPlayfield.Catcher.CustomMultipliers[2] = CatcherSpeed.Value;
-
         }
 
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)

@@ -1,15 +1,12 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
-
-
 using osu.Game.Beatmaps;
 
-namespace osu.Game.Rulesets.Catch.Mods.DebugMods
+namespace osu.Game.Rulesets.Catch.Mods.DebugMods.Utility
 {
-    public class CatchUsefulForMods
+    public class CatchUtilityForMods
     {
-
         public static double ApproachRateToTime(double ar) => IBeatmapDifficultyInfo.DifficultyRange(ar, 1800, 1200, 450);
 
         public static double TimeToApproachRate(double time)

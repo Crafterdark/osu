@@ -24,9 +24,9 @@ namespace osu.Game.Rulesets.Catch.Difficulty
 
         private float halfCatcherWidth;
 
-        private bool modLP_status = false;
+        private bool modLpStatus;
 
-        private double modLP_leniencyValue;
+        private double modLpLeniencyValue;
 
         public override int Version => 20220701;
 
@@ -72,18 +72,17 @@ namespace osu.Game.Rulesets.Catch.Difficulty
 
                 if (lastObject != null)
                 {
-
                     double accuracyDistance = 0;
 
-                    if (modLP_status)
+                    if (modLpStatus)
                     {
-                        accuracyDistance = CatchModLowPrecision.CalculateHalfLeniencyDistanceForHitObject(hitObject, modLP_leniencyValue);
+                        accuracyDistance = CatchModLowPrecision.CalculateHalfLeniencyDistanceForHitObject(hitObject, modLpLeniencyValue);
                         accuracyDistance *= 1 - (Math.Max(0, beatmap.Difficulty.CircleSize - 5.5f) * 0.0625f);
                     }
 
                     objects.Add(new CatchDifficultyHitObject(hitObject, lastObject, clockRate, halfCatcherWidth + (float)accuracyDistance, objects, objects.Count));
-
                 }
+
                 lastObject = hitObject;
             }
 
@@ -100,10 +99,10 @@ namespace osu.Game.Rulesets.Catch.Difficulty
             // Check if there's any mod to apply effects here
             for (int index = 0; index < mods.Length; index++)
             {
-                if (mods[index] is CatchModLowPrecision modLP)
+                if (mods[index] is CatchModLowPrecision modLp)
                 {
-                    modLP_status = true;
-                    modLP_leniencyValue = modLP.Leniency.Value;
+                    modLpStatus = true;
+                    modLpLeniencyValue = modLp.Leniency.Value;
                 }
             }
 

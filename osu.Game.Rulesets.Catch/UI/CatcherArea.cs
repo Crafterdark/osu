@@ -28,11 +28,10 @@ namespace osu.Game.Rulesets.Catch.UI
             set => catcherContainer.Child = catcher = value;
         }
 
-        public bool DisabledDashing { get; set; } = false;
-
-        public bool UnlockedDirection { get; set; } = false;
-        public bool SetPressedForLeft { get; set; } = false;
-        public bool SetPressedForRight { get; set; } = false;
+        public bool DisabledDashing { get; set; }
+        public bool UnlockedDirection { get; set; }
+        public bool SetPressedForLeft { get; set; }
+        public bool SetPressedForRight { get; set; }
 
         public int SetPressedFirst = 0;
 
@@ -148,9 +147,13 @@ namespace osu.Game.Rulesets.Catch.UI
                     if (UnlockedDirection)
                     {
                         SetPressedForLeft = true;
-                        if (!SetPressedForRight) currentDirection = -1;
+
+                        if (!SetPressedForRight)
+                            currentDirection = -1;
+
                         return true;
                     }
+
                     currentDirection--;
                     return true;
 
@@ -158,14 +161,17 @@ namespace osu.Game.Rulesets.Catch.UI
                     if (UnlockedDirection)
                     {
                         SetPressedForRight = true;
-                        if (!SetPressedForLeft) currentDirection = 1;
+
+                        if (!SetPressedForLeft)
+                            currentDirection = 1;
+
                         return true;
                     }
+
                     currentDirection++;
                     return true;
 
                 case CatchAction.Dash:
-
                     if (DisabledDashing)
                         return true;
 
@@ -183,29 +189,28 @@ namespace osu.Game.Rulesets.Catch.UI
                 case CatchAction.MoveLeft:
                     if (UnlockedDirection)
                     {
-
                         SetPressedForLeft = false;
                         currentDirection = 0;
 
                         break;
                     }
+
                     currentDirection++;
                     break;
 
                 case CatchAction.MoveRight:
                     if (UnlockedDirection)
                     {
-
                         SetPressedForRight = false;
                         currentDirection = 0;
 
                         break;
                     }
+
                     currentDirection--;
                     break;
 
                 case CatchAction.Dash:
-
                     if (DisabledDashing)
                         break;
 

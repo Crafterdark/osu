@@ -1,7 +1,6 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
-
 using osu.Framework.Localisation;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.UI;
@@ -17,7 +16,7 @@ using osu.Framework.Bindables;
 using osu.Game.Configuration;
 using osu.Game.Overlays.Settings;
 using osu.Game.Rulesets.Objects.Drawables;
-//using osu.Framework.Logging;
+using osu.Game.Rulesets.Catch.Mods.DebugMods.Utility;
 
 namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 {
@@ -39,14 +38,14 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
         public float CurrentVisibility { get; set; }
         public float FinalVisibility { get; set; }
 
-        [SettingSource("Change size based on combo", "Reduces visibility as combo increases. (Up to Approach Rate 9)")]
+        [SettingSource("Change size based on combo", "Reduces visibility as combo increases.")]
         public BindableBool ComboBasedSize { get; } = new BindableBool(true);
 
         protected readonly BindableNumber<int> CurrentCombo = new BindableInt();
 
         private const float fade_in_duration_multiplier = 0.24f;
-        private float target_approach_rate = 9.0f;
-        private int combo_scaling = 150;
+        private float targetApproachRate;
+        private const int combo_scaling = 150;
         public override string Acronym => "FI";
         public override ModType Type => ModType.DifficultyIncrease;
         public override Type[] IncompatibleMods => new[] { typeof(CatchModHidden), typeof(CatchModFlashlight) };
@@ -62,28 +61,27 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 
             //Usually from Overdose+/Top Diffs and above
             if (mapApproachRate > 9.4)
-                target_approach_rate = 10.5f;
+                targetApproachRate = 10.5f;
 
             //Usually from Rain and above
             else if (mapApproachRate <= 9.4 && mapApproachRate > 8.6)
-                target_approach_rate = 10.0f;
+                targetApproachRate = 10.0f;
 
             //Most Platter belong here
             else if (mapApproachRate <= 8.6 && mapApproachRate > 7)
-                target_approach_rate = 9.0f;
+                targetApproachRate = 9.0f;
 
             //Most Cup/Salad belong here
             else if (mapApproachRate <= 7 && mapApproachRate > 5)
-                target_approach_rate = 8.5f;
+                targetApproachRate = 8.5f;
 
             //This range considers the usage of EZ
             else
-                target_approach_rate = 8.0f;
+                targetApproachRate = 8.0f;
 
-            float mapApproachRateTime = (float)CatchUsefulForMods.ApproachRateToTime(mapApproachRate);
+            float mapApproachRateTime = (float)CatchUtilityForMods.ApproachRateToTime(mapApproachRate);
 
-            float mapApproachRateTimeTarget = (float)CatchUsefulForMods.ApproachRateToTime(target_approach_rate);
-
+            float mapApproachRateTimeTarget = (float)CatchUtilityForMods.ApproachRateToTime(targetApproachRate);
 
             //The final value of visibility that we are enforcing to low approach rate maps
             FinalVisibility = mapApproachRateTimeTarget / mapApproachRateTime;
@@ -109,13 +107,13 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
                 return;
             }
 
-            float ComboBasedDiffVisibility = (float)(InitialVisibility.Value - FinalVisibility);
+            float comboBasedDiffVisibility = (float)(InitialVisibility.Value - FinalVisibility);
 
             CurrentCombo.BindTo(scoreProcessor.Combo);
             CurrentCombo.BindValueChanged(combo =>
             {
                 if (combo.NewValue <= combo_scaling)
-                    CurrentVisibility = (float)InitialVisibility.Value - (ComboBasedDiffVisibility * combo.NewValue / combo_scaling);
+                    CurrentVisibility = (float)InitialVisibility.Value - (comboBasedDiffVisibility * combo.NewValue / combo_scaling);
             }, true);
         }
 
@@ -133,16 +131,15 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
                     return rank;
             }
         }
+
         public void Update(Playfield playfield)
         {
             CatchPlayfield cpf = (CatchPlayfield)playfield;
 
             foreach (DrawableHitObject hitObject in cpf.AllHitObjects)
             {
-
-                if (!(hitObject is DrawableCatchHitObject catchDrawable))
+                if (!(hitObject is DrawableCatchHitObject))
                     return;
-
 
                 if (hitObject.NestedHitObjects.Any())
                 {
@@ -152,29 +149,29 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
                             fadeInHitObject(nestedCatchDrawable, cpf);
                     }
                 }
+
                 else
                     fadeInHitObject((DrawableCatchHitObject)hitObject, cpf);
             }
-
-
         }
+
         private void fadeInHitObject(DrawableCatchHitObject drawable, CatchPlayfield cpf)
         {
             CatchHitObject hitObject = drawable.HitObject;
 
             double hitTime = hitObject.StartTime;
-            double offset_before_fading = hitObject.TimePreempt * CurrentVisibility;
-            double offset_after_fully_visible = hitObject.TimePreempt * fade_in_duration_multiplier * CurrentVisibility;
+            double offsetBeforeFading = hitObject.TimePreempt * CurrentVisibility;
+            double offsetAfterFullyVisible = hitObject.TimePreempt * fade_in_duration_multiplier * CurrentVisibility;
 
             //If we are during the fade in and if the hitobject is still not hit
-            if (hitTime - offset_before_fading <= cpf.Time.Current && hitTime > cpf.Time.Current)
+            if (hitTime - offsetBeforeFading <= cpf.Time.Current && hitTime > cpf.Time.Current)
             {
                 // Main difference between Fade In Mod and Hidden Mod implementations:
                 // The actual visibility state of the hitobject depends on the current fade in offset and duration
-                if ((hitTime - offset_before_fading) + offset_after_fully_visible >= cpf.Time.Current)
+                if ((hitTime - offsetBeforeFading) + offsetAfterFullyVisible >= cpf.Time.Current)
                 {
-                    if (offset_after_fully_visible > 0)
-                        drawable.FadeTo((float)((cpf.Time.Current - (hitTime - offset_before_fading)) / offset_after_fully_visible), 0);
+                    if (offsetAfterFullyVisible > 0)
+                        drawable.FadeTo((float)((cpf.Time.Current - (hitTime - offsetBeforeFading)) / offsetAfterFullyVisible), 0);
 
                     //Should be impossible, just in case
                     else
@@ -185,12 +182,10 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
                     drawable.FadeTo(1, 0);
             }
             //Only if we are earlier than the fade in: We don't want to see hitobjects
-            else if (hitTime - offset_before_fading > cpf.Time.Current)
+            else if (hitTime - offsetBeforeFading > cpf.Time.Current)
             {
                 drawable.FadeTo(0, 0);
             }
-
         }
-
     }
 }

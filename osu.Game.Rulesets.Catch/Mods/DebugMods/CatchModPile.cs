@@ -31,22 +31,17 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 
         [SettingSource("Stacking Seed", "Use a custom seed for the stacking of the fruit pile", SettingControlType = typeof(SettingsNumberBox))]
         public Bindable<int?> Seed { get; } = new Bindable<int?>();
+
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {
             var drawableCatchRuleset = (DrawableCatchRuleset)drawableRuleset;
             var catchRuleset = (CatchPlayfield)drawableCatchRuleset.Playfield;
 
             catchRuleset.Catcher.CatchFruitPile = true;
-            if (Seed.Value != null)
-                catchRuleset.Catcher.CatchFruitRandomPile = new Random((int)Seed.Value);
-            else
-                catchRuleset.Catcher.CatchFruitRandomPile = new Random(drawableCatchRuleset.Beatmap.BeatmapInfo.OnlineID);
+            catchRuleset.Catcher.CatchFruitRandomPile = (Seed.Value != null) ? new Random((int)Seed.Value) : new Random(drawableCatchRuleset.Beatmap.BeatmapInfo.OnlineID);
 
             //Logger.Log("Beatmap Seed:" + Seed.Value);
             //Logger.Log("Beatmap Seed (online ID):" + drawableCatchRuleset.Beatmap.BeatmapInfo.OnlineID);
         }
-
-
-
     }
 }
