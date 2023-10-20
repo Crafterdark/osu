@@ -14,10 +14,10 @@ using osu.Game.Rulesets.UI;
 
 namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 {
-    public class CatchModAutoDash : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IUpdatableByPlayfield
+    public class CatchModAutoDashing : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IUpdatableByPlayfield
 
     {
-        public override string Name => "Autodash";
+        public override string Name => "Auto Dashing";
 
         public override string Acronym => "AD";
 
