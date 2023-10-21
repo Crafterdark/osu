@@ -13,6 +13,7 @@ using osu.Framework.Utils;
 using osu.Game.Beatmaps;
 using osu.Game.Configuration;
 using osu.Game.Rulesets.Catch.Judgements;
+using osu.Game.Rulesets.Catch.Mods.DebugMods;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.Objects.Drawables;
 using osu.Game.Rulesets.Catch.Skinning;
@@ -65,6 +66,21 @@ namespace osu.Game.Rulesets.Catch.UI
         public bool CatchFruitOnPlate { get; set; } = true;
 
         /// <summary>
+        /// Whether <see cref="DrawablePalpableCatchHitObject"/> fruit should have variable leniency.
+        /// </summary>
+        public bool CatchFruitLeniency { get; set; }
+
+        /// <summary>
+        /// Whether <see cref="DrawablePalpableCatchHitObject"/> fruit should stay on the plate.
+        /// </summary>
+        public bool CatchFruitPile { get; set; }
+
+        public Random CatchFruitRandomPile = null!;
+
+        //SpeedChange, BASE_WALK_SPEED, BASE_DASH_SPEED
+        public double[] CustomMultipliers = { 1.00, 0.50, 1.00 };
+
+        /// <summary>
         /// The speed of the catcher when the catcher is dashing.
         /// </summary>
         public const double BASE_DASH_SPEED = 1.0;
@@ -74,10 +90,42 @@ namespace osu.Game.Rulesets.Catch.UI
         /// </summary>
         public const double BASE_WALK_SPEED = 0.5;
 
+        public static double GetCatcherSpeed(MoveType status, double[] customMultipliers)
+        {
+            double rate = customMultipliers[0];
+
+            //Regular nomod walking speed
+            if (status == MoveType.Walk && customMultipliers[1] == 0.50)
+                return BASE_WALK_SPEED / rate;
+
+            //Regular nomod dashing speed
+            else if (status == MoveType.Dash && customMultipliers[2] == 1.00)
+                return BASE_DASH_SPEED / rate;
+
+            //Custom walking speed
+            else if (status == MoveType.Walk && customMultipliers[1] != 0.50)
+                //CustomWalkSpeed
+                return customMultipliers[1] / rate;
+
+            //Custom dashing speed
+            else if (status == MoveType.Dash && customMultipliers[2] != 1.00)
+                //CustomDashSpeed
+                return customMultipliers[2] / rate;
+
+            //If this happens, something went wrong somewhere else...
+            return 0;
+        }
+
+        public enum MoveType
+        {
+            Walk,
+            Dash,
+        }
+
         /// <summary>
         /// The current speed of the catcher with the hyper-dash modifier applied.
         /// </summary>
-        public double Speed => (Dashing ? BASE_DASH_SPEED : BASE_WALK_SPEED) * hyperDashModifier;
+        public double Speed => (Dashing ? GetCatcherSpeed(MoveType.Dash, CustomMultipliers) : GetCatcherSpeed(MoveType.Walk, CustomMultipliers)) * hyperDashModifier;
 
         /// <summary>
         /// The amount by which caught fruit should be scaled down to fit on the plate.
@@ -122,6 +170,7 @@ namespace osu.Game.Rulesets.Catch.UI
         /// </summary>
         public readonly float CatchWidth;
 
+        public double CatchLeniencySlider;
         private readonly SkinnableCatcher body;
 
         private Color4 hyperDashColour = DEFAULT_HYPER_DASH_COLOUR;
@@ -129,6 +178,7 @@ namespace osu.Game.Rulesets.Catch.UI
         private double hyperDashModifier = 1;
         private int hyperDashDirection;
         private float hyperDashTargetPosition;
+
         private Bindable<bool> hitLighting = null!;
 
         private readonly HitExplosionContainer hitExplosionContainer;
@@ -204,8 +254,17 @@ namespace osu.Game.Rulesets.Catch.UI
                 return false;
 
             float halfCatchWidth = CatchWidth * 0.5f;
-            return fruit.EffectiveX >= X - halfCatchWidth &&
-                   fruit.EffectiveX <= X + halfCatchWidth;
+
+            if (CatchFruitLeniency)
+            {
+                double leniencyValue = CatchModLowPrecision.CalculateHalfLeniencyDistanceForHitObject(hitObject, CatchLeniencySlider);
+
+                //Logger.Log("Current Leniency:" + leniencyValue);
+
+                return fruit.EffectiveX >= X - (halfCatchWidth + leniencyValue) && fruit.EffectiveX <= X + (halfCatchWidth + leniencyValue);
+            }
+
+            return fruit.EffectiveX >= X - halfCatchWidth && fruit.EffectiveX <= X + halfCatchWidth;
         }
 
         public void OnNewResult(DrawableCatchHitObject drawableObject, JudgementResult result)
@@ -221,7 +280,11 @@ namespace osu.Game.Rulesets.Catch.UI
 
             if (result.IsHit)
             {
-                var positionInStack = computePositionInStack(new Vector2(palpableObject.X - X, 0), palpableObject.DisplaySize.X);
+                float objectX = palpableObject.X - X;
+
+                if (CatchFruitLeniency) objectX = Math.Clamp(palpableObject.X - X, -1 * CatchWidth / 2, CatchWidth / 2);
+
+                var positionInStack = computePositionInStack(new Vector2(objectX, 0), palpableObject.DisplaySize.X);
 
                 if (CatchFruitOnPlate)
                     placeCaughtObject(palpableObject, positionInStack);
@@ -239,7 +302,7 @@ namespace osu.Game.Rulesets.Catch.UI
                 double positionDifference = target.EffectiveX - X;
                 double velocity = positionDifference / Math.Max(1.0, timeDifference - 1000.0 / 60.0);
 
-                SetHyperDashState(Math.Abs(velocity) / BASE_DASH_SPEED, target.EffectiveX);
+                SetHyperDashState(Math.Abs(velocity) / GetCatcherSpeed(MoveType.Dash, CustomMultipliers), target.EffectiveX);
             }
             else
                 SetHyperDashState();
@@ -247,9 +310,13 @@ namespace osu.Game.Rulesets.Catch.UI
             if (result.IsHit)
                 CurrentState = hitObject.Kiai ? CatcherAnimationState.Kiai : CatcherAnimationState.Idle;
             else if (!(hitObject is Banana))
+            {
                 CurrentState = CatcherAnimationState.Fail;
+                if (CatchFruitPile)
+                    Drop();
+            }
 
-            if (palpableObject.HitObject.LastInCombo)
+            if (palpableObject.HitObject.LastInCombo && !CatchFruitPile)
             {
                 if (result.Judgement is CatchJudgement catchJudgement && catchJudgement.ShouldExplodeFor(result))
                     Explode();
@@ -354,6 +421,9 @@ namespace osu.Game.Rulesets.Catch.UI
 
         private void placeCaughtObject(DrawablePalpableCatchHitObject drawableObject, Vector2 position)
         {
+            if (CatchFruitPile && (drawableObject.HitObject is Banana || caughtObjectContainer.Count >= 500))
+                return;
+
             var caughtObject = getCaughtObject(drawableObject.HitObject);
 
             if (caughtObject == null) return;
@@ -379,8 +449,16 @@ namespace osu.Game.Rulesets.Catch.UI
 
             while (caughtObjectContainer.Any(f => Vector2Extensions.DistanceSquared(f.Position, position) < checkDistance))
             {
-                position.X += RNG.NextSingle(-adjustedRadius, adjustedRadius);
-                position.Y -= RNG.NextSingle(0, 5);
+                if (!CatchFruitPile)
+                {
+                    position.X += RNG.NextSingle(-adjustedRadius, adjustedRadius);
+                    position.Y -= RNG.NextSingle(0, 5);
+                }
+                else
+                {
+                    position.X += Math.Clamp((CatchFruitRandomPile.NextSingle() * 2 - 1.0f) * adjustedRadius, -adjustedRadius, adjustedRadius);
+                    position.Y -= Math.Clamp(CatchFruitRandomPile.NextSingle() * 5, 0, 5);
+                }
             }
 
             return position;

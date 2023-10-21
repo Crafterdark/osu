@@ -15,6 +15,7 @@ using osu.Game.Rulesets.Catch.Beatmaps;
 using osu.Game.Rulesets.Catch.Difficulty;
 using osu.Game.Rulesets.Catch.Edit;
 using osu.Game.Rulesets.Catch.Mods;
+using osu.Game.Rulesets.Catch.Mods.DebugMods;
 using osu.Game.Rulesets.Catch.Replays;
 using osu.Game.Rulesets.Catch.Scoring;
 using osu.Game.Rulesets.Catch.Skinning.Argon;
@@ -108,7 +109,10 @@ namespace osu.Game.Rulesets.Catch
                     {
                         new CatchModEasy(),
                         new CatchModNoFail(),
-                        new MultiMod(new CatchModHalfTime(), new CatchModDaycore())
+                        new MultiMod(new CatchModHalfTime(), new CatchModDaycore()),
+
+                        //Debug Mod 1#:
+                        new CatchModLowPrecision(),
                     };
 
                 case ModType.DifficultyIncrease:
@@ -117,7 +121,8 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModHardRock(),
                         new MultiMod(new CatchModSuddenDeath(), new CatchModPerfect()),
                         new MultiMod(new CatchModDoubleTime(), new CatchModNightcore()),
-                        new CatchModHidden(),
+                        //Debug Mod 3#:
+                        new MultiMod(new CatchModHidden(), new CatchModFadeIn()),
                         new CatchModFlashlight(),
                         new ModAccuracyChallenge(),
                     };
@@ -128,6 +133,14 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModDifficultyAdjust(),
                         new CatchModClassic(),
                         new CatchModMirror(),
+
+                        //Debug Mod 4# (WIP):
+                        //new CatchModUnlockedDirection(),
+
+                        //Debug Mod 6#:
+                        new CatchModSpeedRun(),
+                        //Debug Mod 7#:
+                        new CatchModDropletStabilizer(),
                     };
 
                 case ModType.Automation:
@@ -135,6 +148,9 @@ namespace osu.Game.Rulesets.Catch
                     {
                         new MultiMod(new CatchModAutoplay(), new CatchModCinema()),
                         new CatchModRelax(),
+
+                        //Debug Mod 2# (WIP):
+                        //new CatchModAutoDash(),
                     };
 
                 case ModType.Fun:
@@ -144,6 +160,10 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModFloatingFruits(),
                         new CatchModMuted(),
                         new CatchModNoScope(),
+                        //Debug Mod 5#:
+                        new CatchModPile(),
+                        //Debug Mod 8#:
+                        //new CatchModClimbingWall(),
                     };
 
                 case ModType.System:

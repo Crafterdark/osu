@@ -1,8 +1,10 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics;
+using osu.Game.Rulesets.Catch.Mods.DebugMods;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Mods;
@@ -25,6 +27,8 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override BindableBool ComboBasedSize { get; } = new BindableBool(true);
 
         public override float DefaultFlashlightSize => 325;
+
+        public override Type[] IncompatibleMods => new[] { typeof(CatchModFadeIn) };
 
         protected override Flashlight CreateFlashlight() => new CatchFlashlight(this, playfield);
 

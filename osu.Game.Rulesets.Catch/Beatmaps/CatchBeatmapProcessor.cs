@@ -18,6 +18,13 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         public bool HardRockOffsets { get; set; }
 
+        public bool IsDropletStabilized { get; set; }
+
+        public double StabilizerPower { get; set; }
+
+        //SpeedChange, BASE_WALK_SPEED, BASE_DASH_SPEED
+        public double[] CustomMultipliers = { 1.00, 0.50, 1.00 };
+
         public CatchBeatmapProcessor(IBeatmap beatmap)
             : base(beatmap)
         {
@@ -86,7 +93,16 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                             catchObject.XOffset = 0;
 
                             if (catchObject is TinyDroplet)
-                                catchObject.XOffset = Math.Clamp(rng.Next(-20, 20), -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
+                            {
+                                if (IsDropletStabilized)
+                                {
+                                    int modOffset = StabilizerPower == 1.00 ? 0 : rng.Next(-20 * (1 - StabilizerPower), 20 * (1 - StabilizerPower));
+                                    catchObject.XOffset = Math.Clamp(modOffset, -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
+                                }
+                                else
+                                    catchObject.XOffset = Math.Clamp(rng.Next(-20, 20), -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
+                            }
+
                             else if (catchObject is Droplet)
                                 rng.Next(); // osu!stable retrieved a random droplet rotation
                         }
@@ -95,7 +111,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 }
             }
 
-            initialiseHyperDash(beatmap);
+            initialiseHyperDash(beatmap, CustomMultipliers);
         }
 
         private static void applyHardRockOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime, LegacyRandom rng)
@@ -190,7 +206,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             }
         }
 
-        private static void initialiseHyperDash(IBeatmap beatmap)
+        private static void initialiseHyperDash(IBeatmap beatmap, double[] customMultipliers)
         {
             List<PalpableCatchHitObject> palpableObjects = new List<PalpableCatchHitObject>();
 
@@ -233,7 +249,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 int thisDirection = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
                 double timeToNext = nextObject.StartTime - currentObject.StartTime - 1000f / 60f / 4; // 1/4th of a frame of grace time, taken from osu-stable
                 double distanceToNext = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcess : halfCatcherWidth);
-                float distanceToHyper = (float)(timeToNext * Catcher.BASE_DASH_SPEED - distanceToNext);
+                float distanceToHyper = (float)(timeToNext * Catcher.GetCatcherSpeed(Catcher.MoveType.Dash, customMultipliers) - distanceToNext);
 
                 if (distanceToHyper < 0)
                 {

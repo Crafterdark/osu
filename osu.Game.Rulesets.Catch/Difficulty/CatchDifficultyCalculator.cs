@@ -8,6 +8,7 @@ using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Catch.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Catch.Difficulty.Skills;
 using osu.Game.Rulesets.Catch.Mods;
+using osu.Game.Rulesets.Catch.Mods.DebugMods;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Difficulty;
@@ -22,6 +23,10 @@ namespace osu.Game.Rulesets.Catch.Difficulty
         private const double star_scaling_factor = 0.153;
 
         private float halfCatcherWidth;
+
+        private bool modLpStatus;
+
+        private double modLpLeniencyValue;
 
         public override int Version => 20220701;
 
@@ -66,7 +71,17 @@ namespace osu.Game.Rulesets.Catch.Difficulty
                     continue;
 
                 if (lastObject != null)
-                    objects.Add(new CatchDifficultyHitObject(hitObject, lastObject, clockRate, halfCatcherWidth, objects, objects.Count));
+                {
+                    double accuracyDistance = 0;
+
+                    if (modLpStatus)
+                    {
+                        accuracyDistance = CatchModLowPrecision.CalculateHalfLeniencyDistanceForHitObject(hitObject, modLpLeniencyValue);
+                        accuracyDistance *= 1 - (Math.Max(0, beatmap.Difficulty.CircleSize - 5.5f) * 0.0625f);
+                    }
+
+                    objects.Add(new CatchDifficultyHitObject(hitObject, lastObject, clockRate, halfCatcherWidth + (float)accuracyDistance, objects, objects.Count));
+                }
 
                 lastObject = hitObject;
             }
@@ -80,6 +95,16 @@ namespace osu.Game.Rulesets.Catch.Difficulty
 
             // For circle sizes above 5.5, reduce the catcher width further to simulate imperfect gameplay.
             halfCatcherWidth *= 1 - (Math.Max(0, beatmap.Difficulty.CircleSize - 5.5f) * 0.0625f);
+
+            // Check if there's any mod to apply effects here
+            for (int index = 0; index < mods.Length; index++)
+            {
+                if (mods[index] is CatchModLowPrecision modLp)
+                {
+                    modLpStatus = true;
+                    modLpLeniencyValue = modLp.Leniency.Value;
+                }
+            }
 
             return new Skill[]
             {

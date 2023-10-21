@@ -38,11 +38,11 @@ namespace osu.Game.Rulesets.Catch.Difficulty
             double value = Math.Pow(5.0 * Math.Max(1.0, catchAttributes.StarRating / 0.0049) - 4.0, 2.0) / 100000.0;
 
             // Longer maps are worth more. "Longer" means how many hits there are which can contribute to combo
-            int numTotalHits = totalComboHits();
+            //int numTotalHits = totalComboHits();
 
-            double lengthBonus =
-                0.95 + 0.3 * Math.Min(1.0, numTotalHits / 2500.0) +
-                (numTotalHits > 2500 ? Math.Log10(numTotalHits / 2500.0) * 0.475 : 0.0);
+            double lengthBonus = NewRework_lengthBonus(score);
+            //double lengthBonus = OldRework_lengthBonus(numTotalHits);
+
             value *= lengthBonus;
 
             value *= Math.Pow(0.97, misses);
@@ -85,9 +85,57 @@ namespace osu.Game.Rulesets.Catch.Difficulty
             };
         }
 
+        public double OldRework_lengthBonus(int numTotalHits)
+        {
+            double lengthBonus = 0.95 + 0.3 * Math.Min(1.0, numTotalHits / 2500.0) + (numTotalHits > 2500 ? Math.Log10(numTotalHits / 2500.0) * 0.475 : 0.0);
+
+            return lengthBonus;
+        }
+
+        public double NewRework_lengthBonus(ScoreInfo score)
+        {
+            double drainTime = score.BeatmapInfo == null ? 0 : score.BeatmapInfo.Length / 1000;
+
+            // Check if there's any rate adjust mod to for reducing or increasing drainTime
+            for (int index = 0; index < score.Mods.Length; index++)
+            {
+                if (score.Mods[index] is ModRateAdjust modRa)
+                {
+                    drainTime /= modRa.SpeedChange.Value;
+                    break;
+                }
+            }
+
+            int maxfruitsHit = score.MaximumStatistics.GetValueOrDefault(HitResult.Great);
+            int maxticksHit = score.MaximumStatistics.GetValueOrDefault(HitResult.LargeTickHit);
+
+            int maxCombo = maxfruitsHit + maxticksHit;
+
+            //Most TV size ranked songs are within the 90 seconds range
+            const double short_length = 90.0;
+
+            //If it is less than 1, it is short (linear), otherwise it is long (logarithm)
+            double lengthFactor = drainTime / short_length;
+
+            const double long_length_bonus = 0.475;
+
+            double comboRatio = (double)totalSuccessfulComboHits() / maxCombo;
+
+            double lengthBonus =
+                0.95 + comboRatio * (0.05 * Math.Min(1.0, lengthFactor) + (lengthFactor > 1.0 ? Math.Log10(lengthFactor) * long_length_bonus : 0.0));
+
+            //Logger.Log("drainTime: " + drainTime);
+            //Logger.Log("lengthFactor: " + lengthFactor);
+            //Logger.Log("lengthBonus: " + lengthBonus);
+            //Logger.Log("comboRatio: " + comboRatio);
+
+            return lengthBonus;
+        }
+
         private double accuracy() => totalHits() == 0 ? 0 : Math.Clamp((double)totalSuccessfulHits() / totalHits(), 0, 1);
         private int totalHits() => tinyTicksHit + ticksHit + fruitsHit + misses + tinyTicksMissed;
         private int totalSuccessfulHits() => tinyTicksHit + ticksHit + fruitsHit;
         private int totalComboHits() => misses + ticksHit + fruitsHit;
+        private int totalSuccessfulComboHits() => ticksHit + fruitsHit;
     }
 }
