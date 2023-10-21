@@ -83,7 +83,7 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 
             double difficultyValue = 10 * (1 - leniencySliderValue);
 
-            return Math.Abs(difficultyValue - 10) / 10 * (double)((CatchHitObject)hitObject).Scale * rescaleFactor * (MAX_HITBOX_FRUIT / 2.0);
+            return Math.Abs(difficultyValue - 10) / 10 * ((CatchHitObject)hitObject).Scale * rescaleFactor * (MAX_HITBOX_FRUIT / 2.0);
         }
     }
 }

@@ -23,7 +23,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         public double StabilizerPower { get; set; }
 
         //SpeedChange, BASE_WALK_SPEED, BASE_DASH_SPEED
-        public double[] CustomMultipliers = new double[] { 1.00, 0.50, 1.00 };
+        public double[] CustomMultipliers = { 1.00, 0.50, 1.00 };
 
         public CatchBeatmapProcessor(IBeatmap beatmap)
             : base(beatmap)

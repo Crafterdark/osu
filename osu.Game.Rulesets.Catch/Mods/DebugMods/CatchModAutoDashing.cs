@@ -74,7 +74,7 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
                     rescaleFactor = 0.4;
                 }
 
-                accuracyDistance = Math.Abs(catcher.CatchLeniencySlider - 10) / 10 * (double)hitObject.Scale * rescaleFactor * (CatchModLowPrecision.MAX_HITBOX_FRUIT / 2.0);
+                accuracyDistance = Math.Abs(catcher.CatchLeniencySlider - 10) / 10 * hitObject.Scale * rescaleFactor * (CatchModLowPrecision.MAX_HITBOX_FRUIT / 2.0);
             }
 
             return hitObject.EffectiveX <= catcher.X + (halfCatchWidth + accuracyDistance) && hitObject.EffectiveX >= catcher.X - (halfCatchWidth + accuracyDistance);

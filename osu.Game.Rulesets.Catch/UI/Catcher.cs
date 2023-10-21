@@ -78,7 +78,7 @@ namespace osu.Game.Rulesets.Catch.UI
         public Random CatchFruitRandomPile = null!;
 
         //SpeedChange, BASE_WALK_SPEED, BASE_DASH_SPEED
-        public double[] CustomMultipliers = new double[] { 1.00, 0.50, 1.00 };
+        public double[] CustomMultipliers = { 1.00, 0.50, 1.00 };
 
         /// <summary>
         /// The speed of the catcher when the catcher is dashing.
