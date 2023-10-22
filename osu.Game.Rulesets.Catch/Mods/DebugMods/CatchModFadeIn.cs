@@ -35,8 +35,8 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
             Precision = 0.1,
         };
 
-        public float CurrentVisibility { get; set; }
-        public float FinalVisibility { get; set; }
+        public BindableNumber<double> CurrentVisibility { get; set; } = new BindableNumber<double>();
+        public BindableNumber<double> FinalVisibility { get; set; } = new BindableNumber<double>();
 
         [SettingSource("Change size based on combo", "Reduces visibility as combo increases.")]
         public BindableBool ComboBasedSize { get; } = new BindableBool(true);
@@ -44,8 +44,8 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
         protected readonly BindableNumber<int> CurrentCombo = new BindableInt();
 
         private const float fade_in_duration_multiplier = 0.24f;
-        private float targetApproachRate;
-        private const int combo_scaling = 150;
+
+        public const int COMBO_SCALING = 150;
         public override string Acronym => "FI";
         public override ModType Type => ModType.DifficultyIncrease;
         public override Type[] IncompatibleMods => new[] { typeof(CatchModHidden), typeof(CatchModFlashlight) };
@@ -57,39 +57,10 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 
             catchPlayfield.Catcher.CatchFruitOnPlate = true;
 
-            float mapApproachRate = drawableCatchRuleset.Beatmap.Difficulty.ApproachRate;
-
-            //Usually from Overdose+/Top Diffs and above
-            if (mapApproachRate > 9.4)
-                targetApproachRate = 10.5f;
-
-            //Usually from Rain and above
-            else if (mapApproachRate <= 9.4 && mapApproachRate > 8.6)
-                targetApproachRate = 10.0f;
-
-            //Most Platter belong here
-            else if (mapApproachRate <= 8.6 && mapApproachRate > 7)
-                targetApproachRate = 9.0f;
-
-            //Most Cup/Salad belong here
-            else if (mapApproachRate <= 7 && mapApproachRate > 5)
-                targetApproachRate = 8.5f;
-
-            //This range considers the usage of EZ
-            else
-                targetApproachRate = 8.0f;
-
-            float mapApproachRateTime = (float)CatchUtilityForMods.ApproachRateToTime(mapApproachRate);
-
-            float mapApproachRateTimeTarget = (float)CatchUtilityForMods.ApproachRateToTime(targetApproachRate);
+            double mapApproachRate = drawableCatchRuleset.Beatmap.Difficulty.ApproachRate;
 
             //The final value of visibility that we are enforcing to low approach rate maps
-            FinalVisibility = mapApproachRateTimeTarget / mapApproachRateTime;
-
-            //Logger.Log("Final Visibility After Time" + FinalVisibility);
-
-            if (FinalVisibility > InitialVisibility.Value)
-                FinalVisibility = (float)InitialVisibility.Value;
+            FinalVisibility.Value = GetFinalVisibilityValue(mapApproachRate, GetTargetApproachRate(mapApproachRate), InitialVisibility.Value);
 
             //Logger.Log("ApproachRate " + drawableCatchRuleset.Beatmap.Difficulty.ApproachRate);
             //Logger.Log("Initial Visibility " + InitialVisibility.Value);
@@ -103,17 +74,17 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 
             if (!ComboBasedSize.Value)
             {
-                CurrentVisibility = (float)InitialVisibility.Value;
+                CurrentVisibility.Value = InitialVisibility.Value;
                 return;
             }
 
-            float comboBasedDiffVisibility = (float)(InitialVisibility.Value - FinalVisibility);
+            double comboBasedDiffVisibility = InitialVisibility.Value - FinalVisibility.Value;
 
             CurrentCombo.BindTo(scoreProcessor.Combo);
             CurrentCombo.BindValueChanged(combo =>
             {
-                if (combo.NewValue <= combo_scaling)
-                    CurrentVisibility = (float)InitialVisibility.Value - (comboBasedDiffVisibility * combo.NewValue / combo_scaling);
+                if (combo.NewValue <= COMBO_SCALING)
+                    CurrentVisibility.Value = InitialVisibility.Value - (comboBasedDiffVisibility * combo.NewValue / COMBO_SCALING);
             }, true);
         }
 
@@ -160,8 +131,8 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
             CatchHitObject hitObject = drawable.HitObject;
 
             double hitTime = hitObject.StartTime;
-            double offsetBeforeFading = hitObject.TimePreempt * CurrentVisibility;
-            double offsetAfterFullyVisible = hitObject.TimePreempt * fade_in_duration_multiplier * CurrentVisibility;
+            double offsetBeforeFading = hitObject.TimePreempt * CurrentVisibility.Value;
+            double offsetAfterFullyVisible = hitObject.TimePreempt * fade_in_duration_multiplier * CurrentVisibility.Value;
 
             //If we are during the fade in and if the hitobject is still not hit
             if (hitTime - offsetBeforeFading <= cpf.Time.Current && hitTime > cpf.Time.Current)
@@ -186,6 +157,45 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
             {
                 drawable.FadeTo(0, 0);
             }
+        }
+
+        public static double GetFinalVisibilityValue(double mapAR, double targetAR, double initialVisibility)
+        {
+            double mapApproachRateTime = CatchUtilityForMods.ApproachRateToTime(mapAR);
+
+            double mapApproachRateTimeTarget = CatchUtilityForMods.ApproachRateToTime(targetAR);
+
+            double finalVisibility = mapApproachRateTimeTarget / mapApproachRateTime;
+
+            if (finalVisibility > initialVisibility)
+                return initialVisibility;
+
+            //Logger.Log("Final Visibility After Time" + FinalVisibility);
+
+            return finalVisibility;
+        }
+
+        public static double GetTargetApproachRate(double mapAR)
+        {
+            //Usually from Overdose+/Top Diffs and above
+            if (mapAR > 9.4)
+                return 10.5f;
+
+            //Usually from Rain and above
+            else if (mapAR <= 9.4 && mapAR > 8.6)
+                return 10.0f;
+
+            //Most Platter belong here
+            else if (mapAR <= 8.6 && mapAR > 7)
+                return 9.0f;
+
+            //Most Cup/Salad belong here
+            else if (mapAR <= 7 && mapAR > 5)
+                return 8.5f;
+
+            //This range considers the usage of EZ
+            else
+                return 8.0f;
         }
     }
 }

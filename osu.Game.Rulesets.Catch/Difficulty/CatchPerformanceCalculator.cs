@@ -4,6 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using osu.Game.Rulesets.Catch.Mods.DebugMods;
+using osu.Game.Rulesets.Catch.Mods.DebugMods.Utility;
 using osu.Game.Rulesets.Difficulty;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Scoring;
@@ -18,6 +20,7 @@ namespace osu.Game.Rulesets.Catch.Difficulty
         private int tinyTicksHit;
         private int tinyTicksMissed;
         private int misses;
+        private double comboRatio;
 
         public CatchPerformanceCalculator()
             : base(new CatchRuleset())
@@ -34,14 +37,17 @@ namespace osu.Game.Rulesets.Catch.Difficulty
             tinyTicksMissed = score.Statistics.GetValueOrDefault(HitResult.SmallTickMiss);
             misses = score.Statistics.GetValueOrDefault(HitResult.Miss);
 
+            // Calculate the combo ratio (current combo / maximum combo)
+            comboRatio = CalculateComboRatio(score);
+
             // We are heavily relying on aim in catch the beat
             double value = Math.Pow(5.0 * Math.Max(1.0, catchAttributes.StarRating / 0.0049) - 4.0, 2.0) / 100000.0;
 
             // Longer maps are worth more. "Longer" means how many hits there are which can contribute to combo
             //int numTotalHits = totalComboHits();
 
-            double lengthBonus = NewRework_lengthBonus(score);
-            //double lengthBonus = OldRework_lengthBonus(numTotalHits);
+            double lengthBonus = NewReworkLengthBonus(score);
+            //double lengthBonus = OldReworkLengthBonus(numTotalHits);
 
             value *= lengthBonus;
 
@@ -53,6 +59,28 @@ namespace osu.Game.Rulesets.Catch.Difficulty
 
             double approachRate = catchAttributes.ApproachRate;
             double approachRateFactor = 1.0;
+
+            // Fade In must adjust the approach rate
+            if (score.Mods.Any(m => m is CatchModFadeIn))
+            {
+                double mapAR = catchAttributes.ApproachRate;
+                double currentVisibility;
+                double finalVisibility = CatchModFadeIn.GetFinalVisibilityValue(mapAR, CatchModFadeIn.GetTargetApproachRate(mapAR), catchAttributes.InitialVisibility);
+
+                if (score.Combo <= CatchModFadeIn.COMBO_SCALING)
+                    currentVisibility = catchAttributes.InitialVisibility - ((catchAttributes.InitialVisibility - finalVisibility) * score.Combo / CatchModFadeIn.COMBO_SCALING);
+                else
+                    currentVisibility = finalVisibility;
+
+                approachRate = CatchUtilityForMods.TimeToApproachRate(CatchUtilityForMods.ApproachRateToTime(mapAR) * currentVisibility);
+
+                //Logger.Log("Map AR: " + approachRate);
+                //Logger.Log("Initial Visibility: " + catchAttributes.InitialVisibility);
+                //Logger.Log("Final Visibility: " + finalVisibility);
+                //Logger.Log("Current Combo: " + score.Combo);
+                //Logger.Log("Current Visibility: " + currentVisibility);
+            }
+
             if (approachRate > 9.0)
                 approachRateFactor += 0.1 * (approachRate - 9.0); // 10% for each AR above 9
             if (approachRate > 10.0)
@@ -85,14 +113,14 @@ namespace osu.Game.Rulesets.Catch.Difficulty
             };
         }
 
-        public double OldRework_lengthBonus(int numTotalHits)
+        public double OldReworkLengthBonus(int numTotalHits)
         {
             double lengthBonus = 0.95 + 0.3 * Math.Min(1.0, numTotalHits / 2500.0) + (numTotalHits > 2500 ? Math.Log10(numTotalHits / 2500.0) * 0.475 : 0.0);
 
             return lengthBonus;
         }
 
-        public double NewRework_lengthBonus(ScoreInfo score)
+        public double NewReworkLengthBonus(ScoreInfo score)
         {
             double drainTime = score.BeatmapInfo == null ? 0 : score.BeatmapInfo.Length / 1000;
 
@@ -106,11 +134,6 @@ namespace osu.Game.Rulesets.Catch.Difficulty
                 }
             }
 
-            int maxfruitsHit = score.MaximumStatistics.GetValueOrDefault(HitResult.Great);
-            int maxticksHit = score.MaximumStatistics.GetValueOrDefault(HitResult.LargeTickHit);
-
-            int maxCombo = maxfruitsHit + maxticksHit;
-
             //Most TV size ranked songs are within the 90 seconds range
             const double short_length = 90.0;
 
@@ -118,8 +141,6 @@ namespace osu.Game.Rulesets.Catch.Difficulty
             double lengthFactor = drainTime / short_length;
 
             const double long_length_bonus = 0.475;
-
-            double comboRatio = (double)totalSuccessfulComboHits() / maxCombo;
 
             double lengthBonus =
                 0.95 + comboRatio * (0.05 * Math.Min(1.0, lengthFactor) + (lengthFactor > 1.0 ? Math.Log10(lengthFactor) * long_length_bonus : 0.0));
@@ -130,6 +151,20 @@ namespace osu.Game.Rulesets.Catch.Difficulty
             //Logger.Log("comboRatio: " + comboRatio);
 
             return lengthBonus;
+        }
+
+        public double CalculateComboRatio(ScoreInfo score)
+        {
+            int maxfruitsHit = score.MaximumStatistics.GetValueOrDefault(HitResult.Great);
+            int maxticksHit = score.MaximumStatistics.GetValueOrDefault(HitResult.LargeTickHit);
+
+            int maxCombo = maxfruitsHit + maxticksHit;
+
+            //There's no combo yet
+            if (maxCombo <= 0)
+                return 0;
+
+            return (double)totalSuccessfulComboHits() / maxCombo;
         }
 
         private double accuracy() => totalHits() == 0 ? 0 : Math.Clamp((double)totalSuccessfulHits() / totalHits(), 0, 1);

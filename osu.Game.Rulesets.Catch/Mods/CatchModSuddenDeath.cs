@@ -16,7 +16,6 @@ namespace osu.Game.Rulesets.Catch.Mods
         public BindableBool DropletsCannotFail { get; } = new BindableBool(false);
 
         protected override bool FailCondition(HealthProcessor healthProcessor, JudgementResult result)
-    => result.Type.AffectsCombo()
-       && !result.IsHit && (!DropletsCannotFail.Value || result.HitObject is not Droplet);
+            => result.Type.AffectsCombo() && !result.IsHit && (!DropletsCannotFail.Value || result.HitObject is not Droplet);
     }
 }
