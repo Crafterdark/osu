@@ -104,6 +104,7 @@ namespace osu.Game.Rulesets.Catch.Difficulty
                     isLeniencyApplied = true;
                     leniencyFromMod = modLp.Leniency.Value;
                 }
+
                 if (mods[index] is CatchModFadeIn modFi)
                 {
                     initialVisibilityFromMod = modFi.InitialVisibility.Value;

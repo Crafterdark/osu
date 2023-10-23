@@ -124,6 +124,8 @@ namespace osu.Game.Rulesets.Catch
                         //Debug Mod 3#:
                         new MultiMod(new CatchModHidden(), new CatchModFadeIn()),
                         new CatchModFlashlight(),
+                        //Debug Mod 9#:
+                        new CatchModSecretHyper(),
                         new ModAccuracyChallenge(),
                     };
 
