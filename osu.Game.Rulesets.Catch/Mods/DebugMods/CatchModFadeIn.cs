@@ -33,6 +33,7 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
             MaxValue = 0.9,
             Precision = 0.1,
         };
+
         public BindableNumber<double> CurrentVisibility { get; set; } = new BindableNumber<double>();
         public BindableNumber<double> FinalVisibility { get; set; } = new BindableNumber<double>();
 
@@ -157,11 +158,11 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
             }
         }
 
-        public static double GetFinalVisibilityValue(double mapAR, double targetAR, double initialVisibility)
+        public static double GetFinalVisibilityValue(double mapAr, double targetAr, double initialVisibility)
         {
-            double mapApproachRateTime = CatchUtilityForMods.ApproachRateToTime(mapAR);
+            double mapApproachRateTime = CatchUtilityForMods.ApproachRateToTime(mapAr);
 
-            double mapApproachRateTimeTarget = CatchUtilityForMods.ApproachRateToTime(targetAR);
+            double mapApproachRateTimeTarget = CatchUtilityForMods.ApproachRateToTime(targetAr);
 
             double finalVisibility = mapApproachRateTimeTarget / mapApproachRateTime;
 
@@ -173,22 +174,22 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
             return finalVisibility;
         }
 
-        public static double GetTargetApproachRate(double mapAR)
+        public static double GetTargetApproachRate(double mapAr)
         {
             //Usually from Overdose+/Top Diffs and above
-            if (mapAR > 9.4)
+            if (mapAr > 9.4)
                 return 10.5f;
 
             //Usually from Rain and above
-            else if (mapAR <= 9.4 && mapAR > 8.6)
+            else if (mapAr <= 9.4 && mapAr > 8.6)
                 return 10.0f;
 
             //Most Platter belong here
-            else if (mapAR <= 8.6 && mapAR > 7)
+            else if (mapAr <= 8.6 && mapAr > 7)
                 return 9.0f;
 
             //Most Cup/Salad belong here
-            else if (mapAR <= 7 && mapAR > 5)
+            else if (mapAr <= 7 && mapAr > 5)
                 return 8.5f;
 
             //This range considers the usage of EZ
