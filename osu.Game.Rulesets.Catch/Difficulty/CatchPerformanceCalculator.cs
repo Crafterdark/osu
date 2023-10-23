@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using osu.Framework.Logging;
 using osu.Game.Rulesets.Catch.Mods.DebugMods;
 using osu.Game.Rulesets.Catch.Mods.DebugMods.Utility;
 using osu.Game.Rulesets.Difficulty;
@@ -64,17 +65,35 @@ namespace osu.Game.Rulesets.Catch.Difficulty
             if (score.Mods.Any(m => m is CatchModFadeIn))
             {
                 double mapAR = catchAttributes.ApproachRate;
-                double currentVisibility;
+                double initialVisibility = catchAttributes.InitialVisibility;
                 double finalVisibility = CatchModFadeIn.GetFinalVisibilityValue(mapAR, CatchModFadeIn.GetTargetApproachRate(mapAR), catchAttributes.InitialVisibility);
 
-                if (score.Combo <= CatchModFadeIn.COMBO_SCALING)
-                    currentVisibility = catchAttributes.InitialVisibility - ((catchAttributes.InitialVisibility - finalVisibility) * score.Combo / CatchModFadeIn.COMBO_SCALING);
-                else
-                    currentVisibility = finalVisibility;
+                double minAR = CatchUtilityForMods.TimeToApproachRate(CatchUtilityForMods.ApproachRateToTime(mapAR) * initialVisibility);
+                double maxAR = CatchUtilityForMods.TimeToApproachRate(CatchUtilityForMods.ApproachRateToTime(mapAR) * finalVisibility);
 
-                approachRate = CatchUtilityForMods.TimeToApproachRate(CatchUtilityForMods.ApproachRateToTime(mapAR) * currentVisibility);
+                int maxComboFromMap = GetMaximumComboFromMap(score);
 
-                //Logger.Log("Map AR: " + approachRate);
+                //Weighted Fade In Maximum AR
+                double weightMaxAR = (double)Math.Max(0, score.MaxCombo - 150) / maxComboFromMap * maxAR;
+
+                //Weighted Fade In Increasing AR
+                double weightIncrAR = (double)Math.Min(150, score.MaxCombo) / maxComboFromMap * ((minAR + maxAR) / 2);
+
+                //Weighted Fade In Minimum AR
+                double weightMinAR = (double)Math.Max(0, maxComboFromMap - score.MaxCombo) / maxComboFromMap * minAR;
+
+                double weightTotalAR = weightMaxAR + weightIncrAR + weightMinAR;
+
+                Logger.Log("Map AR: " + mapAR);
+
+                Logger.Log("weightMaxAR: " + weightMaxAR);
+                Logger.Log("weightIncrAR: " + weightIncrAR);
+                Logger.Log("weightMinAR: " + weightMinAR);
+
+                Logger.Log("weightTotalAR: " + weightTotalAR);
+
+                approachRate = weightTotalAR;
+
                 //Logger.Log("Initial Visibility: " + catchAttributes.InitialVisibility);
                 //Logger.Log("Final Visibility: " + finalVisibility);
                 //Logger.Log("Current Combo: " + score.Combo);
@@ -155,16 +174,20 @@ namespace osu.Game.Rulesets.Catch.Difficulty
 
         public double CalculateComboRatio(ScoreInfo score)
         {
-            int maxfruitsHit = score.MaximumStatistics.GetValueOrDefault(HitResult.Great);
-            int maxticksHit = score.MaximumStatistics.GetValueOrDefault(HitResult.LargeTickHit);
-
-            int maxCombo = maxfruitsHit + maxticksHit;
+            int maxCombo = GetMaximumComboFromMap(score);
 
             //There's no combo yet
             if (maxCombo <= 0)
                 return 0;
 
             return (double)totalSuccessfulComboHits() / maxCombo;
+        }
+
+        public int GetMaximumComboFromMap(ScoreInfo score)
+        {
+            int maxfruitsHit = score.MaximumStatistics.GetValueOrDefault(HitResult.Great);
+            int maxticksHit = score.MaximumStatistics.GetValueOrDefault(HitResult.LargeTickHit);
+            return maxfruitsHit + maxticksHit;
         }
 
         private double accuracy() => totalHits() == 0 ? 0 : Math.Clamp((double)totalSuccessfulHits() / totalHits(), 0, 1);

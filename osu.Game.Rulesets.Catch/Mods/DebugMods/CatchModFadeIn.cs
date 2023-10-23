@@ -27,14 +27,12 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
         public override double ScoreMultiplier => UsesDefaultConfiguration ? 1.06 : 1;
 
         [SettingSource("Visibility", "The percentage of playfield height that will be visible.", SettingControlType = typeof(MultiplierSettingsSlider))]
-
         public BindableNumber<double> InitialVisibility { get; } = new BindableDouble(0.9)
         {
             MinValue = 0.5,
             MaxValue = 0.9,
             Precision = 0.1,
         };
-
         public BindableNumber<double> CurrentVisibility { get; set; } = new BindableNumber<double>();
         public BindableNumber<double> FinalVisibility { get; set; } = new BindableNumber<double>();
 

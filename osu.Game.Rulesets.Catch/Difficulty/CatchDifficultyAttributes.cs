@@ -19,7 +19,7 @@ namespace osu.Game.Rulesets.Catch.Difficulty
         [JsonProperty("approach_rate")]
         public double ApproachRate { get; set; }
 
-        // Initial visibility of the Fade In mod
+        // Initial visibility of the visibility adjustment mod
         public double InitialVisibility { get; set; }
 
         public override IEnumerable<(int attributeId, object value)> ToDatabaseAttributes()

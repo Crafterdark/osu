@@ -24,9 +24,9 @@ namespace osu.Game.Rulesets.Catch.Difficulty
 
         private float halfCatcherWidth;
 
-        private bool modLpStatus;
-        private double modLpLeniencyValue;
-        private double modFiInitialVisibility;
+        private bool isLeniencyApplied;
+        private double leniencyFromMod;
+        private double initialVisibilityFromMod;
         public override int Version => 20220701;
 
         public CatchDifficultyCalculator(IRulesetInfo ruleset, IWorkingBeatmap beatmap)
@@ -48,7 +48,7 @@ namespace osu.Game.Rulesets.Catch.Difficulty
                 Mods = mods,
                 ApproachRate = preempt > 1200.0 ? -(preempt - 1800.0) / 120.0 : -(preempt - 1200.0) / 150.0 + 5.0,
                 MaxCombo = beatmap.HitObjects.Count(h => h is Fruit) + beatmap.HitObjects.OfType<JuiceStream>().SelectMany(j => j.NestedHitObjects).Count(h => !(h is TinyDroplet)),
-                InitialVisibility = modFiInitialVisibility,
+                InitialVisibility = initialVisibilityFromMod,
             };
 
             return attributes;
@@ -74,9 +74,9 @@ namespace osu.Game.Rulesets.Catch.Difficulty
                 {
                     double accuracyDistance = 0;
 
-                    if (modLpStatus)
+                    if (isLeniencyApplied)
                     {
-                        accuracyDistance = CatchModLowPrecision.CalculateHalfLeniencyDistanceForHitObject(hitObject, modLpLeniencyValue);
+                        accuracyDistance = CatchModLowPrecision.CalculateHalfLeniencyDistanceForHitObject(hitObject, leniencyFromMod);
                         accuracyDistance *= 1 - (Math.Max(0, beatmap.Difficulty.CircleSize - 5.5f) * 0.0625f);
                     }
 
@@ -101,12 +101,12 @@ namespace osu.Game.Rulesets.Catch.Difficulty
             {
                 if (mods[index] is CatchModLowPrecision modLp)
                 {
-                    modLpStatus = true;
-                    modLpLeniencyValue = modLp.Leniency.Value;
+                    isLeniencyApplied = true;
+                    leniencyFromMod = modLp.Leniency.Value;
                 }
                 if (mods[index] is CatchModFadeIn modFi)
                 {
-                    modFiInitialVisibility = modFi.InitialVisibility.Value;
+                    initialVisibilityFromMod = modFi.InitialVisibility.Value;
                 }
             }
 
