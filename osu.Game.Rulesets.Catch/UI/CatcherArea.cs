@@ -28,8 +28,8 @@ namespace osu.Game.Rulesets.Catch.UI
             set => catcherContainer.Child = catcher = value;
         }
 
-        public bool DisabledDashing { get; set; }
-        public bool UnlockedDirection { get; set; }
+        public bool DisableMainDash { get; set; }
+        public bool IsUnlockedDirection { get; set; }
         public bool SetPressedForLeft { get; set; }
         public bool SetPressedForRight { get; set; }
 
@@ -49,6 +49,13 @@ namespace osu.Game.Rulesets.Catch.UI
         /// <c>0</c> when none or both left and right buttons are pressed.
         /// </summary>
         private int currentDirection;
+
+        /// <summary>
+        /// <c>-1</c> when only left movement button is pressed.
+        /// <c>1</c> when only right movement button is pressed.
+        /// <c>0</c> when none or both left and right dash buttons are pressed.
+        /// </summary>
+        private int currentDashDirection;
 
         // TODO: support replay rewind
         private bool lastHyperDashState;
@@ -144,35 +151,21 @@ namespace osu.Game.Rulesets.Catch.UI
             switch (e.Action)
             {
                 case CatchAction.MoveLeft:
-                    if (UnlockedDirection)
-                    {
-                        SetPressedForLeft = true;
-
-                        if (!SetPressedForRight)
-                            currentDirection = -1;
-
+                    if (processUnlockedDirectionMod(true, CatchAction.MoveLeft))
                         return true;
-                    }
 
                     currentDirection--;
                     return true;
 
                 case CatchAction.MoveRight:
-                    if (UnlockedDirection)
-                    {
-                        SetPressedForRight = true;
-
-                        if (!SetPressedForLeft)
-                            currentDirection = 1;
-
+                    if (processUnlockedDirectionMod(true, CatchAction.MoveRight))
                         return true;
-                    }
 
                     currentDirection++;
                     return true;
 
                 case CatchAction.Dash:
-                    if (DisabledDashing)
+                    if (DisableMainDash)
                         return true;
 
                     Catcher.Dashing = true;
@@ -187,31 +180,21 @@ namespace osu.Game.Rulesets.Catch.UI
             switch (e.Action)
             {
                 case CatchAction.MoveLeft:
-                    if (UnlockedDirection)
-                    {
-                        SetPressedForLeft = false;
-                        currentDirection = 0;
-
+                    if (processUnlockedDirectionMod(false, CatchAction.MoveLeft))
                         break;
-                    }
 
                     currentDirection++;
                     break;
 
                 case CatchAction.MoveRight:
-                    if (UnlockedDirection)
-                    {
-                        SetPressedForRight = false;
-                        currentDirection = 0;
-
+                    if (processUnlockedDirectionMod(false, CatchAction.MoveRight))
                         break;
-                    }
 
                     currentDirection--;
                     break;
 
                 case CatchAction.Dash:
-                    if (DisabledDashing)
+                    if (DisableMainDash)
                         break;
 
                     Catcher.Dashing = false;
@@ -220,5 +203,61 @@ namespace osu.Game.Rulesets.Catch.UI
         }
 
         private void displayCatcherTrail(CatcherTrailAnimation animation) => catcherTrails.Add(new CatcherTrailEntry(Time.Current, Catcher.CurrentState, Catcher.X, Catcher.BodyScale, animation));
+
+        private bool processUnlockedDirectionMod(bool isPressed, CatchAction direction)
+        {
+            if (!IsUnlockedDirection)
+                return false;
+
+            if (isPressed)
+            {
+                if (direction == CatchAction.MoveLeft)
+                {
+                    SetPressedForLeft = true;
+
+                    if (!SetPressedForRight)
+                        currentDirection = -1;
+
+                    return true;
+                }
+
+                if (direction == CatchAction.MoveRight)
+                {
+                    SetPressedForRight = true;
+
+                    if (!SetPressedForLeft)
+                        currentDirection = 1;
+
+                    return true;
+                }
+            }
+
+            else
+            {
+                if (direction == CatchAction.MoveLeft)
+                {
+                    SetPressedForLeft = false;
+                    currentDirection = 0;
+
+                    return true;
+                }
+
+                if (direction == CatchAction.MoveRight)
+                {
+                    SetPressedForRight = false;
+                    currentDirection = 0;
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool processDirectionalDashMod()
+        {
+            currentDashDirection *= 0;
+            return true;
+        }
     }
 }

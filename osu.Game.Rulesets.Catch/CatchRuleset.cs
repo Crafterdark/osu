@@ -127,6 +127,8 @@ namespace osu.Game.Rulesets.Catch
                         //Debug Mod 9#:
                         new CatchModSecretHyper(),
                         new ModAccuracyChallenge(),
+                        //Debug Mod 10#:
+                        new CatchModDirectionalDash(),
                     };
 
                 case ModType.Conversion:
@@ -152,7 +154,9 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModRelax(),
 
                         //Debug Mod 2# (WIP):
-                        //new CatchModAutoDash(),
+                        //new CatchModAutodash(),
+                        //Debug Mod 11#:
+                        new CatchModAutopilot(),
                     };
 
                 case ModType.Fun:

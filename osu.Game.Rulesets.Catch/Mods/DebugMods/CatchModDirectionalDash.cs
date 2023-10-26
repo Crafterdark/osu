@@ -10,27 +10,27 @@ using osu.Game.Rulesets.UI;
 
 namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 {
-    public class CatchModUnlockedDirection : Mod, IApplicableToDrawableRuleset<CatchHitObject>
+    public class CatchModDirectionalDash : Mod, IApplicableToDrawableRuleset<CatchHitObject>
 
     {
-        public override string Name => "Unlocked Direction";
+        public override string Name => "Directional Dash";
 
-        public override string Acronym => "UD";
+        public override string Acronym => "DD";
 
-        public override LocalisableString Description => "Pressing left & right directional keys will not stop the catcher, but move it towards the last pressed key.";
+        public override LocalisableString Description => "Dashing requires two keys and only follows one direction.";
 
         public override double ScoreMultiplier => 1.0;
 
-        public override ModType Type => ModType.Conversion;
+        public override ModType Type => ModType.DifficultyIncrease;
 
-        public override Type[] IncompatibleMods => new[] { typeof(CatchModDirectionalDash), typeof(CatchModAutopilot), typeof(CatchModRelax) };
+        public override Type[] IncompatibleMods => new[] { typeof(CatchModAutopilot), typeof(CatchModRelax) };
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {
             var drawableCatchRuleset = (DrawableCatchRuleset)drawableRuleset;
             var catchRuleset = (CatchPlayfield)drawableCatchRuleset.Playfield;
 
-            catchRuleset.CatcherArea.IsUnlockedDirection = true;
+            catchRuleset.CatcherArea.DisableMainDash = true;
         }
     }
 }

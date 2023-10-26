@@ -13,9 +13,9 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 {
     public class CatchModSecretHyper : Mod, IUpdatableByPlayfield
     {
-        public override LocalisableString Description => @"Hyperdashing effect is no longer visible...";
+        public override LocalisableString Description => @"Hyperdash effect is no longer visible...";
         public override string Name => "Secret Hyper";
-        public override double ScoreMultiplier => UsesDefaultConfiguration ? 1.01 : 1;
+        public override double ScoreMultiplier => UsesDefaultConfiguration ? 1 : 1;
         public override string Acronym => "SH";
         public override ModType Type => ModType.DifficultyIncrease;
 

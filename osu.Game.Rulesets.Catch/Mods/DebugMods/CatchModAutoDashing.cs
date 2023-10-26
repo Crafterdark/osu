@@ -14,10 +14,10 @@ using osu.Game.Rulesets.UI;
 
 namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 {
-    public class CatchModAutoDashing : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IUpdatableByPlayfield
+    public class CatchModAutodashing : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IUpdatableByPlayfield
 
     {
-        public override string Name => "Auto Dashing";
+        public override string Name => "Autodashing";
 
         public override string Acronym => "AD";
 
@@ -36,7 +36,7 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
             var drawableCatchRuleset = (DrawableCatchRuleset)drawableRuleset;
             var catchRuleset = (CatchPlayfield)drawableCatchRuleset.Playfield;
 
-            catchRuleset.CatcherArea.DisabledDashing = true;
+            catchRuleset.CatcherArea.DisableMainDash = true;
         }
 
         public bool CatcherDashingUpdate(Catcher catcher, CatchHitObject incomingCatchObject, double exactTime)

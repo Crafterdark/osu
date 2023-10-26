@@ -181,21 +181,21 @@ namespace osu.Game.Rulesets.Catch.Difficulty
 
             int maxComboFromMap = GetMaximumComboFromMap(score);
 
-            //Weighted Fade In Maximum AR
-            double weightMaxAr = (double)Math.Max(0, score.MaxCombo - 150) / maxComboFromMap * maxAr;
-
             //Weighted Fade In Increasing AR
-            double weightIncrAr = (double)Math.Min(150, score.MaxCombo) / maxComboFromMap * ((minAr + maxAr) / 2);
+            double weightIncrAr = (double)Math.Min(150, score.MaxCombo) / maxComboFromMap;
 
-            //Weighted Fade In Minimum AR
-            double weightMinAr = (double)Math.Max(0, maxComboFromMap - score.MaxCombo) / maxComboFromMap * minAr;
+            //Weighted Fade In Maximum AR
+            double weightMaxAr = (double)Math.Max(0, score.MaxCombo - 150) / maxComboFromMap;
 
-            double weightTotalAr = weightMaxAr + weightIncrAr + weightMinAr;
+            //Weighted Fade In Remaining AR
+            double weightRemAr = (double)Math.Max(0, maxComboFromMap - score.MaxCombo) / maxComboFromMap;
+
+            double weightTotalAr = weightIncrAr * (minAr + maxAr) / 2 + weightMaxAr * maxAr + weightRemAr * minAr;
 
             //Logger.Log("Map AR: " + mapAr);
             //Logger.Log("weightMaxAR: " + weightMaxAr);
             //Logger.Log("weightIncrAR: " + weightIncrAr);
-            //Logger.Log("weightMinAR: " + weightMinAr);
+            //Logger.Log("weightRemAR: " + weightRemAr);
             //Logger.Log("weightTotalAR: " + weightTotalAr);
             //Logger.Log("Initial Visibility: " + catchAttributes.InitialVisibility);
             //Logger.Log("Final Visibility: " + finalVisibility);
