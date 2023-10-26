@@ -20,7 +20,6 @@ namespace osu.Game.Rulesets.Catch.Difficulty
         private int tinyTicksHit;
         private int tinyTicksMissed;
         private int misses;
-        private double comboRatio;
 
         public CatchPerformanceCalculator()
             : base(new CatchRuleset())
@@ -37,17 +36,11 @@ namespace osu.Game.Rulesets.Catch.Difficulty
             tinyTicksMissed = score.Statistics.GetValueOrDefault(HitResult.SmallTickMiss);
             misses = score.Statistics.GetValueOrDefault(HitResult.Miss);
 
-            // Calculate the combo ratio (current combo / maximum combo)
-            comboRatio = CalculateComboRatio(score);
-
             // We are heavily relying on aim in catch the beat
             double value = Math.Pow(5.0 * Math.Max(1.0, catchAttributes.StarRating / 0.0049) - 4.0, 2.0) / 100000.0;
 
             // Longer maps are worth more. "Longer" means how many hits there are which can contribute to combo
-            //int numTotalHits = totalComboHits();
-
-            double lengthBonus = NewReworkLengthBonus(score);
-            //double lengthBonus = OldReworkLengthBonus(numTotalHits);
+            double lengthBonus = CurrentSystemLengthBonus(totalComboHits());
 
             value *= lengthBonus;
 
@@ -62,37 +55,7 @@ namespace osu.Game.Rulesets.Catch.Difficulty
 
             // Fade In must adjust the approach rate
             if (score.Mods.Any(m => m is CatchModFadeIn))
-            {
-                double mapAr = catchAttributes.ApproachRate;
-                double initialVisibility = catchAttributes.InitialVisibility;
-                double finalVisibility = CatchModFadeIn.GetFinalVisibilityValue(mapAr, CatchModFadeIn.GetTargetApproachRate(mapAr), catchAttributes.InitialVisibility);
-
-                double minAr = CatchUtilityForMods.TimeToApproachRate(CatchUtilityForMods.ApproachRateToTime(mapAr) * initialVisibility);
-                double maxAr = CatchUtilityForMods.TimeToApproachRate(CatchUtilityForMods.ApproachRateToTime(mapAr) * finalVisibility);
-
-                int maxComboFromMap = GetMaximumComboFromMap(score);
-
-                //Weighted Fade In Maximum AR
-                double weightMaxAr = (double)Math.Max(0, score.MaxCombo - 150) / maxComboFromMap * maxAr;
-
-                //Weighted Fade In Increasing AR
-                double weightIncrAr = (double)Math.Min(150, score.MaxCombo) / maxComboFromMap * ((minAr + maxAr) / 2);
-
-                //Weighted Fade In Minimum AR
-                double weightMinAr = (double)Math.Max(0, maxComboFromMap - score.MaxCombo) / maxComboFromMap * minAr;
-
-                double weightTotalAr = weightMaxAr + weightIncrAr + weightMinAr;
-
-                //Logger.Log("Map AR: " + mapAr);
-                //Logger.Log("weightMaxAR: " + weightMaxAr);
-                //Logger.Log("weightIncrAR: " + weightIncrAr);
-                //Logger.Log("weightMinAR: " + weightMinAr);
-                //Logger.Log("weightTotalAR: " + weightTotalAr);
-                approachRate = weightTotalAr;
-                //Logger.Log("Initial Visibility: " + catchAttributes.InitialVisibility);
-                //Logger.Log("Final Visibility: " + finalVisibility);
-                //Logger.Log("Current Combo: " + score.Combo);
-            }
+                approachRate = ExperimentalSystemOneFadeInAdjust(catchAttributes, score);
 
             if (approachRate > 9.0)
                 approachRateFactor += 0.1 * (approachRate - 9.0); // 10% for each AR above 9
@@ -113,7 +76,7 @@ namespace osu.Game.Rulesets.Catch.Difficulty
             }
 
             if (score.Mods.Any(m => m is ModFlashlight))
-                value *= 1.35 * lengthBonus;
+                value *= ExperimentalSystemOneFlashlightBonus(score, lengthBonus);
 
             value *= Math.Pow(accuracy(), 5.5);
 
@@ -126,14 +89,19 @@ namespace osu.Game.Rulesets.Catch.Difficulty
             };
         }
 
-        public double OldReworkLengthBonus(int numTotalHits)
+        public double CurrentSystemLengthBonus(int numTotalHits)
         {
             double lengthBonus = 0.95 + 0.3 * Math.Min(1.0, numTotalHits / 2500.0) + (numTotalHits > 2500 ? Math.Log10(numTotalHits / 2500.0) * 0.475 : 0.0);
 
             return lengthBonus;
         }
 
-        public double NewReworkLengthBonus(ScoreInfo score)
+        public double CurrentSystemFlashlightBonus(double lengthBonus)
+        {
+            return 1.35 * lengthBonus;
+        }
+
+        public double ExperimentalSystemOneLengthBonus(ScoreInfo score)
         {
             double drainTime = score.BeatmapInfo == null ? 0 : score.BeatmapInfo.Length / 1000;
 
@@ -156,16 +124,86 @@ namespace osu.Game.Rulesets.Catch.Difficulty
             const double long_length_bonus = 0.475;
 
             double lengthBonus =
-                0.95 + comboRatio * (0.05 * Math.Min(1.0, lengthFactor) + (lengthFactor > 1.0 ? Math.Log10(lengthFactor) * long_length_bonus : 0.0));
+                0.95 + CalculateComboRatio(score) * (0.05 * Math.Min(1.0, lengthFactor) + (lengthFactor > 1.0 ? Math.Log10(lengthFactor) * long_length_bonus : 0.0));
 
             //Logger.Log("drainTime: " + drainTime);
             //Logger.Log("lengthFactor: " + lengthFactor);
             //Logger.Log("lengthBonus: " + lengthBonus);
             //Logger.Log("comboRatio: " + comboRatio);
-
             return lengthBonus;
         }
 
+        public double ExperimentalSystemOneFlashlightBonus(ScoreInfo score, double lengthBonus)
+        {
+            //float currentFlashSize = GetFlashlightSize(score.MaxCombo);
+            double currentFlashSizeScaleFactor;
+
+            int maxComboFromMap = GetMaximumComboFromMap(score);
+
+            //Weighted Minimum Flash Size Scale Factor
+            int minCombo = Math.Max(0, Math.Min(99, score.MaxCombo));
+            double weightMinScaleFactor = (double)minCombo / maxComboFromMap;
+
+            //Weighted Mid Flash Size Scale Factor
+            int midCombo = Math.Max(0, Math.Min(199, score.MaxCombo) - 99);
+            double weightMidScaleFactor = (double)midCombo / maxComboFromMap;
+
+            //Weighted Max Flash Size Scale Factor
+            int maxCombo = Math.Max(0, score.MaxCombo - 199);
+            double weightMaxScaleFactor = (double)maxCombo / maxComboFromMap;
+
+            //Weighted Remaining Flash Size Scale Factor
+            int remCombo = totalSuccessfulComboHits() - score.MaxCombo;
+            double weightRemScaleFactor = (double)Math.Max(0, remCombo) / maxComboFromMap * GetFlashlightScaleFactor(GetFlashlightSize(99));
+
+            currentFlashSizeScaleFactor = (double)(weightMinScaleFactor * GetFlashlightScaleFactor(GetFlashlightSize(99)) + weightMidScaleFactor * GetFlashlightScaleFactor(GetFlashlightSize(199)) + weightMaxScaleFactor * GetFlashlightScaleFactor(GetFlashlightSize(200)) + weightRemScaleFactor * GetFlashlightScaleFactor(GetFlashlightSize(99)));
+
+            //Logger.Log("scaleMin: " + GetFlashlightScaleFactor(GetFlashlightSize(99)));
+            //Logger.Log("scaleMid: " + GetFlashlightScaleFactor(GetFlashlightSize(199)));
+            //Logger.Log("scaleMax: " + GetFlashlightScaleFactor(GetFlashlightSize(200)));
+            //Logger.Log("weightMin: " + weightMinScaleFactor);
+            //Logger.Log("weightMid: " + weightMidScaleFactor);
+            //Logger.Log("weightMax: " + weightMaxScaleFactor);
+            //Logger.Log("weightRem: " + weightRemScaleFactor);
+            //Logger.Log("weightTot: " + currentFlashSizeScaleFactor);
+            //Logger.Log("flashBonus: " + (1.00 + 0.35 * currentFlashSizeScaleFactor));
+            return (1.00 + 0.35 * currentFlashSizeScaleFactor) * lengthBonus;
+        }
+
+        public double ExperimentalSystemOneFadeInAdjust(CatchDifficultyAttributes catchAttributes, ScoreInfo score)
+        {
+            double mapAr = catchAttributes.ApproachRate;
+            double initialVisibility = catchAttributes.InitialVisibility;
+            double finalVisibility = CatchModFadeIn.GetFinalVisibilityValue(mapAr, CatchModFadeIn.GetTargetApproachRate(mapAr), catchAttributes.InitialVisibility);
+
+            double minAr = CatchUtilityForMods.TimeToApproachRate(CatchUtilityForMods.ApproachRateToTime(mapAr) * initialVisibility);
+            double maxAr = CatchUtilityForMods.TimeToApproachRate(CatchUtilityForMods.ApproachRateToTime(mapAr) * finalVisibility);
+
+            int maxComboFromMap = GetMaximumComboFromMap(score);
+
+            //Weighted Fade In Maximum AR
+            double weightMaxAr = (double)Math.Max(0, score.MaxCombo - 150) / maxComboFromMap * maxAr;
+
+            //Weighted Fade In Increasing AR
+            double weightIncrAr = (double)Math.Min(150, score.MaxCombo) / maxComboFromMap * ((minAr + maxAr) / 2);
+
+            //Weighted Fade In Minimum AR
+            double weightMinAr = (double)Math.Max(0, maxComboFromMap - score.MaxCombo) / maxComboFromMap * minAr;
+
+            double weightTotalAr = weightMaxAr + weightIncrAr + weightMinAr;
+
+            //Logger.Log("Map AR: " + mapAr);
+            //Logger.Log("weightMaxAR: " + weightMaxAr);
+            //Logger.Log("weightIncrAR: " + weightIncrAr);
+            //Logger.Log("weightMinAR: " + weightMinAr);
+            //Logger.Log("weightTotalAR: " + weightTotalAr);
+            //Logger.Log("Initial Visibility: " + catchAttributes.InitialVisibility);
+            //Logger.Log("Final Visibility: " + finalVisibility);
+            //Logger.Log("Current Combo: " + score.Combo);
+            return weightTotalAr;
+        }
+
+        // Calculate the combo ratio (current combo / maximum combo)
         public double CalculateComboRatio(ScoreInfo score)
         {
             int maxCombo = GetMaximumComboFromMap(score);
@@ -181,7 +219,29 @@ namespace osu.Game.Rulesets.Catch.Difficulty
         {
             int maxfruitsHit = score.MaximumStatistics.GetValueOrDefault(HitResult.Great);
             int maxticksHit = score.MaximumStatistics.GetValueOrDefault(HitResult.LargeTickHit);
+
             return maxfruitsHit + maxticksHit;
+        }
+
+        public float GetFlashlightSize(int combo)
+        {
+            if (combo >= 100 && combo < 200)
+                return 0.885f;
+            else if (combo >= 200)
+                return 0.770f;
+            else
+                return
+                    1.0f;
+        }
+
+        public double GetFlashlightScaleFactor(float currentFlashSize)
+        {
+            if (currentFlashSize == 1.0f)
+                return (double)1 / 3;
+            else if (currentFlashSize == 0.885f)
+                return (double)1 / 2;
+            else
+                return 1;
         }
 
         private double accuracy() => totalHits() == 0 ? 0 : Math.Clamp((double)totalSuccessfulHits() / totalHits(), 0, 1);
