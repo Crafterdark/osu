@@ -27,5 +27,11 @@ namespace osu.Game.Rulesets.Catch
 
         [Description("Engage dash")]
         Dash,
+
+        [Description("Engage left dash")]
+        DashLeft,
+
+        [Description("Engage right dash")]
+        DashRight,
     }
 }

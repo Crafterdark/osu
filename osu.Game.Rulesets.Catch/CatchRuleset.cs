@@ -56,6 +56,12 @@ namespace osu.Game.Rulesets.Catch
             new KeyBinding(InputKey.Right, CatchAction.MoveRight),
             new KeyBinding(InputKey.Shift, CatchAction.Dash),
             new KeyBinding(InputKey.MouseLeft, CatchAction.Dash),
+
+            //Directional Dash
+            new KeyBinding(InputKey.N, CatchAction.DashLeft),
+            new KeyBinding(InputKey.C, CatchAction.DashLeft),
+            new KeyBinding(InputKey.M, CatchAction.DashRight),
+            new KeyBinding(InputKey.V, CatchAction.DashRight),
         };
 
         public override IEnumerable<Mod> ConvertFromLegacyMods(LegacyMods mods)

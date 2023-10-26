@@ -29,6 +29,8 @@ namespace osu.Game.Rulesets.Catch.UI
         }
 
         public bool DisableMainDash { get; set; }
+
+        public bool IsDirectionalDash { get; set; }
         public bool IsUnlockedDirection { get; set; }
         public bool SetPressedForLeft { get; set; }
         public bool SetPressedForRight { get; set; }
@@ -103,6 +105,9 @@ namespace osu.Game.Rulesets.Catch.UI
             SetCatcherPosition(
                 replayState?.CatcherX ??
                 (float)(Catcher.X + Catcher.Speed * currentDirection * Clock.ElapsedFrameTime));
+
+            if (IsDirectionalDash)
+                Catcher.Dashing = (currentDashDirection != 0 && currentDashDirection == currentDirection) ? true : false;
         }
 
         protected override void UpdateAfterChildren()
@@ -172,6 +177,22 @@ namespace osu.Game.Rulesets.Catch.UI
                     return true;
             }
 
+            if (IsDirectionalDash)
+            {
+                switch (e.Action)
+                {
+                    case CatchAction.DashLeft:
+                        processDirectionalDashMod(true, currentDirection, CatchAction.DashLeft);
+
+                        return true;
+
+                    case CatchAction.DashRight:
+                        processDirectionalDashMod(true, currentDirection, CatchAction.DashRight);
+
+                        return true;
+                }
+            }
+
             return false;
         }
 
@@ -200,18 +221,35 @@ namespace osu.Game.Rulesets.Catch.UI
                     Catcher.Dashing = false;
                     break;
             }
+
+            if (IsDirectionalDash)
+            {
+                switch (e.Action)
+                {
+                    case CatchAction.DashLeft:
+                        processDirectionalDashMod(false, currentDirection, CatchAction.DashLeft);
+
+                        break;
+
+                    case CatchAction.DashRight:
+                        processDirectionalDashMod(false, currentDirection, CatchAction.DashRight);
+
+                        break;
+                }
+            }
+
         }
 
         private void displayCatcherTrail(CatcherTrailAnimation animation) => catcherTrails.Add(new CatcherTrailEntry(Time.Current, Catcher.CurrentState, Catcher.X, Catcher.BodyScale, animation));
 
-        private bool processUnlockedDirectionMod(bool isPressed, CatchAction direction)
+        private bool processUnlockedDirectionMod(bool isPressed, CatchAction moveDirection)
         {
             if (!IsUnlockedDirection)
                 return false;
 
             if (isPressed)
             {
-                if (direction == CatchAction.MoveLeft)
+                if (moveDirection == CatchAction.MoveLeft)
                 {
                     SetPressedForLeft = true;
 
@@ -221,7 +259,7 @@ namespace osu.Game.Rulesets.Catch.UI
                     return true;
                 }
 
-                if (direction == CatchAction.MoveRight)
+                if (moveDirection == CatchAction.MoveRight)
                 {
                     SetPressedForRight = true;
 
@@ -234,7 +272,7 @@ namespace osu.Game.Rulesets.Catch.UI
 
             else
             {
-                if (direction == CatchAction.MoveLeft)
+                if (moveDirection == CatchAction.MoveLeft)
                 {
                     SetPressedForLeft = false;
                     currentDirection = 0;
@@ -242,7 +280,7 @@ namespace osu.Game.Rulesets.Catch.UI
                     return true;
                 }
 
-                if (direction == CatchAction.MoveRight)
+                if (moveDirection == CatchAction.MoveRight)
                 {
                     SetPressedForRight = false;
                     currentDirection = 0;
@@ -254,10 +292,36 @@ namespace osu.Game.Rulesets.Catch.UI
             return false;
         }
 
-        private bool processDirectionalDashMod()
+        private void processDirectionalDashMod(bool isPressed, int moveDirection, CatchAction dashDirection)
         {
-            currentDashDirection *= 0;
-            return true;
+            if (!IsDirectionalDash)
+                return;
+
+            if (isPressed)
+            {
+                if (dashDirection == CatchAction.DashLeft)
+                {
+                    currentDashDirection--;
+                }
+
+                if (dashDirection == CatchAction.DashRight)
+                {
+                    currentDashDirection++;
+                }
+            }
+
+            else
+            {
+                if (dashDirection == CatchAction.DashLeft)
+                {
+                    currentDashDirection++;
+                }
+
+                if (dashDirection == CatchAction.DashRight)
+                {
+                    currentDashDirection--;
+                }
+            }
         }
     }
 }

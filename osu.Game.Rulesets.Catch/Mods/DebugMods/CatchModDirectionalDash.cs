@@ -31,6 +31,7 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
             var catchRuleset = (CatchPlayfield)drawableCatchRuleset.Playfield;
 
             catchRuleset.CatcherArea.DisableMainDash = true;
+            catchRuleset.CatcherArea.IsDirectionalDash = true;
         }
     }
 }
