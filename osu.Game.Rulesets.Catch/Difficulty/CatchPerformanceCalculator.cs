@@ -153,8 +153,8 @@ namespace osu.Game.Rulesets.Catch.Difficulty
             double weightMaxScaleFactor = (double)maxCombo / maxComboFromMap;
 
             //Weighted Remaining Flash Size Scale Factor
-            int remCombo = totalSuccessfulComboHits() - score.MaxCombo;
-            double weightRemScaleFactor = (double)Math.Max(0, remCombo) / maxComboFromMap * GetFlashlightScaleFactor(GetFlashlightSize(99));
+            int remCombo = Math.Max(0, totalSuccessfulComboHits() - score.MaxCombo);
+            double weightRemScaleFactor = (double)remCombo / maxComboFromMap;
 
             currentFlashSizeScaleFactor = (double)(weightMinScaleFactor * GetFlashlightScaleFactor(GetFlashlightSize(99)) + weightMidScaleFactor * GetFlashlightScaleFactor(GetFlashlightSize(199)) + weightMaxScaleFactor * GetFlashlightScaleFactor(GetFlashlightSize(200)) + weightRemScaleFactor * GetFlashlightScaleFactor(GetFlashlightSize(99)));
 
