@@ -176,6 +176,8 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModPile(),
                         //Debug Mod 8#:
                         //new CatchModClimbingWall(),
+                        //Debug Mod 12#:
+                        new CatchModFirstPerson(),
                     };
 
                 case ModType.System:

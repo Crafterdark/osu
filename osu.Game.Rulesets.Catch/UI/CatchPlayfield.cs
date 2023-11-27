@@ -34,6 +34,8 @@ namespace osu.Game.Rulesets.Catch.UI
         /// </summary>
         public const float CENTER_X = WIDTH / 2;
 
+        public float ScaleMultiplier { get; set; } = 1f;
+
         public override bool ReceivePositionalInputAt(Vector2 screenSpacePos) =>
             // only check the X position; handle all vertical space.
             base.ReceivePositionalInputAt(new Vector2(screenSpacePos.X, ScreenSpaceDrawQuad.Centre.Y));
@@ -58,7 +60,7 @@ namespace osu.Game.Rulesets.Catch.UI
         {
             var droppedObjectContainer = new DroppedObjectContainer();
 
-            Catcher = new Catcher(droppedObjectContainer, difficulty)
+            Catcher = new Catcher(droppedObjectContainer, ScaleMultiplier, difficulty)
             {
                 X = CENTER_X
             };

@@ -58,6 +58,7 @@ namespace osu.Game.Rulesets.Catch.Objects.Drawables
         {
             OriginalXBindable.BindValueChanged(updateXPosition);
             XOffsetBindable.BindValueChanged(updateXPosition, true);
+            XOffsetModBindable.BindValueChanged(updateXPosition, true);
 
             ScaleBindable.BindValueChanged(scale =>
             {
@@ -70,7 +71,7 @@ namespace osu.Game.Rulesets.Catch.Objects.Drawables
 
         private void updateXPosition(ValueChangedEvent<float> _)
         {
-            X = OriginalXBindable.Value + XOffsetBindable.Value;
+            X = OriginalXBindable.Value + XOffsetBindable.Value + XOffsetModBindable.Value;
         }
 
         protected override void OnApply()

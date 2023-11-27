@@ -38,7 +38,11 @@ namespace osu.Game.Rulesets.Catch.Objects
 
         private HitObjectProperty<float> xOffset;
 
+        private HitObjectProperty<float> xOffsetMod;
+
         public Bindable<float> XOffsetBindable => xOffset.Bindable;
+
+        public Bindable<float> XOffsetModBindable => xOffsetMod.Bindable;
 
         /// <summary>
         /// A random offset applied to the horizontal position, set by the beatmap processing.
@@ -47,6 +51,15 @@ namespace osu.Game.Rulesets.Catch.Objects
         {
             get => xOffset.Value;
             set => xOffset.Value = value;
+        }
+
+        /// <summary>
+        /// A random offset applied to the horizontal position, set by modifications.
+        /// </summary>
+        public float XOffsetMod
+        {
+            get => xOffsetMod.Value;
+            set => xOffsetMod.Value = value;
         }
 
         /// <summary>
@@ -69,7 +82,7 @@ namespace osu.Game.Rulesets.Catch.Objects
         /// This value is the original <see cref="X"/> value plus the offset applied by the beatmap processing.
         /// Use <see cref="OriginalX"/> if a value not affected by the offset is desired.
         /// </remarks>
-        public float EffectiveX => Math.Clamp(OriginalX + XOffset, 0, CatchPlayfield.WIDTH);
+        public float EffectiveX => Math.Clamp(OriginalX + XOffset + XOffsetMod, 0, CatchPlayfield.WIDTH);
 
         public double TimePreempt { get; set; } = 1000;
 

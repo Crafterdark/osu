@@ -1,11 +1,14 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System;
+using System.Linq;
 using osu.Framework.Graphics;
 using osu.Framework.Input;
 using osu.Framework.Input.Bindings;
 using osu.Framework.Input.Events;
 using osu.Framework.Localisation;
+using osu.Game.Rulesets.Catch.Mods.DebugMods;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Mods;
@@ -20,7 +23,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override LocalisableString Description => @"Use the mouse to control the catcher.";
 
         private DrawableCatchRuleset drawableRuleset = null!;
-
+        public override Type[] IncompatibleMods => base.IncompatibleMods.Append(typeof(CatchModAutopilot)).ToArray();
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {
             this.drawableRuleset = (DrawableCatchRuleset)drawableRuleset;
@@ -28,7 +31,7 @@ namespace osu.Game.Rulesets.Catch.Mods
 
         public void ApplyToPlayer(Player player)
         {
-            if (!drawableRuleset.HasReplayLoaded.Value)
+            if (!drawableRuleset.HasReplayLoaded.Value && !drawableRuleset.Mods.Any(m => m is CatchModFirstPerson))
             {
                 var catchPlayfield = (CatchPlayfield)drawableRuleset.Playfield;
                 catchPlayfield.CatcherArea.Add(new MouseInputHelper(catchPlayfield.CatcherArea));

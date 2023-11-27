@@ -28,14 +28,14 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
         //Leniency slider dependency -> rescale the current fruit hitbox with the leniency slider value.
 
         [SettingSource("Maximum Leniency", "The catch leniency to apply", SettingControlType = typeof(MultiplierSettingsSlider))]
-        public BindableNumber<double> Leniency { get; } = new BindableDouble(1.00)
+        public BindableNumber<double> Leniency { get; } = new BindableDouble(1.0)
         {
-            MinValue = 0.01,
-            MaxValue = 1.00,
-            Precision = 0.01,
+            MinValue = 0.1,
+            MaxValue = 1.0,
+            Precision = 0.1,
         };
 
-        public override double ScoreMultiplier => 1.00 - (Leniency.Value * 0.75);
+        public override double ScoreMultiplier => 1.00 - (Leniency.Value * 0.50);
 
         //Current maximum allowed size of fruits.
 
@@ -44,7 +44,7 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
         public virtual void ApplyToDifficulty(BeatmapDifficulty difficulty)
         {
             //OverallDifficulty will go [OD/4 -> OD] based on the leniency.
-            difficulty.OverallDifficulty = (float)(difficulty.OverallDifficulty * (1 - 3 * Leniency.Value / 4));
+            difficulty.OverallDifficulty = (float)(difficulty.OverallDifficulty * (1 - Leniency.Value * 0.50));
         }
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)

@@ -187,16 +187,16 @@ namespace osu.Game.Rulesets.Catch.UI
         private readonly DrawablePool<CaughtBanana> caughtBananaPool;
         private readonly DrawablePool<CaughtDroplet> caughtDropletPool;
 
-        public Catcher(DroppedObjectContainer droppedObjectTarget, IBeatmapDifficultyInfo? difficulty = null)
+        public Catcher(DroppedObjectContainer droppedObjectTarget, float scaleMultiplier, IBeatmapDifficultyInfo? difficulty = null)
         {
             this.droppedObjectTarget = droppedObjectTarget;
 
             Origin = Anchor.TopCentre;
 
-            Size = new Vector2(BASE_SIZE);
+            Size = new Vector2(BASE_SIZE * scaleMultiplier);
 
             if (difficulty != null)
-                Scale = calculateScale(difficulty);
+                Scale = new Vector2(calculateScale(difficulty).X * scaleMultiplier);
 
             CatchWidth = CalculateCatchWidth(Scale);
 

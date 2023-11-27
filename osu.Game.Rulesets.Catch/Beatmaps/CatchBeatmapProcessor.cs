@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using osu.Game.Beatmaps;
+using osu.Game.Rulesets.Catch.Mods.DebugMods.Utility;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Objects.Types;
@@ -24,6 +25,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         //SpeedChange, BASE_WALK_SPEED, BASE_DASH_SPEED
         public double[] CustomMultipliers = { 1.00, 0.50, 1.00 };
+
+        public float PlayfieldCompressionFactor = 1.0f;
+        public bool IsPlayfieldCompressionChanged => (PlayfieldCompressionFactor != 1.0f) ? true : false;
 
         public CatchBeatmapProcessor(IBeatmap beatmap)
             : base(beatmap)
@@ -58,6 +62,11 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             float? lastPosition = null;
             double lastStartTime = 0;
 
+            float minPlayfieldWidth = CatchUtilityForMods.GetMinPlayfieldWidth(PlayfieldCompressionFactor);
+            float maxPlayfieldWidth = CatchUtilityForMods.GetMaxPlayfieldWidth(PlayfieldCompressionFactor);
+
+            float coordinateTransformFactor = (maxPlayfieldWidth - minPlayfieldWidth) / CatchPlayfield.WIDTH;
+
             foreach (var obj in beatmap.HitObjects.OfType<CatchHitObject>())
             {
                 obj.XOffset = 0;
@@ -65,14 +74,16 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 switch (obj)
                 {
                     case Fruit fruit:
+                        if (IsPlayfieldCompressionChanged)
+                            fruit.OriginalX = minPlayfieldWidth + fruit.OriginalX * coordinateTransformFactor;
                         if (HardRockOffsets)
-                            applyHardRockOffset(fruit, ref lastPosition, ref lastStartTime, rng);
+                            applyHardRockOffset(fruit, ref lastPosition, ref lastStartTime, rng, minPlayfieldWidth, maxPlayfieldWidth);
                         break;
 
                     case BananaShower bananaShower:
                         foreach (var banana in bananaShower.NestedHitObjects.OfType<Banana>())
                         {
-                            banana.XOffset = (float)(rng.NextDouble() * CatchPlayfield.WIDTH);
+                            banana.XOffset = (float)(minPlayfieldWidth + rng.NextDouble() * (maxPlayfieldWidth - minPlayfieldWidth));
                             rng.Next(); // osu!stable retrieved a random banana type
                             rng.Next(); // osu!stable retrieved a random banana rotation
                             rng.Next(); // osu!stable retrieved a random banana colour
@@ -82,8 +93,12 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
                     case JuiceStream juiceStream:
                         // Todo: BUG!! Stable used the last control point as the final position of the path, but it should use the computed path instead.
-                        lastPosition = juiceStream.OriginalX + juiceStream.Path.ControlPoints[^1].Position.X;
+                        float effectiveLastPosition = juiceStream.OriginalX + juiceStream.Path.ControlPoints[^1].Position.X;
 
+                        if (IsPlayfieldCompressionChanged)
+                            effectiveLastPosition = minPlayfieldWidth + effectiveLastPosition * coordinateTransformFactor;
+
+                        lastPosition = effectiveLastPosition;
                         // Todo: BUG!! Stable attempted to use the end time of the stream, but referenced it too early in execution and used the start time instead.
                         lastStartTime = juiceStream.StartTime;
 
@@ -92,15 +107,18 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                             var catchObject = (CatchHitObject)nested;
                             catchObject.XOffset = 0;
 
+                            if (IsPlayfieldCompressionChanged)
+                                catchObject.OriginalX = minPlayfieldWidth + catchObject.OriginalX * coordinateTransformFactor;
+
                             if (catchObject is TinyDroplet)
                             {
                                 if (IsDropletStabilized)
                                 {
                                     int modOffset = StabilizerPower == 1.00 ? 0 : rng.Next(-20 * (1 - StabilizerPower), 20 * (1 - StabilizerPower));
-                                    catchObject.XOffset = Math.Clamp(modOffset, -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
+                                    catchObject.XOffset = Math.Clamp(modOffset, minPlayfieldWidth - catchObject.OriginalX, maxPlayfieldWidth - catchObject.OriginalX);
                                 }
                                 else
-                                    catchObject.XOffset = Math.Clamp(rng.Next(-20, 20), -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
+                                    catchObject.XOffset = Math.Clamp(rng.Next(-20, 20), minPlayfieldWidth - catchObject.OriginalX, maxPlayfieldWidth - catchObject.OriginalX);
                             }
 
                             else if (catchObject is Droplet)
@@ -114,7 +132,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             initialiseHyperDash(beatmap, CustomMultipliers);
         }
 
-        private static void applyHardRockOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime, LegacyRandom rng)
+        private static void applyHardRockOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime, LegacyRandom rng, float minPlayfieldWidth, float maxPlayfieldWidth)
         {
             float offsetPosition = hitObject.OriginalX;
             double startTime = hitObject.StartTime;
@@ -141,14 +159,14 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
             if (positionDiff == 0)
             {
-                applyRandomOffset(ref offsetPosition, timeDiff / 4d, rng);
+                applyRandomOffset(ref offsetPosition, timeDiff / 4d, rng, minPlayfieldWidth, maxPlayfieldWidth);
                 hitObject.XOffset = offsetPosition - hitObject.OriginalX;
                 return;
             }
 
             // ReSharper disable once PossibleLossOfFraction
             if (Math.Abs(positionDiff) < timeDiff / 3)
-                applyOffset(ref offsetPosition, positionDiff);
+                applyOffset(ref offsetPosition, positionDiff, minPlayfieldWidth, maxPlayfieldWidth);
 
             hitObject.XOffset = offsetPosition - hitObject.OriginalX;
 
@@ -162,7 +180,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         /// <param name="position">The position which the offset should be applied to.</param>
         /// <param name="maxOffset">The maximum offset, cannot exceed 20px.</param>
         /// <param name="rng">The random number generator.</param>
-        private static void applyRandomOffset(ref float position, double maxOffset, LegacyRandom rng)
+        /// <param name="minPlayfieldWidth">The minimum playfield coordinate.</param>
+        /// <param name="maxPlayfieldWidth">The maximum playfield coordinate.</param>
+        private static void applyRandomOffset(ref float position, double maxOffset, LegacyRandom rng, float minPlayfieldWidth, float maxPlayfieldWidth)
         {
             bool right = rng.NextBool();
             float rand = Math.Min(20, (float)rng.Next(0, Math.Max(0, maxOffset)));
@@ -170,7 +190,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             if (right)
             {
                 // Clamp to the right bound
-                if (position + rand <= CatchPlayfield.WIDTH)
+                if (position + rand <= maxPlayfieldWidth)
                     position += rand;
                 else
                     position -= rand;
@@ -178,7 +198,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             else
             {
                 // Clamp to the left bound
-                if (position - rand >= 0)
+                if (position - rand >= minPlayfieldWidth)
                     position -= rand;
                 else
                     position += rand;
@@ -190,18 +210,20 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         /// </summary>
         /// <param name="position">The position which the offset should be applied to.</param>
         /// <param name="amount">The amount to offset by.</param>
-        private static void applyOffset(ref float position, float amount)
+        /// <param name="minPlayfieldWidth">The minimum playfield coordinate.</param>
+        /// <param name="maxPlayfieldWidth">The maximum playfield coordinate.</param>
+        private static void applyOffset(ref float position, float amount, float minPlayfieldWidth, float maxPlayfieldWidth)
         {
             if (amount > 0)
             {
                 // Clamp to the right bound
-                if (position + amount < CatchPlayfield.WIDTH)
+                if (position + amount < maxPlayfieldWidth)
                     position += amount;
             }
             else
             {
                 // Clamp to the left bound
-                if (position + amount > 0)
+                if (position + amount > minPlayfieldWidth)
                     position += amount;
             }
         }

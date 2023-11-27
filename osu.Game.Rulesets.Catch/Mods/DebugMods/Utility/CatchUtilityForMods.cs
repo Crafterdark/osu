@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using osu.Game.Beatmaps;
+using osu.Game.Rulesets.Catch.UI;
 
 namespace osu.Game.Rulesets.Catch.Mods.DebugMods.Utility
 {
@@ -19,6 +20,21 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods.Utility
 
             //AR 5
             return 5.0d;
+        }
+
+        public static float GetPlayfieldWidth(float playfieldCompressionFactor)
+        {
+            return CatchPlayfield.WIDTH * playfieldCompressionFactor;
+        }
+
+        public static float GetMinPlayfieldWidth(float playfieldCompressionFactor)
+        {
+            return (CatchPlayfield.WIDTH / 2) - (CatchPlayfield.WIDTH * playfieldCompressionFactor / 2);
+        }
+
+        public static float GetMaxPlayfieldWidth(float playfieldCompressionFactor)
+        {
+            return (CatchPlayfield.WIDTH / 2) + (CatchPlayfield.WIDTH * playfieldCompressionFactor / 2);
         }
     }
 }

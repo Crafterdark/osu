@@ -25,11 +25,11 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
         public override ModType Type => ModType.Conversion;
 
         [SettingSource("Stabilizer Power", "The actual stability to apply", SettingControlType = typeof(MultiplierSettingsSlider))]
-        public BindableNumber<double> StabilizerPower { get; } = new BindableDouble(1.00)
+        public BindableNumber<double> StabilizerPower { get; } = new BindableDouble(1.0)
         {
-            MinValue = 0.01,
-            MaxValue = 1.00,
-            Precision = 0.01,
+            MinValue = 0.1,
+            MaxValue = 1.0,
+            Precision = 0.1,
         };
 
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)

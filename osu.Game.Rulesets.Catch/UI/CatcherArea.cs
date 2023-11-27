@@ -6,6 +6,8 @@ using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Input.Bindings;
 using osu.Framework.Input.Events;
+using osu.Game.Rulesets.Catch.Mods.DebugMods;
+using osu.Game.Rulesets.Catch.Mods.DebugMods.Utility;
 using osu.Game.Rulesets.Catch.Objects.Drawables;
 using osu.Game.Rulesets.Catch.Replays;
 using osu.Game.Rulesets.Judgements;
@@ -30,13 +32,16 @@ namespace osu.Game.Rulesets.Catch.UI
 
         public bool DisableMainDash { get; set; }
         public bool DisableMainMovement { get; set; }
+        public bool ForceVisualDirectionChanges { get; set; }
         public bool IsAutopilot { get; set; }
+        public bool IsFirstPerson { get; set; }
         public bool IsDirectionalDash { get; set; }
         public bool IsUnlockedDirection { get; set; }
         public bool SetPressedForLeft { get; set; }
         public bool SetPressedForRight { get; set; }
 
         public int SetPressedFirst = 0;
+        public float FirstPersonPosition { get; set; } = CatchPlayfield.CENTER_X;
 
         private readonly Container<Catcher> catcherContainer;
 
@@ -110,15 +115,41 @@ namespace osu.Game.Rulesets.Catch.UI
 
             var replayState = (GetContainingInputManager().CurrentState as RulesetInputManagerInputState<CatchAction>)?.LastReplayState as CatchFramedReplayInputHandler.CatchReplayState;
 
+            //Visual direction potential changes
+            if (ForceVisualDirectionChanges)
+            {
+                int localCurrentDirection = IsAutopilot ? CurrentAutopilotDirection : currentDirection;
+                //Doesn't do anything if currentDirection is 0
+                if (localCurrentDirection > 0)
+                    Catcher.VisualDirection = Direction.Right;
+                else if (localCurrentDirection < 0)
+                    Catcher.VisualDirection = Direction.Left;
+
+                if (IsFirstPerson)
+                {
+                    FirstPersonPosition += (float)Catcher.Speed * localCurrentDirection * (float)Clock.ElapsedFrameTime;
+                    float minPlayfieldWidth = CatchUtilityForMods.GetMinPlayfieldWidth(2 * CatchModFirstPerson.COMPRESSION_LEVEL);
+                    float maxPlayfieldWidth = CatchUtilityForMods.GetMaxPlayfieldWidth(2 * CatchModFirstPerson.COMPRESSION_LEVEL);
+                    FirstPersonPosition = Math.Clamp(FirstPersonPosition, minPlayfieldWidth, maxPlayfieldWidth);
+                }
+            }
+
+            //Current direction potential changes
+            int localDirection = 0;
+
             if (IsAutopilot)
-                currentDirection = CurrentAutopilotDirection;
+                localDirection = CurrentAutopilotDirection;
+            else if (!DisableMainMovement)
+                localDirection = currentDirection;
 
-            SetCatcherPosition(
-                replayState?.CatcherX ??
-                (float)(Catcher.X + Catcher.Speed * currentDirection * Clock.ElapsedFrameTime));
+            if (!IsFirstPerson)
+                SetCatcherPosition(
+                     replayState?.CatcherX ??
+                     (float)(Catcher.X + Catcher.Speed * localDirection * Clock.ElapsedFrameTime));
 
+            //Current dashing potential changes
             if (IsDirectionalDash)
-                Catcher.Dashing = (currentDashDirection != 0 && currentDashDirection == currentDirection) ? true : false;
+                Catcher.Dashing = (currentDashDirection != 0 && currentDashDirection == localDirection) ? true : false;
         }
 
         protected override void UpdateAfterChildren()
@@ -167,8 +198,6 @@ namespace osu.Game.Rulesets.Catch.UI
             switch (e.Action)
             {
                 case CatchAction.MoveLeft:
-                    if (DisableMainMovement)
-                        return true;
                     if (processUnlockedDirectionMod(true, CatchAction.MoveLeft))
                         return true;
 
@@ -176,8 +205,6 @@ namespace osu.Game.Rulesets.Catch.UI
                     return true;
 
                 case CatchAction.MoveRight:
-                    if (DisableMainMovement)
-                        return true;
                     if (processUnlockedDirectionMod(true, CatchAction.MoveRight))
                         return true;
 
@@ -216,8 +243,6 @@ namespace osu.Game.Rulesets.Catch.UI
             switch (e.Action)
             {
                 case CatchAction.MoveLeft:
-                    if (DisableMainMovement)
-                        break;
                     if (processUnlockedDirectionMod(false, CatchAction.MoveLeft))
                         break;
 
@@ -225,8 +250,6 @@ namespace osu.Game.Rulesets.Catch.UI
                     break;
 
                 case CatchAction.MoveRight:
-                    if (DisableMainMovement)
-                        break;
                     if (processUnlockedDirectionMod(false, CatchAction.MoveRight))
                         break;
 

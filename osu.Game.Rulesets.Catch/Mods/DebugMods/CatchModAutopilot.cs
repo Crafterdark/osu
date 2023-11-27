@@ -2,8 +2,10 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
+using osu.Framework.Bindables;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
+using osu.Game.Configuration;
 using osu.Game.Graphics;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.Objects.Drawables;
@@ -23,17 +25,26 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 
         public override LocalisableString Description => @"Automatic catcher movement - directional dash with two keys.";
 
-        public override double ScoreMultiplier => 0.1;
+        public override double ScoreMultiplier => (AutoplayMode.Value == false) ? 0.1 : 0.0;
 
         public override ModType Type => ModType.Automation;
 
         public override IconUsage? Icon => OsuIcon.ModAutopilot;
 
-        public override Type[] IncompatibleMods => new[] { typeof(CatchModDirectionalDash), typeof(CatchModRelax), typeof(CatchModAutoplay), typeof(CatchModCinema) };
+        public override Type[] IncompatibleMods => new[] {
+            typeof(CatchModDirectionalDash),
+            typeof(CatchModRelax),
+            typeof(CatchModAutoplay),
+            typeof(CatchModCinema),
+            typeof(CatchModNoFail)
+        };
 
         public bool PerformFail() => false;
 
         public bool RestartOnFail => false;
+
+        [SettingSource("[DEBUG] Autoplay mode", "Simulate perfect gameplay for testing purposes.")]
+        public BindableBool AutoplayMode { get; } = new BindableBool(false);
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {
@@ -55,17 +66,22 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
             double currentElapsed = catchPlayfield.Time.Elapsed;
             double exactTime = currentTime - currentElapsed;
 
+            if (AutoplayMode.Value)
+                catcher.Dashing = true;
+
             CatchHitObject? incomingObject = FindIncomingCatchHitObject(catchPlayfield, catchPlayfield.Catcher, exactTime);
 
             //WIP: This system does not handle many patterns and it's just a placeholder
             if (incomingObject != null)
             {
-                if (incomingObject.EffectiveX > catcher.X)
+                float remainingDistance = Math.Abs(incomingObject.EffectiveX - catcher.X);
+
+                if (incomingObject.EffectiveX > catcher.X && remainingDistance > catcher.CatchWidth / 4)
                 {
                     catcherArea.CurrentAutopilotDirection = 1;
                 }
 
-                else if (incomingObject.EffectiveX < catcher.X)
+                else if (incomingObject.EffectiveX < catcher.X && remainingDistance > catcher.CatchWidth / 4)
                 {
                     catcherArea.CurrentAutopilotDirection = -1;
                 }

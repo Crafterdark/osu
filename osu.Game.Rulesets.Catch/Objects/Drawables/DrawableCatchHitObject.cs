@@ -19,6 +19,7 @@ namespace osu.Game.Rulesets.Catch.Objects.Drawables
     {
         public readonly Bindable<float> OriginalXBindable = new Bindable<float>();
         public readonly Bindable<float> XOffsetBindable = new Bindable<float>();
+        public readonly Bindable<float> XOffsetModBindable = new Bindable<float>();
 
         protected override double InitialLifetimeOffset => HitObject.TimePreempt;
 
@@ -43,6 +44,7 @@ namespace osu.Game.Rulesets.Catch.Objects.Drawables
 
             OriginalXBindable.BindTo(HitObject.OriginalXBindable);
             XOffsetBindable.BindTo(HitObject.XOffsetBindable);
+            XOffsetModBindable.BindTo(HitObject.XOffsetModBindable);
         }
 
         protected override void OnFree()
@@ -51,6 +53,7 @@ namespace osu.Game.Rulesets.Catch.Objects.Drawables
 
             OriginalXBindable.UnbindFrom(HitObject.OriginalXBindable);
             XOffsetBindable.UnbindFrom(HitObject.XOffsetBindable);
+            XOffsetModBindable.UnbindFrom(HitObject.XOffsetModBindable);
         }
 
         [CanBeNull]
