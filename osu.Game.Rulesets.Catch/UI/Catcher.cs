@@ -77,8 +77,17 @@ namespace osu.Game.Rulesets.Catch.UI
 
         public Random CatchFruitRandomPile = null!;
 
-        //SpeedChange, BASE_WALK_SPEED, BASE_DASH_SPEED
-        public double[] CustomMultipliers = { 1.00, 0.50, 1.00 };
+        public double[] CustomCatcherMultipliers = {
+
+            //SpeedChange
+            1.00,
+
+            //BASE_WALK_SPEED
+            0.50,
+
+            //BASE_DASH_SPEED
+            1.00
+        };
 
         /// <summary>
         /// The speed of the catcher when the catcher is dashing.
@@ -125,7 +134,7 @@ namespace osu.Game.Rulesets.Catch.UI
         /// <summary>
         /// The current speed of the catcher with the hyper-dash modifier applied.
         /// </summary>
-        public double Speed => (Dashing ? GetCatcherSpeed(MoveType.Dash, CustomMultipliers) : GetCatcherSpeed(MoveType.Walk, CustomMultipliers)) * hyperDashModifier;
+        public double Speed => (Dashing ? GetCatcherSpeed(MoveType.Dash, CustomCatcherMultipliers) : GetCatcherSpeed(MoveType.Walk, CustomCatcherMultipliers)) * hyperDashModifier;
 
         /// <summary>
         /// The amount by which caught fruit should be scaled down to fit on the plate.
@@ -187,16 +196,16 @@ namespace osu.Game.Rulesets.Catch.UI
         private readonly DrawablePool<CaughtBanana> caughtBananaPool;
         private readonly DrawablePool<CaughtDroplet> caughtDropletPool;
 
-        public Catcher(DroppedObjectContainer droppedObjectTarget, float scaleMultiplier, IBeatmapDifficultyInfo? difficulty = null)
+        public Catcher(DroppedObjectContainer droppedObjectTarget, IBeatmapDifficultyInfo? difficulty = null)
         {
             this.droppedObjectTarget = droppedObjectTarget;
 
             Origin = Anchor.TopCentre;
 
-            Size = new Vector2(BASE_SIZE * scaleMultiplier);
+            Size = new Vector2(BASE_SIZE);
 
             if (difficulty != null)
-                Scale = new Vector2(calculateScale(difficulty).X * scaleMultiplier);
+                Scale = new Vector2(calculateScale(difficulty).X);
 
             CatchWidth = CalculateCatchWidth(Scale);
 
@@ -302,7 +311,7 @@ namespace osu.Game.Rulesets.Catch.UI
                 double positionDifference = target.EffectiveX - X;
                 double velocity = positionDifference / Math.Max(1.0, timeDifference - 1000.0 / 60.0);
 
-                SetHyperDashState(Math.Abs(velocity) / GetCatcherSpeed(MoveType.Dash, CustomMultipliers), target.EffectiveX);
+                SetHyperDashState(Math.Abs(velocity) / GetCatcherSpeed(MoveType.Dash, CustomCatcherMultipliers), target.EffectiveX);
             }
             else
                 SetHyperDashState();

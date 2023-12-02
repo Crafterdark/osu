@@ -17,12 +17,11 @@ using osu.Game.Rulesets.UI;
 using osu.Game.Screens.Play;
 using osuTK;
 using System.Linq;
-using osu.Game.Beatmaps;
-using osu.Game.Rulesets.Catch.Beatmaps;
+using osu.Game.Rulesets.Catch.Mods.DebugMods.Utility;
 
 namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 {
-    public partial class CatchModFirstPerson : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IApplicableToPlayer, IUpdatableByPlayfield, IApplicableToBeatmapProcessor
+    public partial class CatchModFirstPerson : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IApplicableToPlayer, IUpdatableByPlayfield
 
     {
         public override string Name => "First-Person";
@@ -41,18 +40,12 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 
         public float LastTrackedCatcherPosition;
 
-        public const float COMPRESSION_LEVEL = (float)1 / 3;
-
         private DrawableCatchRuleset drawableRuleset = null!;
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {
             var drawableCatchRuleset = (DrawableCatchRuleset)drawableRuleset;
             this.drawableRuleset = drawableCatchRuleset;
-            var catchPlayfield = (CatchPlayfield)drawableCatchRuleset.Playfield;
-            catchPlayfield.Catcher.CustomMultipliers[1] *= 1d - COMPRESSION_LEVEL;
-            catchPlayfield.Catcher.CustomMultipliers[2] *= 1d - COMPRESSION_LEVEL;
-            catchPlayfield.ScaleMultiplier *= 1f - COMPRESSION_LEVEL;
         }
 
         public void ApplyToPlayer(Player player)
@@ -96,7 +89,7 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 
             protected override bool OnMouseMove(MouseMoveEvent e)
             {
-                float mousePosition = Math.Clamp(e.MousePosition.X / DrawSize.X * CatchPlayfield.WIDTH, 512 * COMPRESSION_LEVEL / 2, 512 - (512 * COMPRESSION_LEVEL / 2));
+                float mousePosition = Math.Clamp(e.MousePosition.X / DrawSize.X * CatchPlayfield.WIDTH, CatchUtilityForMods.GetMinPlayfieldWidth(catcherArea.ShrinkFactor), CatchUtilityForMods.GetMaxPlayfieldWidth(catcherArea.ShrinkFactor));
 
                 UpdateCatcherVisualDirection(catcherArea.Catcher, mousePosition, lastTrackedMousePosition);
 
@@ -173,14 +166,6 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
 
                 UpdateHitObjects(catchPlayfield, LastTrackedCatcherPosition);
             }
-        }
-
-        public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
-        {
-            CatchBeatmapProcessor catchBeatmapProcessor = (CatchBeatmapProcessor)beatmapProcessor;
-            catchBeatmapProcessor.PlayfieldCompressionFactor = 2 * COMPRESSION_LEVEL;
-            catchBeatmapProcessor.CustomMultipliers[1] *= 1d - COMPRESSION_LEVEL;
-            catchBeatmapProcessor.CustomMultipliers[2] *= 1d - COMPRESSION_LEVEL;
         }
     }
 }

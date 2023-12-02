@@ -6,7 +6,6 @@ using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Input.Bindings;
 using osu.Framework.Input.Events;
-using osu.Game.Rulesets.Catch.Mods.DebugMods;
 using osu.Game.Rulesets.Catch.Mods.DebugMods.Utility;
 using osu.Game.Rulesets.Catch.Objects.Drawables;
 using osu.Game.Rulesets.Catch.Replays;
@@ -39,9 +38,11 @@ namespace osu.Game.Rulesets.Catch.UI
         public bool IsUnlockedDirection { get; set; }
         public bool SetPressedForLeft { get; set; }
         public bool SetPressedForRight { get; set; }
+        public bool IsShrinked { get; set; }
 
         public int SetPressedFirst = 0;
         public float FirstPersonPosition { get; set; } = CatchPlayfield.CENTER_X;
+        public float ShrinkFactor { get; set; } = 1.0f;
 
         private readonly Container<Catcher> catcherContainer;
 
@@ -128,8 +129,10 @@ namespace osu.Game.Rulesets.Catch.UI
                 if (IsFirstPerson)
                 {
                     FirstPersonPosition += (float)Catcher.Speed * localCurrentDirection * (float)Clock.ElapsedFrameTime;
-                    float minPlayfieldWidth = CatchUtilityForMods.GetMinPlayfieldWidth(2 * CatchModFirstPerson.COMPRESSION_LEVEL);
-                    float maxPlayfieldWidth = CatchUtilityForMods.GetMaxPlayfieldWidth(2 * CatchModFirstPerson.COMPRESSION_LEVEL);
+
+                    float minPlayfieldWidth = CatchUtilityForMods.GetMinPlayfieldWidth(ShrinkFactor);
+                    float maxPlayfieldWidth = CatchUtilityForMods.GetMaxPlayfieldWidth(ShrinkFactor);
+
                     FirstPersonPosition = Math.Clamp(FirstPersonPosition, minPlayfieldWidth, maxPlayfieldWidth);
                 }
             }
@@ -183,7 +186,16 @@ namespace osu.Game.Rulesets.Catch.UI
         public void SetCatcherPosition(float x)
         {
             float lastPosition = Catcher.X;
-            float newPosition = Math.Clamp(x, 0, CatchPlayfield.WIDTH);
+            float newPosition;
+
+            if (!IsShrinked)
+                newPosition = Math.Clamp(x, 0, CatchPlayfield.WIDTH);
+            else
+            {
+                float minPlayfieldWidth = CatchUtilityForMods.GetMinPlayfieldWidth(ShrinkFactor);
+                float maxPlayfieldWidth = CatchUtilityForMods.GetMaxPlayfieldWidth(ShrinkFactor);
+                newPosition = Math.Clamp(x, minPlayfieldWidth, maxPlayfieldWidth);
+            }
 
             Catcher.X = newPosition;
 

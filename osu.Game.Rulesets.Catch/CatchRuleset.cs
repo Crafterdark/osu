@@ -121,6 +121,8 @@ namespace osu.Game.Rulesets.Catch
 
                         //Debug Mod 1#:
                         new CatchModLowPrecision(),
+                        //Debug Mod 13#:
+                        new CatchModShrink(),
                     };
 
                 case ModType.DifficultyIncrease:

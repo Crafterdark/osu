@@ -23,11 +23,20 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         public double StabilizerPower { get; set; }
 
-        //SpeedChange, BASE_WALK_SPEED, BASE_DASH_SPEED
-        public double[] CustomMultipliers = { 1.00, 0.50, 1.00 };
+        public double[] CustomCatcherMultipliers = {
 
-        public float PlayfieldCompressionFactor = 1.0f;
-        public bool IsPlayfieldCompressionChanged => (PlayfieldCompressionFactor != 1.0f) ? true : false;
+            //SpeedChange
+            1.00,
+
+            //BASE_WALK_SPEED
+            0.50,
+
+            //BASE_DASH_SPEED
+            1.00
+        };
+
+        public float PlayfieldShrinkFactor = 1.0f;
+        public bool IsPlayfieldShrinkChanged => (PlayfieldShrinkFactor != 1.0f) ? true : false;
 
         public CatchBeatmapProcessor(IBeatmap beatmap)
             : base(beatmap)
@@ -78,8 +87,8 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             float? lastPosition = null;
             double lastStartTime = 0;
 
-            float minPlayfieldWidth = CatchUtilityForMods.GetMinPlayfieldWidth(PlayfieldCompressionFactor);
-            float maxPlayfieldWidth = CatchUtilityForMods.GetMaxPlayfieldWidth(PlayfieldCompressionFactor);
+            float minPlayfieldWidth = CatchUtilityForMods.GetMinPlayfieldWidth(PlayfieldShrinkFactor);
+            float maxPlayfieldWidth = CatchUtilityForMods.GetMaxPlayfieldWidth(PlayfieldShrinkFactor);
 
             float coordinateTransformFactor = (maxPlayfieldWidth - minPlayfieldWidth) / CatchPlayfield.WIDTH;
 
@@ -90,7 +99,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 switch (obj)
                 {
                     case Fruit fruit:
-                        if (IsPlayfieldCompressionChanged)
+                        if (IsPlayfieldShrinkChanged)
                             fruit.OriginalX = minPlayfieldWidth + fruit.OriginalX * coordinateTransformFactor;
                         if (HardRockOffsets)
                             applyHardRockOffset(fruit, ref lastPosition, ref lastStartTime, rng, minPlayfieldWidth, maxPlayfieldWidth);
@@ -111,7 +120,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         // Todo: BUG!! Stable used the last control point as the final position of the path, but it should use the computed path instead.
                         float effectiveLastPosition = juiceStream.OriginalX + juiceStream.Path.ControlPoints[^1].Position.X;
 
-                        if (IsPlayfieldCompressionChanged)
+                        if (IsPlayfieldShrinkChanged)
                             effectiveLastPosition = minPlayfieldWidth + effectiveLastPosition * coordinateTransformFactor;
 
                         lastPosition = effectiveLastPosition;
@@ -123,7 +132,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                             var catchObject = (CatchHitObject)nested;
                             catchObject.XOffset = 0;
 
-                            if (IsPlayfieldCompressionChanged)
+                            if (IsPlayfieldShrinkChanged)
                                 catchObject.OriginalX = minPlayfieldWidth + catchObject.OriginalX * coordinateTransformFactor;
 
                             if (catchObject is TinyDroplet)
@@ -145,7 +154,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 }
             }
 
-            initialiseHyperDash(beatmap, CustomMultipliers);
+            initialiseHyperDash(beatmap, CustomCatcherMultipliers);
         }
 
         private static void applyHardRockOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime, LegacyRandom rng, float minPlayfieldWidth, float maxPlayfieldWidth)

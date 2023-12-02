@@ -40,15 +40,15 @@ namespace osu.Game.Rulesets.Catch.Mods.DebugMods
             var drawableCatchRuleset = (DrawableCatchRuleset)drawableRuleset;
             var catchPlayfield = (CatchPlayfield)drawableCatchRuleset.Playfield;
 
-            catchPlayfield.Catcher.CustomMultipliers[1] = CatcherSpeed.Value / 2;
-            catchPlayfield.Catcher.CustomMultipliers[2] = CatcherSpeed.Value;
+            catchPlayfield.Catcher.CustomCatcherMultipliers[1] = CatcherSpeed.Value / 2;
+            catchPlayfield.Catcher.CustomCatcherMultipliers[2] = CatcherSpeed.Value;
         }
 
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
         {
             var catchBeatmapProcessor = (CatchBeatmapProcessor)beatmapProcessor;
-            catchBeatmapProcessor.CustomMultipliers[1] = CatcherSpeed.Value / 2;
-            catchBeatmapProcessor.CustomMultipliers[2] = CatcherSpeed.Value;
+            catchBeatmapProcessor.CustomCatcherMultipliers[1] = CatcherSpeed.Value / 2;
+            catchBeatmapProcessor.CustomCatcherMultipliers[2] = CatcherSpeed.Value;
         }
     }
 }

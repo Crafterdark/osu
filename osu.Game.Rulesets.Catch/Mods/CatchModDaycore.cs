@@ -22,14 +22,14 @@ namespace osu.Game.Rulesets.Catch.Mods
             var drawableCatchRuleset = (DrawableCatchRuleset)drawableRuleset;
             var catchPlayfield = (CatchPlayfield)drawableCatchRuleset.Playfield;
 
-            if (!AdjustCatcherSpeed.Value) catchPlayfield.Catcher.CustomMultipliers[0] = SpeedChange.Value;
+            if (!AdjustCatcherSpeed.Value) catchPlayfield.Catcher.CustomCatcherMultipliers[0] = SpeedChange.Value;
         }
 
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
         {
             var catchBeatmapProcessor = (CatchBeatmapProcessor)beatmapProcessor;
 
-            if (!AdjustCatcherSpeed.Value) catchBeatmapProcessor.CustomMultipliers[0] = SpeedChange.Value;
+            if (!AdjustCatcherSpeed.Value) catchBeatmapProcessor.CustomCatcherMultipliers[0] = SpeedChange.Value;
         }
     }
 }
