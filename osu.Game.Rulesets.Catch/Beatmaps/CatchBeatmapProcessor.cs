@@ -17,6 +17,20 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         public bool HardRockOffsets { get; set; }
 
+        public bool RandomModOffsets { get; set; }
+
+        public int RandomModSeed { get; set; }
+
+        public float? RandomModOriginalX_OriginalMap { get; set; }
+
+        public float? RandomModXOffset_OriginalMap { get; set; }
+
+        public float? RandomModOriginalX_NewMap { get; set; }
+
+        public float? RandomModXOffset_NewMap { get; set; }
+
+        private Random randomModRng = null!;
+
         public CatchBeatmapProcessor(IBeatmap beatmap)
             : base(beatmap)
         {
@@ -66,6 +80,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             float? lastPosition = null;
             double lastStartTime = 0;
 
+            if (RandomModOffsets)
+                randomModRng = new Random(RandomModSeed);
+
             foreach (var obj in beatmap.HitObjects.OfType<CatchHitObject>())
             {
                 obj.XOffset = 0;
@@ -75,12 +92,16 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                     case Fruit fruit:
                         if (HardRockOffsets)
                             applyHardRockOffset(fruit, ref lastPosition, ref lastStartTime, rng);
+                        if (RandomModOffsets)
+                            ApplyRandomModOffset(fruit);
                         break;
 
                     case BananaShower bananaShower:
                         foreach (var banana in bananaShower.NestedHitObjects.OfType<Banana>())
                         {
                             banana.XOffset = (float)(rng.NextDouble() * CatchPlayfield.WIDTH);
+                            if (RandomModOffsets)
+                                ApplyRandomModOffset(banana);
                             rng.Next(); // osu!stable retrieved a random banana type
                             rng.Next(); // osu!stable retrieved a random banana rotation
                             rng.Next(); // osu!stable retrieved a random banana colour
@@ -104,6 +125,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                                 catchObject.XOffset = Math.Clamp(rng.Next(-20, 20), -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
                             else if (catchObject is Droplet)
                                 rng.Next(); // osu!stable retrieved a random droplet rotation
+
+                            if (RandomModOffsets)
+                                ApplyRandomModOffset(catchObject);
                         }
 
                         break;
@@ -111,6 +135,61 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             }
 
             initialiseHyperDash(beatmap);
+        }
+
+        public void ApplyRandomModOffset(CatchHitObject hitObject)
+        {
+            //First hitObject
+            if (RandomModOriginalX_OriginalMap == null || RandomModXOffset_OriginalMap == null || RandomModOriginalX_NewMap == null || RandomModXOffset_NewMap == null)
+            {
+                RandomModOriginalX_OriginalMap = hitObject.OriginalX;
+                RandomModXOffset_OriginalMap = hitObject.XOffset;
+
+                hitObject.XOffset = 512 * randomModRng.NextSingle();
+                hitObject.OriginalX = 0;
+
+                RandomModOriginalX_NewMap = hitObject.OriginalX;
+                RandomModXOffset_NewMap = hitObject.XOffset;
+
+                return;
+            }
+            else
+            {
+                float jumpCurrent = Math.Abs(hitObject.EffectiveX - (RandomModOriginalX_OriginalMap.Value + RandomModXOffset_OriginalMap.Value));
+
+                RandomModOriginalX_OriginalMap = hitObject.OriginalX;
+                RandomModXOffset_OriginalMap = hitObject.XOffset;
+
+                float newMapEffectiveX = RandomModOriginalX_NewMap.Value + RandomModXOffset_NewMap.Value;
+
+                float leftJump = newMapEffectiveX - jumpCurrent;
+                float rightJump = newMapEffectiveX + jumpCurrent;
+
+                bool isLeftJumpPossible = (leftJump > CatchPlayfield.WIDTH || leftJump < 0) ? false : true;
+                bool isRightJumpPossible = (rightJump > CatchPlayfield.WIDTH || rightJump < 0) ? false : true;
+
+                bool isBothPossible = isLeftJumpPossible && isRightJumpPossible;
+                bool atLeastOnePossible = isLeftJumpPossible || isRightJumpPossible;
+
+                if (isBothPossible)
+                    hitObject.XOffset = (randomModRng.NextDouble() >= 0.5) ? leftJump : rightJump;
+                else if (atLeastOnePossible)
+                    hitObject.XOffset = isLeftJumpPossible ? leftJump : rightJump;
+                else
+                    hitObject.XOffset = Math.Clamp((Math.Abs(leftJump) < Math.Abs(rightJump)) ? leftJump : rightJump, 0, CatchPlayfield.WIDTH);
+
+                hitObject.OriginalX = 0;
+
+                if (hitObject is TinyDroplet)
+                {
+                    hitObject.OriginalX = hitObject.XOffset;
+                    hitObject.XOffset = 0;
+                }
+
+                RandomModOriginalX_NewMap = hitObject.OriginalX;
+                RandomModXOffset_NewMap = hitObject.XOffset;
+
+            }
         }
 
         private static void applyHardRockOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime, LegacyRandom rng)
