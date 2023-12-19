@@ -21,13 +21,25 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         public int RandomModSeed { get; set; }
 
-        public float? RandomModOriginalX_OriginalMap { get; set; }
+        public float? RD_OriginalX_Old { get; set; }
 
-        public float? RandomModXOffset_OriginalMap { get; set; }
+        public float? RD_XOffset_Old { get; set; }
 
-        public float? RandomModOriginalX_NewMap { get; set; }
+        public float? RD_OriginalX_New { get; set; }
 
-        public float? RandomModXOffset_NewMap { get; set; }
+        public float? RD_XOffset_New { get; set; }
+
+        public double RD_FlowFactor { get; set; }
+
+        public float RD_HalfCatchWidth { get; set; }
+
+        public float RD_LastExcess { get; set; }
+
+        public double RD_LastStartTime_Old { get; set; }
+
+        public int RD_LastDirection_New { get; set; }
+
+        public int RD_LastDirection_Old { get; set; }
 
         private Random randomModRng = null!;
 
@@ -81,7 +93,13 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             double lastStartTime = 0;
 
             if (RandomModOffsets)
+            {
                 randomModRng = new Random(RandomModSeed);
+                RD_HalfCatchWidth = Catcher.CalculateCatchWidth(beatmap.Difficulty) / 2;
+                RD_HalfCatchWidth /= Catcher.ALLOWED_CATCH_RANGE;
+
+                RD_LastExcess = RD_HalfCatchWidth;
+            }
 
             foreach (var obj in beatmap.HitObjects.OfType<CatchHitObject>())
             {
@@ -137,33 +155,60 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             initialiseHyperDash(beatmap);
         }
 
+        public int GetLastDirection(float hitObjectX, float referenceX)
+        {
+            return (hitObjectX > referenceX) ? 1 : -1;
+        }
+
+        public bool ShouldChangeDirection(bool hasChangedNew, bool hasChangedOriginal)
+        {
+            return (!hasChangedNew && hasChangedOriginal) || (hasChangedNew && !hasChangedOriginal);
+        }
+
         public void ApplyRandomModOffset(CatchHitObject hitObject)
         {
-            //First hitObject
-            if (RandomModOriginalX_OriginalMap == null || RandomModXOffset_OriginalMap == null || RandomModOriginalX_NewMap == null || RandomModXOffset_NewMap == null)
+            //Banana (ends code earlier)
+            if (hitObject is Banana)
             {
-                RandomModOriginalX_OriginalMap = hitObject.OriginalX;
-                RandomModXOffset_OriginalMap = hitObject.XOffset;
-
-                hitObject.XOffset = 512 * randomModRng.NextSingle();
+                hitObject.XOffset = (float)(randomModRng.NextDouble() * CatchPlayfield.WIDTH);
                 hitObject.OriginalX = 0;
-
-                RandomModOriginalX_NewMap = hitObject.OriginalX;
-                RandomModXOffset_NewMap = hitObject.XOffset;
-
                 return;
             }
+
+            else if (RD_OriginalX_Old == null || RD_XOffset_Old == null || RD_OriginalX_New == null || RD_XOffset_New == null)
+            {
+                RD_OriginalX_Old = hitObject.OriginalX;
+                RD_XOffset_Old = hitObject.XOffset;
+                RD_LastDirection_Old = GetLastDirection(hitObject.EffectiveX, CatchPlayfield.WIDTH / 2);
+
+                //First hitobject position will always be completely random
+                hitObject.XOffset = (float)(randomModRng.NextDouble() * CatchPlayfield.WIDTH);
+                hitObject.OriginalX = 0;
+
+                //TinyDroplet conversion
+                if (hitObject is TinyDroplet)
+                {
+                    hitObject.OriginalX = hitObject.XOffset;
+                    hitObject.XOffset = 0;
+                }
+
+                RD_OriginalX_New = hitObject.OriginalX;
+                RD_XOffset_New = hitObject.XOffset;
+                RD_LastDirection_New = GetLastDirection(hitObject.EffectiveX, CatchPlayfield.WIDTH / 2);
+                RD_LastStartTime_Old = hitObject.StartTime;
+            }
+
             else
             {
-                float jumpCurrent = Math.Abs(hitObject.EffectiveX - (RandomModOriginalX_OriginalMap.Value + RandomModXOffset_OriginalMap.Value));
+                float jumpOriginal = hitObject.EffectiveX - (RD_OriginalX_Old.Value + RD_XOffset_Old.Value);
+                float jumpCurrent = Math.Abs(jumpOriginal);
 
-                RandomModOriginalX_OriginalMap = hitObject.OriginalX;
-                RandomModXOffset_OriginalMap = hitObject.XOffset;
+                int curr_RD_LastDirection_Old = GetLastDirection(hitObject.EffectiveX, RD_OriginalX_Old.Value + RD_XOffset_Old.Value);
 
-                float newMapEffectiveX = RandomModOriginalX_NewMap.Value + RandomModXOffset_NewMap.Value;
+                float newEffectiveX = RD_OriginalX_New.Value + RD_XOffset_New.Value;
 
-                float leftJump = newMapEffectiveX - jumpCurrent;
-                float rightJump = newMapEffectiveX + jumpCurrent;
+                float leftJump = newEffectiveX - jumpCurrent;
+                float rightJump = newEffectiveX + jumpCurrent;
 
                 bool isLeftJumpPossible = (leftJump > CatchPlayfield.WIDTH || leftJump < 0) ? false : true;
                 bool isRightJumpPossible = (rightJump > CatchPlayfield.WIDTH || rightJump < 0) ? false : true;
@@ -171,24 +216,84 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 bool isBothPossible = isLeftJumpPossible && isRightJumpPossible;
                 bool atLeastOnePossible = isLeftJumpPossible || isRightJumpPossible;
 
-                if (isBothPossible)
-                    hitObject.XOffset = (randomModRng.NextDouble() >= 0.5) ? leftJump : rightJump;
+                int curr_RD_LastDirection_New;
+
+
+                //Randomly select a jump: Choose between the original map flow or random direction
+                float randSelectedJump = (randomModRng.NextDouble() < 0.5) ? leftJump : rightJump;
+
+                curr_RD_LastDirection_New = GetLastDirection(randSelectedJump - newEffectiveX, 0);
+
+                bool mustChangeDirection = false;
+
+                double timeToNextOld = (int)hitObject.StartTime - (int)RD_LastStartTime_Old - 1000f / 60f / 4; // 1/4th of a frame of grace time, taken from osu-stable
+                double distanceToNextOld = Math.Abs(hitObject.EffectiveX - (RD_OriginalX_Old.Value + RD_XOffset_Old.Value)) - (curr_RD_LastDirection_Old == RD_LastDirection_Old ? RD_LastExcess : RD_HalfCatchWidth);
+                float distanceToDashOld = (float)(timeToNextOld * Catcher.BASE_WALK_SPEED - distanceToNextOld);
+
+                if (distanceToDashOld < RD_HalfCatchWidth)
+                {
+                    RD_LastExcess = RD_HalfCatchWidth;
+                    mustChangeDirection = true;
+                }
+                else
+                {
+                    RD_LastExcess = Math.Clamp(distanceToDashOld, 0, RD_HalfCatchWidth);
+                }
+
+                RD_OriginalX_Old = hitObject.OriginalX;
+                RD_XOffset_Old = hitObject.XOffset;
+
+                bool hasChangedLastDirectionNew = curr_RD_LastDirection_New != RD_LastDirection_New;
+
+                bool hasChangedLastDirectionOld = curr_RD_LastDirection_Old != RD_LastDirection_Old;
+
+                if (mustChangeDirection && ShouldChangeDirection(hasChangedLastDirectionNew, hasChangedLastDirectionOld))
+                {
+                    if (hasChangedLastDirectionOld && !hasChangedLastDirectionNew)
+                        curr_RD_LastDirection_New = -RD_LastDirection_New;
+                    else if (!hasChangedLastDirectionOld && hasChangedLastDirectionNew)
+                        curr_RD_LastDirection_New = RD_LastDirection_New;
+
+                    if (curr_RD_LastDirection_New > 0)
+                        randSelectedJump = rightJump;
+                    else
+                        randSelectedJump = leftJump;
+
+                    hitObject.XOffset = Math.Clamp(randSelectedJump, 0, CatchPlayfield.WIDTH);
+                }
+
+                //Use the randomly selected jump
+                else if (isBothPossible)
+                    hitObject.XOffset = randSelectedJump;
+                //Use the other possible jump
                 else if (atLeastOnePossible)
                     hitObject.XOffset = isLeftJumpPossible ? leftJump : rightJump;
+                //Use the randomly selected jump or the other possible jump with clamp
+                //(select the one with the best matching distance)
                 else
-                    hitObject.XOffset = Math.Clamp((Math.Abs(leftJump) < Math.Abs(rightJump)) ? leftJump : rightJump, 0, CatchPlayfield.WIDTH);
+                {
+                    float otherJump = (randSelectedJump == leftJump) ? rightJump : leftJump;
+                    float otherJumpOOB = otherJump < 0 ? Math.Abs(otherJump) : otherJump - CatchPlayfield.WIDTH;
+                    float randSelectedJumpOOB = randSelectedJump < 0 ? Math.Abs(randSelectedJump) : randSelectedJump - CatchPlayfield.WIDTH;
+                    hitObject.XOffset = Math.Clamp((otherJumpOOB < randSelectedJumpOOB) ? otherJump : randSelectedJump, 0, CatchPlayfield.WIDTH);
+                }
 
                 hitObject.OriginalX = 0;
 
+
+                //TinyDroplet conversion
                 if (hitObject is TinyDroplet)
                 {
                     hitObject.OriginalX = hitObject.XOffset;
                     hitObject.XOffset = 0;
                 }
 
-                RandomModOriginalX_NewMap = hitObject.OriginalX;
-                RandomModXOffset_NewMap = hitObject.XOffset;
+                RD_LastDirection_New = curr_RD_LastDirection_New;
+                RD_OriginalX_New = hitObject.OriginalX;
+                RD_XOffset_New = hitObject.XOffset;
 
+                RD_LastDirection_Old = curr_RD_LastDirection_Old;
+                RD_LastStartTime_Old = hitObject.StartTime;
             }
         }
 
