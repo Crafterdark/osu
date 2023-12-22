@@ -227,12 +227,12 @@ namespace osu.Game.Rulesets.Scoring
 
             if (result.Judgement.MaxResult.AffectsAccuracy())
             {
-                currentMaximumBaseScore += Judgement.ToNumericResult(result.Judgement.MaxResult);
+                currentMaximumBaseScore += GetBaseScoreForResult(result.Judgement.MaxResult);
                 currentAccuracyJudgementCount++;
             }
 
             if (result.Type.AffectsAccuracy())
-                currentBaseScore += Judgement.ToNumericResult(result.Type);
+                currentBaseScore += GetBaseScoreForResult(result.Type);
 
             if (result.Type.IsBonus())
                 currentBonusPortion += GetBonusScoreChange(result);
@@ -276,12 +276,12 @@ namespace osu.Game.Rulesets.Scoring
 
             if (result.Judgement.MaxResult.AffectsAccuracy())
             {
-                currentMaximumBaseScore -= Judgement.ToNumericResult(result.Judgement.MaxResult);
+                currentMaximumBaseScore -= GetBaseScoreForResult(result.Judgement.MaxResult);
                 currentAccuracyJudgementCount--;
             }
 
             if (result.Type.AffectsAccuracy())
-                currentBaseScore -= Judgement.ToNumericResult(result.Type);
+                currentBaseScore -= GetBaseScoreForResult(result.Type);
 
             if (result.Type.IsBonus())
                 currentBonusPortion -= GetBonusScoreChange(result);
@@ -297,9 +297,51 @@ namespace osu.Game.Rulesets.Scoring
             updateScore();
         }
 
-        protected virtual double GetBonusScoreChange(JudgementResult result) => Judgement.ToNumericResult(result.Type);
+        /// <summary>
+        /// Gets the final score change to be applied to the bonus portion of the score.
+        /// </summary>
+        /// <param name="result">The judgement result.</param>
+        protected virtual double GetBonusScoreChange(JudgementResult result) => GetBaseScoreForResult(result.Type);
 
-        protected virtual double GetComboScoreChange(JudgementResult result) => Judgement.ToNumericResult(result.Judgement.MaxResult) * Math.Pow(result.ComboAfterJudgement, COMBO_EXPONENT);
+        /// <summary>
+        /// Gets the final score change to be applied to the combo portion of the score.
+        /// </summary>
+        /// <param name="result">The judgement result.</param>
+        protected virtual double GetComboScoreChange(JudgementResult result) => GetBaseScoreForResult(result.Judgement.MaxResult) * Math.Pow(result.ComboAfterJudgement, COMBO_EXPONENT);
+
+        public virtual int GetBaseScoreForResult(HitResult result)
+        {
+            switch (result)
+            {
+                default:
+                    return 0;
+
+                case HitResult.SmallTickHit:
+                    return 10;
+
+                case HitResult.LargeTickHit:
+                    return 30;
+
+                case HitResult.Meh:
+                    return 50;
+
+                case HitResult.Ok:
+                    return 100;
+
+                case HitResult.Good:
+                    return 200;
+
+                case HitResult.Great:
+                case HitResult.Perfect: // Perfect doesn't actually give more score / accuracy directly.
+                    return 300;
+
+                case HitResult.SmallBonus:
+                    return 10;
+
+                case HitResult.LargeBonus:
+                    return 50;
+            }
+        }
 
         protected virtual void ApplyScoreChange(JudgementResult result)
         {
@@ -528,7 +570,7 @@ namespace osu.Game.Rulesets.Scoring
         /// </summary>
         /// <remarks>
         /// Used to compute accuracy.
-        /// See: <see cref="HitResultExtensions.IsBasic"/> and <see cref="Judgement.ToNumericResult"/>.
+        /// See: <see cref="HitResultExtensions.IsBasic"/> and <see cref="ScoreProcessor.GetBaseScoreForResult"/>.
         /// </remarks>
         [Key(0)]
         public double BaseScore { get; set; }

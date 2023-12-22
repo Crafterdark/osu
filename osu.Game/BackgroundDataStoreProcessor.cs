@@ -316,8 +316,7 @@ namespace osu.Game
 
             HashSet<Guid> scoreIds = realmAccess.Run(r => new HashSet<Guid>(r.All<ScoreInfo>()
                                                                              .Where(s => !s.BackgroundReprocessingFailed && s.BeatmapInfo != null
-                                                                                                                         && (s.TotalScoreVersion == 30000002
-                                                                                                                             || s.TotalScoreVersion == 30000003))
+                                                                                                                         && s.TotalScoreVersion < LegacyScoreEncoder.LATEST_VERSION)
                                                                              .AsEnumerable().Select(s => s.ID)));
 
             Logger.Log($"Found {scoreIds.Count} scores which require total score conversion.");
@@ -341,15 +340,12 @@ namespace osu.Game
 
                 try
                 {
-                    var score = scoreManager.Query(s => s.ID == id);
-                    long newTotalScore = StandardisedScoreMigrationTools.ConvertFromLegacyTotalScore(score, beatmapManager);
-
                     // Can't use async overload because we're not on the update thread.
                     // ReSharper disable once MethodHasAsyncOverload
                     realmAccess.Write(r =>
                     {
                         ScoreInfo s = r.Find<ScoreInfo>(id)!;
-                        s.TotalScore = newTotalScore;
+                        StandardisedScoreMigrationTools.UpdateFromLegacy(s, beatmapManager);
                         s.TotalScoreVersion = LegacyScoreEncoder.LATEST_VERSION;
                     });
 

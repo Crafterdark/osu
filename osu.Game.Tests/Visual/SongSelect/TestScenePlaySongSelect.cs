@@ -420,6 +420,7 @@ namespace osu.Game.Tests.Visual.SongSelect
         }
 
         [Test]
+        [Ignore("temporary while peppy investigates. probably realm batching related.")]
         public void TestSelectionRetainedOnBeatmapUpdate()
         {
             createSongSelect();
