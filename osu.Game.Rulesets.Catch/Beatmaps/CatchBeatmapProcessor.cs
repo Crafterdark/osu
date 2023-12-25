@@ -17,6 +17,12 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         public bool HardRockOffsets { get; set; }
 
+        public bool ShakeApplied { get; set; }
+
+        public bool ShakeOffsets { get; set; }
+
+        public float DropletRandomPower { get; set; } = 1f;
+
         public CatchBeatmapProcessor(IBeatmap beatmap)
             : base(beatmap)
         {
@@ -66,6 +72,14 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             float? lastPosition = null;
             double lastStartTime = 0;
 
+            if (ShakeApplied)
+            {
+                if (ShakeOffsets)
+                    HardRockOffsets = true;
+                else
+                    HardRockOffsets = false;
+            }
+
             foreach (var obj in beatmap.HitObjects.OfType<CatchHitObject>())
             {
                 obj.XOffset = 0;
@@ -101,7 +115,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                             catchObject.XOffset = 0;
 
                             if (catchObject is TinyDroplet)
-                                catchObject.XOffset = Math.Clamp(rng.Next(-20, 20), -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
+                                catchObject.XOffset = Math.Clamp(DropletRandomPower * rng.Next(-20, 20), -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
                             else if (catchObject is Droplet)
                                 rng.Next(); // osu!stable retrieved a random droplet rotation
                         }
