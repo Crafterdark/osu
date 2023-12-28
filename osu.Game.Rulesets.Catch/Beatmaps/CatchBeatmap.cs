@@ -59,5 +59,10 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                     yield return nested;
             }
         }
+
+        /// <summary>
+        /// Whether tiny droplets can initiate a hyperdash in the current beatmap.
+        /// </summary>
+        public bool HyperDashTinyDroplet { get; set; } = true;
     }
 }

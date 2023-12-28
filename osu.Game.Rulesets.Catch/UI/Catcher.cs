@@ -231,9 +231,6 @@ namespace osu.Game.Rulesets.Catch.UI
                     addLighting(result, drawableObject.AccentColour.Value, positionInStack.X);
             }
 
-            // droplet doesn't affect the catcher state
-            if (hitObject is TinyDroplet) return;
-
             // if a hyper fruit was already handled this frame, just go where it says to go.
             // this special-cases some aspire maps that have doubled-up objects (one hyper, one not) at the same time instant.
             // handling this "properly" elsewhere is impossible as there is no feasible way to ensure
@@ -251,6 +248,9 @@ namespace osu.Game.Rulesets.Catch.UI
                 else
                     SetHyperDashState();
             }
+
+            // droplet doesn't affect the catcher state
+            if (hitObject is TinyDroplet) return;
 
             if (result.IsHit)
                 CurrentState = hitObject.Kiai ? CatcherAnimationState.Kiai : CatcherAnimationState.Idle;

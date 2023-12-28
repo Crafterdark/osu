@@ -3,6 +3,7 @@
 
 using System;
 using System.Linq;
+using osu.Framework.Logging;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.UI;
@@ -205,10 +206,36 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             }
         }
 
+        private static bool isTinyDropletPathStart(PalpableCatchHitObject hitObject1, PalpableCatchHitObject hitObject2) => hitObject1 is not TinyDroplet && hitObject2 is TinyDroplet;
+
+        private static bool isTinyDropletPathMid(PalpableCatchHitObject hitObject1, PalpableCatchHitObject hitObject2) => hitObject1 is TinyDroplet && hitObject2 is TinyDroplet;
+
+        private static bool isTinyDropletPathEnd(PalpableCatchHitObject hitObject1, PalpableCatchHitObject hitObject2) => hitObject1 is TinyDroplet && hitObject2 is not TinyDroplet;
+
+        private static bool isTinyDropletPath(PalpableCatchHitObject hitObject1, PalpableCatchHitObject hitObject2) => hitObject1 is TinyDroplet || hitObject2 is TinyDroplet;
+
+        //private static bool isInHyperdashPath(PalpableCatchHitObject hitObjectX, PalpableCatchHitObject hitObject1, PalpableCatchHitObject hitObject2, double halfCatchWidth) =>
+        //    (hitObject1.EffectiveX > hitObject2.EffectiveX) ?
+        //    hitObject1.EffectiveX + halfCatchWidth >= hitObjectX.EffectiveX || hitObject2.EffectiveX - halfCatchWidth <= hitObjectX.EffectiveX :
+        //    hitObject1.EffectiveX - halfCatchWidth <= hitObjectX.EffectiveX || hitObject2.EffectiveX + halfCatchWidth >= hitObjectX.EffectiveX;
+
+        private static bool isInHyperdashPath(PalpableCatchHitObject hitObjectX, PalpableCatchHitObject hitObject1, PalpableCatchHitObject hitObject2, double halfCatchWidth) =>
+            (hitObject1.EffectiveX > hitObject2.EffectiveX) ?
+            hitObject2.EffectiveX <= hitObjectX.EffectiveX :
+            hitObject2.EffectiveX >= hitObjectX.EffectiveX;
+
+
+        private static void resetHyperdashStatus(PalpableCatchHitObject hitObject)
+        {
+            // Reset variables in-case values have changed (e.g. after applying HR)
+            hitObject.HyperDashTarget = null;
+            hitObject.DistanceToHyperDash = 0;
+        }
+
         private static void initialiseHyperDash(IBeatmap beatmap)
         {
             var palpableObjects = CatchBeatmap.GetPalpableObjects(beatmap.HitObjects)
-                                              .Where(h => h is Fruit || (h is Droplet && h is not TinyDroplet))
+                                              .Where(h => h is Fruit || (h is Droplet && (h is not TinyDroplet || ((CatchBeatmap)beatmap).HyperDashTinyDroplet)))
                                               .ToArray();
 
             double halfCatcherWidth = Catcher.CalculateCatchWidth(beatmap.Difficulty) / 2;
@@ -221,35 +248,199 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             int lastDirection = 0;
             double lastExcess = halfCatcherWidth;
 
+            int thisDirection = 0;
+            int thisDirectionTiny = 0;
+            double localLastExcess;
+            double localLastExcessTiny;
+
+            int lastDirectionTiny = 0;
+            double lastExcessTiny = halfCatcherWidth;
+
+            double catcherMaximumSpeed;
+            double catcherHyperDashSpeed = Catcher.BASE_DASH_SPEED;
+
+            PalpableCatchHitObject? prevFruitObject = null;
+            PalpableCatchHitObject? nextFruitObject = null;
+
             for (int i = 0; i < palpableObjects.Length - 1; i++)
             {
                 var currentObject = palpableObjects[i];
                 var nextObject = palpableObjects[i + 1];
 
-                // Reset variables in-case values have changed (e.g. after applying HR)
-                currentObject.HyperDashTarget = null;
-                currentObject.DistanceToHyperDash = 0;
-
-                int thisDirection = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
-
-                // Int truncation added to match osu!stable.
-                double timeToNext = (int)nextObject.StartTime - (int)currentObject.StartTime - 1000f / 60f / 4; // 1/4th of a frame of grace time, taken from osu-stable
-                double distanceToNext = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcess : halfCatcherWidth);
-                float distanceToHyper = (float)(timeToNext * Catcher.BASE_DASH_SPEED - distanceToNext);
-
-                if (distanceToHyper < 0)
+                if (isTinyDropletPathStart(currentObject, nextObject))
                 {
-                    currentObject.HyperDashTarget = nextObject;
-                    lastExcess = halfCatcherWidth;
-                }
-                else
-                {
-                    currentObject.DistanceToHyperDash = distanceToHyper;
-                    lastExcess = Math.Clamp(distanceToHyper, 0, halfCatcherWidth);
+                    resetHyperdashStatus(currentObject);
+
+                    for (int j = i + 2; j < palpableObjects.Length - 1; j++)
+                    {
+                        PalpableCatchHitObject newObject = palpableObjects[j];
+                        if (newObject is not TinyDroplet)
+                        {
+                            resetHyperdashStatus(newObject);
+
+                            // Store the fruit that ends the path
+                            nextFruitObject = newObject;
+                            break;
+                        }
+                    }
+
+                    if (nextFruitObject == null)
+                        continue;
+
+                    // Store the fruit that starts the path
+                    prevFruitObject = currentObject;
+
+                    // Initialise start fruit path to end fruit path hyperdash
+                    thisDirection = nextFruitObject.EffectiveX > prevFruitObject.EffectiveX ? 1 : -1;
+                    localLastExcess = lastDirection == thisDirection ? lastExcess : halfCatcherWidth;
+                    double oldLastExcess = lastExcess;
+                    catcherMaximumSpeed = Catcher.BASE_DASH_SPEED;
+
+                    lastExcess = initialiseHyperDashGetLastExcess(prevFruitObject, nextFruitObject, localLastExcess, halfCatcherWidth, catcherMaximumSpeed, true, true);
+                    lastDirection = thisDirection;
+
+                    // Calculate eventual hyperdash speed
+                    if (prevFruitObject.HyperDashTarget != null)
+                    {
+                        double timeDifference = prevFruitObject.HyperDashTarget.StartTime - prevFruitObject.StartTime;
+                        double positionDifference = prevFruitObject.HyperDashTarget.EffectiveX - prevFruitObject.EffectiveX;
+                        double velocity = positionDifference / Math.Max(1.0, timeDifference - 1000.0 / 60.0);
+
+                        catcherHyperDashSpeed = Math.Abs(velocity) / Catcher.BASE_DASH_SPEED;
+
+                        if (catcherHyperDashSpeed < 1)
+                            catcherHyperDashSpeed = Catcher.BASE_DASH_SPEED;
+                    }
+
+                    // Initialise fruit to tiny (don't change target for now) [use old localLastExcess]
+                    thisDirectionTiny = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
+
+                    localLastExcessTiny = thisDirection == thisDirectionTiny ? oldLastExcess : halfCatcherWidth;
+
+                    if (prevFruitObject != null && nextFruitObject != null && prevFruitObject.HyperDashTarget != null && isInHyperdashPath(nextObject, prevFruitObject, nextFruitObject, halfCatcherWidth))
+                    {
+                        catcherMaximumSpeed = catcherHyperDashSpeed;
+                    }
+
+                    //TO DO: DOUBLE DISTANCE CHECK!
+                    else
+                    {
+                        if (prevFruitObject != null && nextFruitObject != null && prevFruitObject.HyperDashTarget != null && !isInHyperdashPath(currentObject, prevFruitObject, nextFruitObject, halfCatcherWidth))
+                            Logger.Log("Why");
+                        catcherMaximumSpeed = Catcher.BASE_DASH_SPEED;
+                    }
+                    lastExcessTiny = initialiseHyperDashGetLastExcess(currentObject, nextObject, localLastExcessTiny, halfCatcherWidth, catcherMaximumSpeed, false, false);
+                    lastDirectionTiny = thisDirectionTiny;
                 }
 
-                lastDirection = thisDirection;
+                else if (prevFruitObject != null && isTinyDropletPathEnd(currentObject, nextObject))
+                {
+                    resetHyperdashStatus(currentObject);
+
+                    // Initialise tiny to fruit hyperdash
+                    thisDirectionTiny = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
+                    localLastExcessTiny = lastDirectionTiny == thisDirectionTiny ? lastExcessTiny : halfCatcherWidth;
+
+                    if (prevFruitObject != null && nextFruitObject != null && prevFruitObject.HyperDashTarget != null && isInHyperdashPath(currentObject, prevFruitObject, nextFruitObject, halfCatcherWidth))
+                    {
+                        catcherMaximumSpeed = catcherHyperDashSpeed;
+                    }
+
+                    //TO DO: DOUBLE DISTANCE CHECK!
+                    else
+                    {
+                        if (prevFruitObject != null && nextFruitObject != null && prevFruitObject.HyperDashTarget != null && !isInHyperdashPath(currentObject, prevFruitObject, nextFruitObject, halfCatcherWidth))
+                            Logger.Log("Why");
+                        catcherMaximumSpeed = Catcher.BASE_DASH_SPEED;
+                    }
+                    lastExcessTiny = initialiseHyperDashGetLastExcess(currentObject, nextObject, localLastExcessTiny, halfCatcherWidth, catcherMaximumSpeed, false, true);
+
+                    lastDirectionTiny = thisDirectionTiny;
+
+                    prevFruitObject = null;
+                    nextFruitObject = null;
+                }
+
+                else if (isTinyDropletPathMid(currentObject, nextObject))
+                {
+                    resetHyperdashStatus(currentObject);
+
+                    // Initialise tiny to tiny hyperdash
+                    thisDirectionTiny = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
+                    localLastExcessTiny = lastDirectionTiny == thisDirectionTiny ? lastExcessTiny : halfCatcherWidth;
+
+                    if (prevFruitObject != null && nextFruitObject != null && prevFruitObject.HyperDashTarget != null && isInHyperdashPath(currentObject, prevFruitObject, nextFruitObject, halfCatcherWidth))
+                    {
+                        catcherMaximumSpeed = catcherHyperDashSpeed;
+                    }
+
+                    //TO DO: DOUBLE DISTANCE CHECK!
+                    else
+                    {
+                        if (prevFruitObject != null && nextFruitObject != null && prevFruitObject.HyperDashTarget != null && !isInHyperdashPath(currentObject, prevFruitObject, nextFruitObject, halfCatcherWidth))
+                            Logger.Log("Why");
+                        catcherMaximumSpeed = Catcher.BASE_DASH_SPEED;
+                    }
+                    lastExcessTiny = initialiseHyperDashGetLastExcess(currentObject, nextObject, localLastExcessTiny, halfCatcherWidth, catcherMaximumSpeed, false, true);
+
+                    lastDirectionTiny = thisDirectionTiny;
+                }
+
+                else if (!isTinyDropletPath(currentObject, nextObject))
+                {
+                    // Safety for aspire maps
+                    prevFruitObject = null;
+                    nextFruitObject = null;
+
+                    resetHyperdashStatus(currentObject);
+
+                    // Initialise fruit to fruit hyperdash (always necessary)
+                    thisDirection = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
+                    localLastExcess = lastDirection == thisDirection ? lastExcess : halfCatcherWidth;
+                    catcherMaximumSpeed = Catcher.BASE_DASH_SPEED;
+
+                    lastExcess = initialiseHyperDashGetLastExcess(currentObject, nextObject, localLastExcess, halfCatcherWidth, catcherMaximumSpeed, true, true);
+
+                    lastDirection = thisDirection;
+                }
             }
+        }
+
+        private static double initialiseHyperDashGetLastExcess(PalpableCatchHitObject currentObject, PalpableCatchHitObject nextObject, double localLastExcess, double halfCatcherWidth, double catcherMaximumSpeed, bool isGrace, bool changeTarget)
+        {
+            // Int truncation added to match osu!stable.
+
+            float graceTime = isGrace ? 1000f / 60f / 4 : 0f;
+
+            double timeToNext = (int)nextObject.StartTime - (int)currentObject.StartTime - graceTime; // 1/4th of a frame of grace time, taken from osu-stable
+            double distanceToNext = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - localLastExcess;
+            float distanceToHyper = (float)(timeToNext * catcherMaximumSpeed - distanceToNext);
+
+            if (distanceToHyper < 0)
+            {
+                if (currentObject is TinyDroplet)
+                {
+                    Logger.Log("Curr and Next: " + currentObject.EffectiveX + " " + nextObject.EffectiveX);
+                    Logger.Log("Time to Next: " + timeToNext);
+                    Logger.Log("Distance to Next: " + distanceToNext);
+                    Logger.Log("IsGrace: " + isGrace);
+                    Logger.Log("Speed: " + catcherMaximumSpeed);
+                    Logger.Log("Distance: " + distanceToHyper);
+                }
+                if (changeTarget)
+                    currentObject.HyperDashTarget = nextObject;
+                return halfCatcherWidth;
+            }
+            else
+            {
+                if (changeTarget)
+                {
+                    currentObject.HyperDashTarget = null;
+                    currentObject.DistanceToHyperDash = distanceToHyper;
+                }
+                return Math.Clamp(distanceToHyper, 0, halfCatcherWidth);
+            }
+
         }
     }
 }
