@@ -122,6 +122,17 @@ namespace osu.Game.Rulesets.Catch.UI
         /// </summary>
         public readonly float CatchWidth;
 
+        /// <summary>
+        /// Whether the catcher must follow unconventional gameplay rules.
+        /// </summary>
+        public bool AspireApplies { get; set; }
+
+        private CatchHitObject previousHitObjectWithTarget = null!;
+        private CatchHitObject previousTarget = null!;
+        public bool AspireSettingsTypeOne { get; set; }
+        public bool AspireSettingsTypeTwo { get; set; }
+        public bool AspireSettingsTypeThree { get; set; }
+
         private readonly SkinnableCatcher body;
 
         private Color4 hyperDashColour = DEFAULT_HYPER_DASH_COLOUR;
@@ -238,19 +249,42 @@ namespace osu.Game.Rulesets.Catch.UI
             // this special-cases some aspire maps that have doubled-up objects (one hyper, one not) at the same time instant.
             // handling this "properly" elsewhere is impossible as there is no feasible way to ensure
             // that the hyperfruit gets judged second (especially if it coincides with a last fruit in a juice stream).
-            if (lastHyperDashStartTime != Time.Current)
-            {
-                if (result.IsHit && hitObject.HyperDashTarget is CatchHitObject target)
-                {
-                    double timeDifference = target.StartTime - hitObject.StartTime;
-                    double positionDifference = target.EffectiveX - X;
-                    double velocity = positionDifference / Math.Max(1.0, timeDifference - 1000.0 / 60.0);
 
-                    SetHyperDashState(Math.Abs(velocity) / BASE_DASH_SPEED, target.EffectiveX);
+            //if (lastHyperDashStartTime != Time.Current)
+            //{
+
+            if (result.IsHit && hitObject.HyperDashTarget is CatchHitObject target)
+            {
+                bool isAllowingHyperDash = true; //we allow hyper dash unless following conditions
+
+                if (AspireSettingsTypeTwo && hitObject.StartTime == target.StartTime) isAllowingHyperDash = false;
+                if (AspireSettingsTypeThree && Math.Abs(hitObject.EffectiveX - target.EffectiveX) <= CatchWidth) isAllowingHyperDash = false;
+
+                double timeDifference = target.StartTime - hitObject.StartTime;
+                double positionDifference = target.EffectiveX - X;
+                double velocity = positionDifference / Math.Max(1.0, timeDifference - 1000.0 / 60.0);
+
+                if (AspireApplies)
+                {
+                    previousHitObjectWithTarget = hitObject;
+                    previousTarget = target;
                 }
-                else
-                    SetHyperDashState();
+
+                if (isAllowingHyperDash) SetHyperDashState(Math.Abs(velocity) / BASE_DASH_SPEED, target.EffectiveX);
             }
+            else
+            {
+                if (AspireApplies)
+                {
+                    bool isPreventingHyperDash = true; //we prevent hyper dash unless following conditions
+                    if (AspireSettingsTypeOne && previousHitObjectWithTarget != null && previousTarget.StartTime > hitObject.StartTime) isPreventingHyperDash = false;
+                    //final check
+                    if (isPreventingHyperDash) SetHyperDashState();
+                }
+                else SetHyperDashState();
+            }
+
+            //}
 
             if (result.IsHit)
                 CurrentState = hitObject.Kiai ? CatcherAnimationState.Kiai : CatcherAnimationState.Idle;
