@@ -6,6 +6,7 @@ using System.Linq;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.UI;
+using osu.Game.Rulesets.Objects.Legacy;
 using osu.Game.Rulesets.Objects.Types;
 using osu.Game.Utils;
 
@@ -16,6 +17,8 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         public const int RNG_SEED = 1337;
 
         public bool HardRockOffsets { get; set; }
+
+        public bool TinyDropletFixedRandomOffsets { get; set; }
 
         public CatchBeatmapProcessor(IBeatmap beatmap)
             : base(beatmap)
@@ -101,7 +104,22 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                             catchObject.XOffset = 0;
 
                             if (catchObject is TinyDroplet)
-                                catchObject.XOffset = Math.Clamp(rng.Next(-20, 20), -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
+                            {
+                                if (TinyDropletFixedRandomOffsets)
+                                {
+                                    //Stable tiny droplet offset
+                                    float stableTinyDropletXOffset = rng.Next(-20, 20);
+                                    catchObject.XOffset = Math.Clamp(stableTinyDropletXOffset, -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
+                                }
+                                else
+                                {
+                                    //Tiny droplet offset is rescaled to the catcher scale when Circle Size is above 5
+                                    float tinyDropletXOffset = rng.Next(-21, 22);
+                                    tinyDropletXOffset += (tinyDropletXOffset >= 0f) ? 0.35f : -0.35f;
+                                    tinyDropletXOffset *= LegacyRulesetExtensions.CalculateScaleFromCircleSize(Math.Max(5.0f, beatmap.Difficulty.CircleSize)) * 2;
+                                    catchObject.XOffset = Math.Clamp((float)Math.Round(tinyDropletXOffset), -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
+                                }
+                            }
                             else if (catchObject is Droplet)
                                 rng.Next(); // osu!stable retrieved a random droplet rotation
                         }
