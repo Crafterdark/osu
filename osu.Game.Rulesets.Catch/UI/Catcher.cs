@@ -127,11 +127,9 @@ namespace osu.Game.Rulesets.Catch.UI
         /// </summary>
         public bool AspireApplies { get; set; }
 
-        private CatchHitObject previousHitObjectWithTarget = null!;
-        private CatchHitObject previousTarget = null!;
-        public bool AspireSettingsTypeOne { get; set; }
-        public bool AspireSettingsTypeTwo { get; set; }
-        public bool AspireSettingsTypeThree { get; set; }
+        public int CurrentHyperDashDirection;
+        public bool AspireHyperdashPermanentTarget { get; set; }
+        public bool AspireHyperdashHyperAndTargetSameTime { get; set; }
 
         private readonly SkinnableCatcher body;
 
@@ -249,42 +247,28 @@ namespace osu.Game.Rulesets.Catch.UI
             // this special-cases some aspire maps that have doubled-up objects (one hyper, one not) at the same time instant.
             // handling this "properly" elsewhere is impossible as there is no feasible way to ensure
             // that the hyperfruit gets judged second (especially if it coincides with a last fruit in a juice stream).
-
-            //if (lastHyperDashStartTime != Time.Current)
-            //{
-
-            if (result.IsHit && hitObject.HyperDashTarget is CatchHitObject target)
+            if (lastHyperDashStartTime != Time.Current || (AspireApplies && !AspireHyperdashPermanentTarget))
             {
-                bool isAllowingHyperDash = true; //we allow hyper dash unless following conditions
-
-                if (AspireSettingsTypeTwo && hitObject.StartTime == target.StartTime) isAllowingHyperDash = false;
-                if (AspireSettingsTypeThree && Math.Abs(hitObject.EffectiveX - target.EffectiveX) <= CatchWidth) isAllowingHyperDash = false;
-
-                double timeDifference = target.StartTime - hitObject.StartTime;
-                double positionDifference = target.EffectiveX - X;
-                double velocity = positionDifference / Math.Max(1.0, timeDifference - 1000.0 / 60.0);
-
-                if (AspireApplies)
+                if (result.IsHit && hitObject.HyperDashTarget is CatchHitObject target)
                 {
-                    previousHitObjectWithTarget = hitObject;
-                    previousTarget = target;
-                }
+                    bool isAllowingHyperDash = true;
 
-                if (isAllowingHyperDash) SetHyperDashState(Math.Abs(velocity) / BASE_DASH_SPEED, target.EffectiveX);
-            }
-            else
-            {
-                if (AspireApplies)
-                {
-                    bool isPreventingHyperDash = true; //we prevent hyper dash unless following conditions
-                    if (AspireSettingsTypeOne && previousHitObjectWithTarget != null && previousTarget.StartTime > hitObject.StartTime) isPreventingHyperDash = false;
-                    //final check
-                    if (isPreventingHyperDash) SetHyperDashState();
-                }
-                else SetHyperDashState();
-            }
+                    if (AspireApplies)
+                    {
+                        if (AspireHyperdashHyperAndTargetSameTime && hitObject.StartTime == target.StartTime)
+                            isAllowingHyperDash = false;
+                    }
 
-            //}
+                    double timeDifference = target.StartTime - hitObject.StartTime;
+                    double positionDifference = target.EffectiveX - X;
+                    double velocity = positionDifference / Math.Max(1.0, timeDifference - 1000.0 / 60.0);
+
+                    if (isAllowingHyperDash)
+                        SetHyperDashState(Math.Abs(velocity) / BASE_DASH_SPEED, target.EffectiveX);
+                }
+                else
+                    SetHyperDashState();
+            }
 
             if (result.IsHit)
                 CurrentState = hitObject.Kiai ? CatcherAnimationState.Kiai : CatcherAnimationState.Idle;
@@ -347,6 +331,15 @@ namespace osu.Game.Rulesets.Catch.UI
                     runHyperDashStateTransition(true);
 
                 lastHyperDashStartTime = Time.Current;
+            }
+
+            if (AspireApplies)
+            {
+                //A value of 0 means that it doesn't matter which direction is taken
+                if (targetPosition >= 0 && targetPosition <= CatchPlayfield.WIDTH)
+                    CurrentHyperDashDirection = hyperDashDirection;
+                else
+                    CurrentHyperDashDirection = 0;
             }
         }
 

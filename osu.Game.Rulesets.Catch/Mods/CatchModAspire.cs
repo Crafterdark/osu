@@ -20,22 +20,22 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override double ScoreMultiplier => 1;
         public override ModType Type => ModType.Conversion;
 
-        [SettingSource("Change 1#", "Hyper dashing won't be removed too early, in the case of a previous non-target note happening before the expected time of the target note.")]
-        public Bindable<bool> AspireSettingsOne { get; } = new BindableBool(true); //Stable default as "true" (?)
+        [SettingSource("Hyperdash permanent Target", "Initialised Hyperdash Target is not replaced if another Hyper is caught.")]
+        public Bindable<bool> AspireHyperdashPermanentTarget { get; } = new BindableBool(true); //Stable default as "true"
 
-        [SettingSource("Change 2#", "Hyper dashing will not apply if the target note falls at the exact same time of the hyper note.")]
-        public Bindable<bool> AspireSettingsTwo { get; } = new BindableBool(false); //Stable default as "false" (?)
+        [SettingSource("Hyperdash when Hyper and Target fall at the same time", "Hyperdash is not initialised if the Hyper and the Target fall at the same time.")]
+        public Bindable<bool> AspireHyperdashHyperAndTargetSameTime { get; } = new BindableBool(true); //Stable default as "true"
 
-        [SettingSource("Change 3#", "Hyper dashing will not apply if the target note falls near the hyper note & both can be caught without movement.")]
-        public Bindable<bool> AspireSettingsThree { get; } = new BindableBool(false); //Stable default as "false" (?)
+        [SettingSource("Hyperdash Target multidirectional", "Hyperdash initialises if the catcher moves far away from the Target.")]
+        public Bindable<bool> AspireHyperdashMultidirectional { get; } = new BindableBool(true); //Stable default as "true"
 
         public override string SettingDescription
         {
             get
             {
-                string aspireSettingsOne_string = AspireSettingsOne.IsDefault ? string.Empty : string.Empty;
-                string aspireSettingsTwo_string = AspireSettingsTwo.IsDefault ? string.Empty : string.Empty;
-                string aspireSettingsThree_string = AspireSettingsTwo.IsDefault ? string.Empty : string.Empty;
+                string aspireSettingsOne_string = AspireHyperdashPermanentTarget.IsDefault ? string.Empty : string.Empty;
+                string aspireSettingsTwo_string = AspireHyperdashHyperAndTargetSameTime.IsDefault ? string.Empty : string.Empty;
+                string aspireSettingsThree_string = AspireHyperdashMultidirectional.IsDefault ? string.Empty : string.Empty;
 
                 return string.Join(", ", new[]
                 {
@@ -51,10 +51,13 @@ namespace osu.Game.Rulesets.Catch.Mods
         {
             var drawableCatchRuleset = (DrawableCatchRuleset)drawableRuleset;
             var catchPlayfield = (CatchPlayfield)drawableCatchRuleset.Playfield;
+
             catchPlayfield.Catcher.AspireApplies = true;
-            catchPlayfield.Catcher.AspireSettingsTypeOne = AspireSettingsOne.Value;
-            catchPlayfield.Catcher.AspireSettingsTypeTwo = AspireSettingsTwo.Value;
-            catchPlayfield.Catcher.AspireSettingsTypeThree = AspireSettingsThree.Value;
+            catchPlayfield.CatcherArea.AspireApplies = true;
+
+            catchPlayfield.Catcher.AspireHyperdashPermanentTarget = AspireHyperdashPermanentTarget.Value;
+            catchPlayfield.Catcher.AspireHyperdashHyperAndTargetSameTime = AspireHyperdashHyperAndTargetSameTime.Value;
+            catchPlayfield.CatcherArea.AspireHyperdashMultidirectional = AspireHyperdashMultidirectional.Value;
         }
 
     }

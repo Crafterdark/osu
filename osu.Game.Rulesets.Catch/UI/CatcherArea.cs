@@ -45,6 +45,8 @@ namespace osu.Game.Rulesets.Catch.UI
 
         // TODO: support replay rewind
         private bool lastHyperDashState;
+        public bool AspireApplies { get; set; }
+        public bool AspireHyperdashMultidirectional { get; set; }
 
         /// <remarks>
         /// <see cref="Catcher"/> must be set before loading.
@@ -86,9 +88,21 @@ namespace osu.Game.Rulesets.Catch.UI
 
             var replayState = (GetContainingInputManager().CurrentState as RulesetInputManagerInputState<CatchAction>)?.LastReplayState as CatchFramedReplayInputHandler.CatchReplayState;
 
+            double updatedCatcherSpeed;
+
+            if (AspireApplies)
+            {
+                if (!AspireHyperdashMultidirectional && Catcher.CurrentHyperDashDirection != currentDirection && Catcher.CurrentHyperDashDirection != 0)
+                    updatedCatcherSpeed = Catcher.Dashing ? Catcher.BASE_DASH_SPEED : Catcher.BASE_WALK_SPEED;
+                else
+                    updatedCatcherSpeed = Catcher.Speed;
+            }
+            else
+                updatedCatcherSpeed = Catcher.Speed;
+
             SetCatcherPosition(
                 replayState?.CatcherX ??
-                (float)(Catcher.X + Catcher.Speed * currentDirection * Clock.ElapsedFrameTime));
+                (float)(Catcher.X + updatedCatcherSpeed * currentDirection * Clock.ElapsedFrameTime));
         }
 
         protected override void UpdateAfterChildren()
