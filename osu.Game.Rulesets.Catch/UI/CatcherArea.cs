@@ -48,6 +48,8 @@ namespace osu.Game.Rulesets.Catch.UI
         public bool AspireApplies { get; set; }
         public bool AspireHyperdashMultidirectional { get; set; }
 
+        public bool AspireHyperdashOvershootFreeze { get; set; }
+
         /// <remarks>
         /// <see cref="Catcher"/> must be set before loading.
         /// </remarks>
@@ -88,21 +90,43 @@ namespace osu.Game.Rulesets.Catch.UI
 
             var replayState = (GetContainingInputManager().CurrentState as RulesetInputManagerInputState<CatchAction>)?.LastReplayState as CatchFramedReplayInputHandler.CatchReplayState;
 
-            double updatedCatcherSpeed;
+            double updatedCatcherSpeed = Catcher.Speed;
+
+            double clockElapsedFrameTime = Clock.ElapsedFrameTime;
 
             if (AspireApplies)
             {
-                if (!AspireHyperdashMultidirectional && Catcher.CurrentHyperDashDirection != currentDirection && Catcher.CurrentHyperDashDirection != 0)
+                bool removedHyperdashEarly = false;
+
+                if (!removedHyperdashEarly && !AspireHyperdashOvershootFreeze && Catcher.HyperDashing)
+                {
+                    float newPosition = Math.Clamp((float)(Catcher.X + Catcher.Speed * currentDirection * clockElapsedFrameTime), 0, CatchPlayfield.WIDTH);
+
+                    // Correct overshooting from hyperdashing.
+                    if ((Catcher.CurrentHyperDashDirection > 0 && Catcher.CurrentHyperDashTargetPosition <= newPosition) ||
+                        (Catcher.CurrentHyperDashDirection < 0 && Catcher.CurrentHyperDashTargetPosition >= newPosition))
+                    {
+                        // Remove the time it took to reach the Target position
+                        double clockToRemove = Math.Abs(Catcher.X - Catcher.CurrentHyperDashTargetPosition) / Catcher.Speed;
+                        clockElapsedFrameTime -= clockToRemove;
+
+                        // Update Catcher to the new Target position and remove Hyperdash status
+                        Catcher.X = Catcher.CurrentHyperDashTargetPosition;
+                        Catcher.SetHyperDashState();
+                        removedHyperdashEarly = true;
+                    }
+                }
+
+                if (!removedHyperdashEarly && !AspireHyperdashMultidirectional && Catcher.CurrentHyperDashDirection != currentDirection && Catcher.CurrentHyperDashDirection != 0)
+                    removedHyperdashEarly = true;
+
+                if (removedHyperdashEarly)
                     updatedCatcherSpeed = Catcher.Dashing ? Catcher.BASE_DASH_SPEED : Catcher.BASE_WALK_SPEED;
-                else
-                    updatedCatcherSpeed = Catcher.Speed;
             }
-            else
-                updatedCatcherSpeed = Catcher.Speed;
 
             SetCatcherPosition(
                 replayState?.CatcherX ??
-                (float)(Catcher.X + updatedCatcherSpeed * currentDirection * Clock.ElapsedFrameTime));
+                (float)(Catcher.X + updatedCatcherSpeed * currentDirection * clockElapsedFrameTime));
         }
 
         protected override void UpdateAfterChildren()

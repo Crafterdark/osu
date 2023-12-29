@@ -128,6 +128,8 @@ namespace osu.Game.Rulesets.Catch.UI
         public bool AspireApplies { get; set; }
 
         public int CurrentHyperDashDirection;
+
+        public float CurrentHyperDashTargetPosition;
         public bool AspireHyperdashPermanentTarget { get; set; }
         public bool AspireHyperdashHyperAndTargetSameTime { get; set; }
 
@@ -337,9 +339,15 @@ namespace osu.Game.Rulesets.Catch.UI
             {
                 //A value of 0 means that it doesn't matter which direction is taken
                 if (targetPosition >= 0 && targetPosition <= CatchPlayfield.WIDTH)
+                {
                     CurrentHyperDashDirection = hyperDashDirection;
+                    CurrentHyperDashTargetPosition = targetPosition;
+                }
                 else
+                {
                     CurrentHyperDashDirection = 0;
+                    CurrentHyperDashTargetPosition = -1;
+                }
             }
         }
 

@@ -29,6 +29,9 @@ namespace osu.Game.Rulesets.Catch.Mods
         [SettingSource("Hyperdash Target multidirectional", "Hyperdash initialises if the catcher moves far away from the Target.")]
         public Bindable<bool> AspireHyperdashMultidirectional { get; } = new BindableBool(true); //Stable default as "true"
 
+        [SettingSource("Hyperdash overshoot freeze", "Hyperdash overshooting might not consider extra clock time after surpassing the Target.")]
+        public Bindable<bool> AspireHyperdashOvershootFreeze { get; } = new BindableBool(true); //Stable default as "true" (?)
+
         public override string SettingDescription
         {
             get
@@ -36,6 +39,7 @@ namespace osu.Game.Rulesets.Catch.Mods
                 string aspireSettingsOne_string = AspireHyperdashPermanentTarget.IsDefault ? string.Empty : string.Empty;
                 string aspireSettingsTwo_string = AspireHyperdashHyperAndTargetSameTime.IsDefault ? string.Empty : string.Empty;
                 string aspireSettingsThree_string = AspireHyperdashMultidirectional.IsDefault ? string.Empty : string.Empty;
+                string aspireSettingsFour_string = AspireHyperdashOvershootFreeze.IsDefault ? string.Empty : string.Empty;
 
                 return string.Join(", ", new[]
                 {
@@ -58,6 +62,7 @@ namespace osu.Game.Rulesets.Catch.Mods
             catchPlayfield.Catcher.AspireHyperdashPermanentTarget = AspireHyperdashPermanentTarget.Value;
             catchPlayfield.Catcher.AspireHyperdashHyperAndTargetSameTime = AspireHyperdashHyperAndTargetSameTime.Value;
             catchPlayfield.CatcherArea.AspireHyperdashMultidirectional = AspireHyperdashMultidirectional.Value;
+            catchPlayfield.CatcherArea.AspireHyperdashOvershootFreeze = AspireHyperdashOvershootFreeze.Value;
         }
 
     }
