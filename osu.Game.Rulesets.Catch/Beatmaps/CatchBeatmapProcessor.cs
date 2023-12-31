@@ -4,6 +4,7 @@
 using System;
 using System.Linq;
 using osu.Game.Beatmaps;
+using osu.Game.Rulesets.Catch.Mods;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Objects.Types;
@@ -207,9 +208,29 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         private static void initialiseHyperDash(IBeatmap beatmap)
         {
+            var catchBeatmap = (CatchBeatmap)beatmap;
+
             var palpableObjects = CatchBeatmap.GetPalpableObjects(beatmap.HitObjects)
                                               .Where(h => h is Fruit || (h is Droplet && h is not TinyDroplet))
                                               .ToArray();
+
+            float halfCatcherWidthOriginal = 0;
+            double lastExcessOriginal = 0;
+
+            if (catchBeatmap.DullPatterns)
+            {
+                var beatmapDifficulty = beatmap.Difficulty.Clone();
+
+                if (catchBeatmap.EasyReversedHardRock)
+                    beatmapDifficulty.CircleSize = beatmap.Difficulty.CircleSize * CatchModEasy.HR_CS_RATIO;
+                else
+                    beatmapDifficulty.CircleSize = beatmap.Difficulty.CircleSize * 2.0f;
+
+                halfCatcherWidthOriginal = Catcher.CalculateCatchWidth(beatmapDifficulty) / 2;
+                halfCatcherWidthOriginal /= Catcher.ALLOWED_CATCH_RANGE;
+
+                lastExcessOriginal = halfCatcherWidthOriginal;
+            }
 
             double halfCatcherWidth = Catcher.CalculateCatchWidth(beatmap.Difficulty) / 2;
 
@@ -237,7 +258,24 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 double distanceToNext = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcess : halfCatcherWidth);
                 float distanceToHyper = (float)(timeToNext * Catcher.BASE_DASH_SPEED - distanceToNext);
 
-                if (distanceToHyper < 0)
+                bool forceHyperdash = false;
+
+                if (catchBeatmap.DullPatterns)
+                {
+                    double distanceToNextOriginal = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcessOriginal : halfCatcherWidthOriginal);
+                    float distanceToHyperOriginal = (float)(timeToNext * Catcher.BASE_DASH_SPEED - distanceToNextOriginal);
+                    if (distanceToHyperOriginal < 0)
+                    {
+                        forceHyperdash = true;
+                        lastExcessOriginal = halfCatcherWidthOriginal;
+                    }
+                    else
+                    {
+                        lastExcessOriginal = Math.Clamp(distanceToHyperOriginal, 0, halfCatcherWidthOriginal);
+                    }
+                }
+
+                if (distanceToHyper < 0 || forceHyperdash)
                 {
                     currentObject.HyperDashTarget = nextObject;
                     lastExcess = halfCatcherWidth;

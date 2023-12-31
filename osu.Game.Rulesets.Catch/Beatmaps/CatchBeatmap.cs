@@ -11,6 +11,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 {
     public class CatchBeatmap : Beatmap<CatchHitObject>
     {
+        public bool DullPatterns { get; set; }
+        public bool EasyReversedHardRock { get; set; }
+
         public override IEnumerable<BeatmapStatistic> GetStatistics()
         {
             int fruits = HitObjects.Count(s => s is Fruit);
