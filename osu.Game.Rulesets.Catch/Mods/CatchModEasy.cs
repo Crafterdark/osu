@@ -48,8 +48,8 @@ namespace osu.Game.Rulesets.Catch.Mods
             {
                 difficulty.CircleSize = Math.Max(difficulty.CircleSize / HR_CS_RATIO, 0.0f); // CS uses a custom 1.3 ratio.
                 difficulty.ApproachRate = Math.Max(difficulty.ApproachRate / HR_ADJUST_RATIO, 0.0f);
-                difficulty.DrainRate = Math.Max(difficulty.ApproachRate / HR_ADJUST_RATIO, 0.0f);
-                difficulty.OverallDifficulty = Math.Max(difficulty.ApproachRate / HR_ADJUST_RATIO, 0.0f);
+                difficulty.DrainRate = Math.Max(difficulty.DrainRate / HR_ADJUST_RATIO, 0.0f);
+                difficulty.OverallDifficulty = Math.Max(difficulty.OverallDifficulty / HR_ADJUST_RATIO, 0.0f);
             }
             else
                 base.ApplyToDifficulty(difficulty);
