@@ -217,7 +217,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             float halfCatcherWidthOriginal = 0;
             double lastExcessOriginal = 0;
 
-            if (catchBeatmap.DullPatterns)
+            if (catchBeatmap.RemoveDullPatterns)
             {
                 var beatmapDifficulty = beatmap.Difficulty.Clone();
 
@@ -260,7 +260,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
                 bool forceHyperdash = false;
 
-                if (catchBeatmap.DullPatterns)
+                if (catchBeatmap.RemoveDullPatterns)
                 {
                     double distanceToNextOriginal = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcessOriginal : halfCatcherWidthOriginal);
                     float distanceToHyperOriginal = (float)(timeToNext * Catcher.BASE_DASH_SPEED - distanceToNextOriginal);

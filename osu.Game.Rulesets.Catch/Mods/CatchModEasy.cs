@@ -23,15 +23,15 @@ namespace osu.Game.Rulesets.Catch.Mods
         [SettingSource("Reversed Hard Rock", "Changes beatmap parameters with the adjust ratio of Hard Rock.")]
         public Bindable<bool> EasyReversedHardRock { get; } = new BindableBool(false);
 
-        [SettingSource("Adjust Dull Patterns", "Removes uncomfortable patterns from the beatmap.")]
-        public Bindable<bool> DullPatterns { get; } = new BindableBool(false);
+        [SettingSource("Remove Dull Patterns", "Removes uncomfortable patterns from the beatmap.")]
+        public Bindable<bool> RemoveDullPatterns { get; } = new BindableBool(false);
 
         public override string SettingDescription
         {
             get
             {
-                string DullPatterns_string = DullPatterns.IsDefault ? string.Empty : $"{"Dull Patterns:" + DullPatterns.Value}";
-                string EasyReverseHardRock_string = EasyReversedHardRock.IsDefault ? string.Empty : $"{"Reversed Hard Rock:" + EasyReversedHardRock.Value}";
+                string DullPatterns_string = RemoveDullPatterns.IsDefault ? string.Empty : $"{"Remove Dull Patterns: " + (RemoveDullPatterns.Value ? "on" : "off")}";
+                string EasyReverseHardRock_string = EasyReversedHardRock.IsDefault ? string.Empty : $"{"Reversed Hard Rock: " + (EasyReversedHardRock.Value ? "on" : "off")}";
 
                 return string.Join(", ", new[]
                 {
@@ -58,7 +58,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
         {
             var catchBeatmap = (CatchBeatmap)beatmapProcessor.Beatmap;
-            catchBeatmap.DullPatterns = DullPatterns.Value;
+            catchBeatmap.RemoveDullPatterns = RemoveDullPatterns.Value;
             catchBeatmap.EasyReversedHardRock = EasyReversedHardRock.Value;
         }
     }
