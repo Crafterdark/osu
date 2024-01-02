@@ -2,6 +2,8 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Input.Bindings;
@@ -24,17 +26,25 @@ namespace osu.Game.Rulesets.Catch.UI
     {
         public Catcher Catcher
         {
-            get => catcher;
-            set => catcherContainer.Child = catcher = value;
+            get => mainCatcher;
+            set => mainCatcherContainer.Child = mainCatcher = value;
         }
 
-        private readonly Container<Catcher> catcherContainer;
+        public List<Catcher> CatcherList = new List<Catcher>();
+
+        public bool IsPlayfieldUnique = true;
+
+        public List<float> CatcherNewRanges = new List<float>();
+
+        public List<float> TwinNewRanges = new List<float>();
+
+        private readonly Container<Catcher> mainCatcherContainer;
 
         private readonly CatchComboDisplay comboDisplay;
 
         private readonly CatcherTrailDisplay catcherTrails;
 
-        private Catcher catcher = null!;
+        private Catcher mainCatcher = null!;
 
         /// <summary>
         /// <c>-1</c> when only left button is pressed.
@@ -54,7 +64,7 @@ namespace osu.Game.Rulesets.Catch.UI
             Size = new Vector2(CatchPlayfield.WIDTH, Catcher.BASE_SIZE);
             Children = new Drawable[]
             {
-                catcherContainer = new Container<Catcher> { RelativeSizeAxes = Axes.Both },
+                mainCatcherContainer = new Container<Catcher> { RelativeSizeAxes = Axes.Both },
                 catcherTrails = new CatcherTrailDisplay(),
                 comboDisplay = new CatchComboDisplay
                 {
@@ -70,14 +80,20 @@ namespace osu.Game.Rulesets.Catch.UI
 
         public void OnNewResult(DrawableCatchHitObject hitObject, JudgementResult result)
         {
-            Catcher.OnNewResult(hitObject, result);
-            comboDisplay.OnNewResult(hitObject, result);
+            foreach (Catcher catcher in CatcherList)
+            {
+                catcher.OnNewResult(hitObject, result);
+                comboDisplay.OnNewResult(hitObject, result);
+            }
         }
 
         public void OnRevertResult(JudgementResult result)
         {
-            comboDisplay.OnRevertResult(result);
-            Catcher.OnRevertResult(result);
+            foreach (Catcher catcher in CatcherList)
+            {
+                comboDisplay.OnRevertResult(result);
+                catcher.OnRevertResult(result);
+            }
         }
 
         protected override void Update()
@@ -86,50 +102,64 @@ namespace osu.Game.Rulesets.Catch.UI
 
             var replayState = (GetContainingInputManager().CurrentState as RulesetInputManagerInputState<CatchAction>)?.LastReplayState as CatchFramedReplayInputHandler.CatchReplayState;
 
-            SetCatcherPosition(
+            foreach (Catcher catcher in CatcherList)
+            {
+                SetCatcherPosition(
                 replayState?.CatcherX ??
-                (float)(Catcher.X + Catcher.Speed * currentDirection * Clock.ElapsedFrameTime));
+                (float)(catcher.X + catcher.Speed * currentDirection * Clock.ElapsedFrameTime), catcher);
+            }
         }
 
         protected override void UpdateAfterChildren()
         {
             base.UpdateAfterChildren();
 
-            comboDisplay.X = Catcher.X;
-
-            if ((Clock as IGameplayClock)?.IsRewinding == true)
+            foreach (Catcher catcher in CatcherList)
             {
-                // This is probably a wrong value, but currently the true value is not recorded.
-                // Setting `true` will prevent generation of false-positive after-images (with more false-negatives).
-                lastHyperDashState = true;
-                return;
+                comboDisplay.X = catcher.X;
+
+                if ((Clock as IGameplayClock)?.IsRewinding == true)
+                {
+                    // This is probably a wrong value, but currently the true value is not recorded.
+                    // Setting `true` will prevent generation of false-positive after-images (with more false-negatives).
+                    lastHyperDashState = true;
+                    return;
+                }
+
+                if (!lastHyperDashState && catcher.HyperDashing)
+                    displayCatcherTrail(CatcherTrailAnimation.HyperDashAfterImage, catcher);
+
+                if (catcher.Dashing || catcher.HyperDashing)
+                {
+                    double generationInterval = catcher.HyperDashing ? 25 : 50;
+
+                    if (Time.Current - catcherTrails.LastDashTrailTime >= generationInterval)
+                        displayCatcherTrail(catcher.HyperDashing ? CatcherTrailAnimation.HyperDashing : CatcherTrailAnimation.Dashing, catcher);
+                }
+
+                lastHyperDashState = catcher.HyperDashing;
             }
-
-            if (!lastHyperDashState && Catcher.HyperDashing)
-                displayCatcherTrail(CatcherTrailAnimation.HyperDashAfterImage);
-
-            if (Catcher.Dashing || Catcher.HyperDashing)
-            {
-                double generationInterval = Catcher.HyperDashing ? 25 : 50;
-
-                if (Time.Current - catcherTrails.LastDashTrailTime >= generationInterval)
-                    displayCatcherTrail(Catcher.HyperDashing ? CatcherTrailAnimation.HyperDashing : CatcherTrailAnimation.Dashing);
-            }
-
-            lastHyperDashState = Catcher.HyperDashing;
         }
 
-        public void SetCatcherPosition(float x)
+        public void SetCatcherPosition(float x, Catcher catcher)
         {
-            float lastPosition = Catcher.X;
-            float newPosition = Math.Clamp(x, 0, CatchPlayfield.WIDTH);
+            float lastPosition = catcher.X;
 
-            Catcher.X = newPosition;
+            float newPosition;
+
+            if (IsPlayfieldUnique)
+                newPosition = Math.Clamp(x, 0, CatchPlayfield.WIDTH);
+            else
+            {
+                newPosition = Math.Clamp(x, catcher.IsTwin ? TwinNewRanges.ElementAt(0) : CatcherNewRanges.ElementAt(0), catcher.IsTwin ? TwinNewRanges.ElementAt(1) : CatcherNewRanges.ElementAt(1));
+            }
+
+            catcher.X = newPosition;
 
             if (lastPosition < newPosition)
-                Catcher.VisualDirection = Direction.Right;
+                catcher.VisualDirection = Direction.Right;
             else if (lastPosition > newPosition)
-                Catcher.VisualDirection = Direction.Left;
+                catcher.VisualDirection = Direction.Left;
         }
 
         public bool OnPressed(KeyBindingPressEvent<CatchAction> e)
@@ -145,6 +175,18 @@ namespace osu.Game.Rulesets.Catch.UI
                     return true;
 
                 case CatchAction.Dash:
+                    Catcher.Dashing = true;
+                    return true;
+
+                case CatchAction.MoveLeftTwin:
+                    currentDirection--;
+                    return true;
+
+                case CatchAction.MoveRightTwin:
+                    currentDirection++;
+                    return true;
+
+                case CatchAction.DashTwin:
                     Catcher.Dashing = true;
                     return true;
             }
@@ -167,9 +209,21 @@ namespace osu.Game.Rulesets.Catch.UI
                 case CatchAction.Dash:
                     Catcher.Dashing = false;
                     break;
+
+                case CatchAction.MoveLeftTwin:
+                    currentDirection++;
+                    break;
+
+                case CatchAction.MoveRightTwin:
+                    currentDirection--;
+                    break;
+
+                case CatchAction.DashTwin:
+                    Catcher.Dashing = false;
+                    break;
             }
         }
 
-        private void displayCatcherTrail(CatcherTrailAnimation animation) => catcherTrails.Add(new CatcherTrailEntry(Time.Current, Catcher.CurrentState, Catcher.X, Catcher.BodyScale, animation));
+        private void displayCatcherTrail(CatcherTrailAnimation animation, Catcher catcher) => catcherTrails.Add(new CatcherTrailEntry(Time.Current, catcher.CurrentState, catcher.X, catcher.BodyScale, animation));
     }
 }

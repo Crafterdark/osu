@@ -106,6 +106,11 @@ namespace osu.Game.Rulesets.Catch.UI
         public bool Dashing { get; set; }
 
         /// <summary>
+        /// Whether the catcher is a twin hologram.
+        /// </summary>
+        public bool IsTwin { get; set; }
+
+        /// <summary>
         /// The currently facing direction.
         /// </summary>
         public Direction VisualDirection { get; set; } = Direction.Right;
@@ -130,7 +135,7 @@ namespace osu.Game.Rulesets.Catch.UI
         private double hyperDashModifier = 1;
         private int hyperDashDirection;
         private float hyperDashTargetPosition;
-        private Bindable<bool> hitLighting = null!;
+        public Bindable<bool> HitLighting = null!;
 
         private readonly HitExplosionContainer hitExplosionContainer;
 
@@ -176,7 +181,7 @@ namespace osu.Game.Rulesets.Catch.UI
         [BackgroundDependencyLoader]
         private void load(OsuConfigManager config)
         {
-            hitLighting = config.GetBindable<bool>(OsuSetting.HitLighting);
+            HitLighting = config.GetBindable<bool>(OsuSetting.HitLighting);
         }
 
         /// <summary>
@@ -227,7 +232,7 @@ namespace osu.Game.Rulesets.Catch.UI
                 if (CatchFruitOnPlate)
                     placeCaughtObject(palpableObject, positionInStack);
 
-                if (hitLighting.Value)
+                if (HitLighting.Value)
                     addLighting(result, drawableObject.AccentColour.Value, positionInStack.X);
             }
 

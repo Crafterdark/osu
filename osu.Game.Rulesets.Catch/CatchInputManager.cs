@@ -27,5 +27,14 @@ namespace osu.Game.Rulesets.Catch
 
         [Description("Engage dash")]
         Dash,
+
+        [Description("Move left (twin)")]
+        MoveLeftTwin,
+
+        [Description("Move right (twin)")]
+        MoveRightTwin,
+
+        [Description("Engage dash (twin)")]
+        DashTwin,
     }
 }
