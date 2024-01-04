@@ -12,7 +12,6 @@ using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.UI;
 using osu.Framework.Graphics;
-using osu.Framework.Graphics.Containers;
 using System.Collections.Generic;
 
 namespace osu.Game.Rulesets.Catch.Mods
@@ -64,19 +63,8 @@ namespace osu.Game.Rulesets.Catch.Mods
                 }.Where(s => !string.IsNullOrEmpty(s)));
             }
         }
-        public Catcher Twin
-        {
-            get => twin;
-            set => twinContainer.Child = twin = value;
-        }
 
-        private Container<Catcher> twinContainer = new Container<Catcher> { RelativeSizeAxes = Axes.Both };
-
-        private CatchComboDisplay? comboDisplay;
-
-        private CatcherTrailDisplay? twinTrails;
-
-        private Catcher twin = null!;
+        private CatcherBundle twinBundle = null!;
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {
@@ -85,35 +73,24 @@ namespace osu.Game.Rulesets.Catch.Mods
             var catcher = catchPlayfield.CatcherArea.Catcher;
             var catchBeatmap = (CatchBeatmap)drawableCatchRuleset.Beatmap;
 
-            var droppedObjectContainer = new DroppedObjectContainer();
-
             catchPlayfield.CatcherArea.IsPlayfieldUnique = UnifiedPlayfield.Value;
 
-            twin = new Catcher(droppedObjectContainer, catchBeatmap.Difficulty)
-            {
-                X = CatchPlayfield.CENTER_X,
-                CatchFruitOnPlate = catcher.CatchFruitOnPlate,
-                HitLighting = catcher.HitLighting,
-                IsTwin = true
-            };
+            twinBundle = new CatcherBundle(catchBeatmap.Difficulty);
+
+            var twin = twinBundle.Catcher;
+
+            twinBundle.Catcher.X = CatchPlayfield.CENTER_X;
+            twinBundle.Catcher.CatchFruitOnPlate = catcher.CatchFruitOnPlate;
+            twinBundle.Catcher.HitLighting = catcher.HitLighting;
+            twinBundle.Catcher.IsTwin = true;
+
+            catchPlayfield.CatcherArea.Add(twinBundle.CatcherTrailDisplay);
+            catchPlayfield.CatcherArea.Add(twinBundle.ComboDisplay);
+            catchPlayfield.CatcherArea.Add(twinBundle.DroppedObjectContainer);
 
             catchPlayfield.CatcherArea.Add(twin);
 
-            catchPlayfield.CatcherArea.CatcherList.Add(twin);
-
-            twinTrails = new CatcherTrailDisplay();
-            comboDisplay = new CatchComboDisplay
-            {
-                RelativeSizeAxes = Axes.None,
-                AutoSizeAxes = Axes.Both,
-                Anchor = Anchor.TopLeft,
-                Origin = Anchor.Centre,
-                Margin = new MarginPadding { Bottom = 350f },
-                X = CatchPlayfield.CENTER_X
-            };
-
-            //catchPlayfield.CatcherArea.Add(twinTrails);
-            //catchPlayfield.CatcherArea.Add(comboDisplay);
+            catchPlayfield.CatcherBundleList.Add(twinBundle);
 
             //TEST
             twin.FadeTo(0.66f);

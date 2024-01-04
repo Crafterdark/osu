@@ -1,6 +1,7 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System.Linq;
 using osu.Framework.Graphics;
 using osu.Framework.Input;
 using osu.Framework.Input.Bindings;
@@ -57,7 +58,7 @@ namespace osu.Game.Rulesets.Catch.Mods
 
             protected override bool OnMouseMove(MouseMoveEvent e)
             {
-                catcherArea.SetCatcherPosition(e.MousePosition.X / DrawSize.X * CatchPlayfield.WIDTH, catcherArea.Catcher);
+                catcherArea.SetCatcherPosition(e.MousePosition.X / DrawSize.X * CatchPlayfield.WIDTH, catcherArea.FinalCatcherBundleList.ElementAt(0));
                 return base.OnMouseMove(e);
             }
         }

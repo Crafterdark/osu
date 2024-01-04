@@ -1,6 +1,8 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System.Collections.Generic;
+using System.Linq;
 using osu.Framework.Allocation;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
@@ -38,6 +40,10 @@ namespace osu.Game.Rulesets.Catch.UI
             // only check the X position; handle all vertical space.
             base.ReceivePositionalInputAt(new Vector2(screenSpacePos.X, ScreenSpaceDrawQuad.Centre.Y));
 
+        internal List<CatcherBundle> CatcherBundleList { get; private set; } = null!;
+
+        internal CatcherBundle CatcherBundle { get; private set; } = null!;
+
         internal Catcher Catcher { get; private set; } = null!;
 
         internal CatcherArea CatcherArea { get; private set; } = null!;
@@ -56,12 +62,11 @@ namespace osu.Game.Rulesets.Catch.UI
         [BackgroundDependencyLoader]
         private void load()
         {
-            var droppedObjectContainer = new DroppedObjectContainer();
+            CatcherBundleList = new List<CatcherBundle>();
+            CatcherBundle = new CatcherBundle((BeatmapDifficulty)difficulty);
+            Catcher = CatcherBundle.Catcher;
 
-            Catcher = new Catcher(droppedObjectContainer, difficulty)
-            {
-                X = CENTER_X
-            };
+            CatcherBundleList.Add(CatcherBundle);
 
             AddRangeInternal(new[]
             {
@@ -69,21 +74,18 @@ namespace osu.Game.Rulesets.Catch.UI
                 {
                     RelativeSizeAxes = Axes.Both,
                 },
-                droppedObjectContainer,
                 Catcher.CreateProxiedContent(),
                 HitObjectContainer.CreateProxy(),
                 // This ordering (`CatcherArea` before `HitObjectContainer`) is important to
                 // make sure the up-to-date catcher position is used for the catcher catching logic of hit objects.
-                CatcherArea = new CatcherArea
+                CatcherArea = new CatcherArea(CatcherBundle)
                 {
                     Anchor = Anchor.BottomLeft,
                     Origin = Anchor.TopLeft,
-                    Catcher = Catcher,
+                    FinalCatcherBundleList = CatcherBundleList,
                 },
                 HitObjectContainer,
             });
-
-            CatcherArea.CatcherList.Add(Catcher);
 
             RegisterPool<Droplet, DrawableDroplet>(50);
             RegisterPool<TinyDroplet, DrawableTinyDroplet>(50);
@@ -109,13 +111,20 @@ namespace osu.Game.Rulesets.Catch.UI
 
         private bool checkIfWeCanCatch(CatchHitObject obj)
         {
-            foreach (Catcher catcher in CatcherArea.CatcherList)
+            bool canCatch = false;
+
+            foreach (CatcherBundle catcherBundle in CatcherArea.FinalCatcherBundleList)
             {
-                if (catcher.CanCatch(obj))
-                    return true;
+                if (catcherBundle.Catcher.CanCatch(obj))
+                {
+                    catcherBundle.CanCatch = true;
+                    canCatch = true;
+                }
+                else
+                    catcherBundle.CanCatch = false;
             }
 
-            return false;
+            return canCatch;
         }
 
         private void onNewResult(DrawableHitObject judgedObject, JudgementResult result)

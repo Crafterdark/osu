@@ -94,6 +94,16 @@ namespace osu.Game.Rulesets.Catch.UI
         /// </summary>
         private readonly DroppedObjectContainer droppedObjectTarget;
 
+        /// <summary>
+        /// <c>-1</c> when only left button is pressed.
+        /// <c>1</c> when only right button is pressed.
+        /// <c>0</c> when none or both left and right buttons are pressed.
+        /// </summary>
+        public int CurrentDirection;
+
+        // TODO: support replay rewind
+        public bool LastHyperDashState;
+
         public CatcherAnimationState CurrentState
         {
             get => body.AnimationState.Value;
