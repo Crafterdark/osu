@@ -151,6 +151,25 @@ namespace osu.Game.Rulesets.Catch.UI
 
             CatchWidth = CalculateCatchWidth(Scale);
 
+            if (CatcherExtra.INSTANCE.IsApplied)
+            {
+                if (CatcherExtra.INSTANCE.CatchExtend)
+                {
+                    if (difficulty != null)
+                    {
+                        var localDifficulty = new BeatmapDifficulty
+                        {
+                            CircleSize = (difficulty.CircleSize - 6.5f) / 3
+                        };
+
+                        Scale = calculateScale(localDifficulty);
+                        CatchWidth = CalculateCatchWidth(Scale);
+                    }
+                }
+            }
+
+            CatcherExtra.INSTANCE.ResetInstance();
+
             InternalChildren = new Drawable[]
             {
                 caughtFruitPool = new DrawablePool<CaughtFruit>(50),
