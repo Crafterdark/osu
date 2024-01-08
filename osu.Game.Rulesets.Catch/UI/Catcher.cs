@@ -75,9 +75,19 @@ namespace osu.Game.Rulesets.Catch.UI
         public const double BASE_WALK_SPEED = 0.5;
 
         /// <summary>
+        /// The speed of the catcher when the catcher is dashing.
+        /// </summary>
+        public double VARIABLE_DASH_SPEED = 1.0;
+
+        /// <summary>
+        /// The speed of the catcher when the catcher is not dashing.
+        /// </summary>
+        public double VARIABLE_WALK_SPEED = 1.0;
+
+        /// <summary>
         /// The current speed of the catcher with the hyper-dash modifier applied.
         /// </summary>
-        public double Speed => (Dashing ? BASE_DASH_SPEED : BASE_WALK_SPEED) * hyperDashModifier;
+        public double Speed => (Dashing ? BASE_DASH_SPEED * VARIABLE_WALK_SPEED : BASE_WALK_SPEED * VARIABLE_DASH_SPEED) * hyperDashModifier;
 
         /// <summary>
         /// The amount by which caught fruit should be scaled down to fit on the plate.
