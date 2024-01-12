@@ -63,6 +63,11 @@ namespace osu.Game.Rulesets.Catch.Objects
         /// </summary>
         public double SpanDuration => Duration / this.SpanCount();
 
+        /// <summary>
+        /// Whether to use the LegacyLastTick for tiny tick generation. 
+        /// </summary>
+        public bool LegacyLastTickGeneration { get; set; }
+
         protected override void ApplyDefaultsToSelf(ControlPointInfo controlPointInfo, IBeatmapDifficultyInfo difficulty)
         {
             base.ApplyDefaultsToSelf(controlPointInfo, difficulty);
@@ -82,23 +87,13 @@ namespace osu.Game.Rulesets.Catch.Objects
             int nodeIndex = 0;
             SliderEventDescriptor? lastEvent = null;
 
-            //Moved here to make the workaround easier to do.
-            //TODO: Check if the cancellationToken actually works properly here...
-            var sliderEvents = SliderEventGenerator.Generate(StartTime, SpanDuration, Velocity, TickDistance, Path.Distance, this.SpanCount(), cancellationToken);
-
-            // Workaround for BUG (References the same one described in CatchBeatmapProcessor)
-            // "Todo: BUG!! Stable used the last control point as the final position of the path, but it should use the computed path instead."
-            if (sliderEvents.Count() > 2)
+            foreach (var e in SliderEventGenerator.Generate(StartTime, SpanDuration, Velocity, TickDistance, Path.Distance, this.SpanCount(), cancellationToken))
             {
-                var sliderEventsList = sliderEvents.ToList();
-                //Removes the last control point
-                var elementToRemove = sliderEventsList.ElementAt(sliderEvents.Count() - 2);
-                sliderEventsList.Remove(elementToRemove);
-                sliderEvents = sliderEventsList;
-            }
+                // Workaround for BUG (References the same one described in CatchBeatmapProcessor)
+                // "Todo: BUG!! Stable used the last control point as the final position of the path, but it should use the computed path instead."
+                if (!LegacyLastTickGeneration && e.Type is SliderEventType.LegacyLastTick)
+                    continue;
 
-            foreach (var e in sliderEvents)
-            {
                 // generate tiny droplets since the last point
                 if (lastEvent != null)
                 {
