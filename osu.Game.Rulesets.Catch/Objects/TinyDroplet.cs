@@ -8,6 +8,7 @@ namespace osu.Game.Rulesets.Catch.Objects
 {
     public class TinyDroplet : Droplet
     {
+        public bool IsUsingOldRandom { get; set; } = true;
         public override Judgement CreateJudgement() => new CatchTinyDropletJudgement();
     }
 }

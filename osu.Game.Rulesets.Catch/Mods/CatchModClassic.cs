@@ -9,15 +9,21 @@ using osu.Game.Rulesets.Mods;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
-    public class CatchModClassic : ModClassic, IApplicableToBeatmapConverter
+    public class CatchModClassic : ModClassic, IApplicableToBeatmapConverter, IApplicableToBeatmapProcessor
     {
         [SettingSource("Old tiny droplet generation", "Old beatmaps did not generate tiny droplets at the end of sliders on certain conditions.")]
-        public Bindable<bool> OldTinyDropletGeneration { get; } = new BindableBool(true);
+        public Bindable<bool> OldTinyGeneration { get; } = new BindableBool(true);
 
         public void ApplyToBeatmapConverter(IBeatmapConverter beatmapConverter)
         {
             var catchBeatmapConverter = (CatchBeatmapConverter)beatmapConverter;
-            catchBeatmapConverter.OldTinyTickGeneration = OldTinyDropletGeneration.Value;
+            catchBeatmapConverter.OldTinyGeneration = OldTinyGeneration.Value;
+        }
+
+        public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
+        {
+            var catchBeatmapProcessor = (CatchBeatmapProcessor)beatmapProcessor;
+            catchBeatmapProcessor.IsOldTinyGeneration = OldTinyGeneration.Value;
         }
     }
 }

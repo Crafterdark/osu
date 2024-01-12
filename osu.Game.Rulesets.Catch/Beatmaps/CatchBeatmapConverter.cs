@@ -23,7 +23,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         /// <summary>
         /// Every beatmap from Stable had osu!standard tail leniency applied to tiny tick generation. 
         /// </summary>
-        public bool OldTinyTickGeneration { get; set; }
+        public bool OldTinyGeneration { get; set; }
 
         public override bool CanConvert() => Beatmap.HitObjects.All(h => h is IHasXPosition);
 
@@ -52,7 +52,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         // this results in more (or less) ticks being generated in <v8 maps for the same time duration.
                         TickDistanceMultiplier = beatmap.BeatmapInfo.BeatmapVersion < 8 ? 1 : ((LegacyControlPointInfo)beatmap.ControlPointInfo).DifficultyPointAt(obj.StartTime).SliderVelocity,
                         SliderVelocityMultiplier = sliderVelocityData?.SliderVelocityMultiplier ?? 1,
-                        LegacyLastTickGeneration = OldTinyTickGeneration
+                        LegacyLastTickGeneration = OldTinyGeneration
                     }.Yield();
 
                 case IHasDuration endTime:

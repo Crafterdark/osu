@@ -68,6 +68,16 @@ namespace osu.Game.Rulesets.Catch.Objects
         /// </summary>
         public bool LegacyLastTickGeneration { get; set; }
 
+        /// <summary>
+        /// Whether the LegacyLastTick prevented tiny tick generation. 
+        /// </summary>
+        public bool LegacyLastTickCausedTrouble { get; set; }
+
+        /// <summary>
+        /// Whether the LegacyLastTick was found. 
+        /// </summary>
+        public bool LegacyLastTickDetected { get; set; }
+
         protected override void ApplyDefaultsToSelf(ControlPointInfo controlPointInfo, IBeatmapDifficultyInfo difficulty)
         {
             base.ApplyDefaultsToSelf(controlPointInfo, difficulty);
@@ -89,19 +99,30 @@ namespace osu.Game.Rulesets.Catch.Objects
 
             foreach (var e in SliderEventGenerator.Generate(StartTime, SpanDuration, Velocity, TickDistance, Path.Distance, this.SpanCount(), cancellationToken))
             {
-                // Workaround for BUG (References the same one described in CatchBeatmapProcessor)
-                // "Todo: BUG!! Stable used the last control point as the final position of the path, but it should use the computed path instead."
-                if (!LegacyLastTickGeneration && e.Type is SliderEventType.LegacyLastTick)
-                    continue;
-
                 // generate tiny droplets since the last point
                 if (lastEvent != null)
                 {
+                    // Workaround for BUG (References the same one described in CatchBeatmapProcessor)
+                    // "Todo: BUG!! Stable used the last control point as the final position of the path, but it should use the computed path instead."
+                    if (!LegacyLastTickGeneration && e.Type is SliderEventType.LegacyLastTick)
+                    {
+                        double sinceLastTickWithLegacy = (int)e.Time - (int)lastEvent.Value.Time;
+                        if (sinceLastTickWithLegacy <= 100)
+                        {
+                            LegacyLastTickDetected = true;
+                            continue;
+                        }
+                    }
+
                     double sinceLastTick = (int)e.Time - (int)lastEvent.Value.Time;
 
                     if (sinceLastTick > 80)
                     {
                         double timeBetweenTiny = sinceLastTick;
+
+                        if (LegacyLastTickDetected && timeBetweenTiny > 100)
+                            LegacyLastTickCausedTrouble = true;
+
                         while (timeBetweenTiny > 100)
                             timeBetweenTiny /= 2;
 
@@ -113,6 +134,7 @@ namespace osu.Game.Rulesets.Catch.Objects
                             {
                                 StartTime = t + lastEvent.Value.Time,
                                 X = EffectiveX + Path.PositionAt(lastEvent.Value.PathProgress + (t / sinceLastTick) * (e.PathProgress - lastEvent.Value.PathProgress)).X,
+                                IsUsingOldRandom = !LegacyLastTickCausedTrouble
                             });
                         }
                     }
