@@ -82,7 +82,22 @@ namespace osu.Game.Rulesets.Catch.Objects
             int nodeIndex = 0;
             SliderEventDescriptor? lastEvent = null;
 
-            foreach (var e in SliderEventGenerator.Generate(StartTime, SpanDuration, Velocity, TickDistance, Path.Distance, this.SpanCount(), cancellationToken))
+            //Moved here to make the workaround easier to do.
+            //TODO: Check if the cancellationToken actually works properly here...
+            var sliderEvents = SliderEventGenerator.Generate(StartTime, SpanDuration, Velocity, TickDistance, Path.Distance, this.SpanCount(), cancellationToken);
+
+            // Workaround for BUG (References the same one described in CatchBeatmapProcessor)
+            // "Todo: BUG!! Stable used the last control point as the final position of the path, but it should use the computed path instead."
+            if (sliderEvents.Count() > 2)
+            {
+                var sliderEventsList = sliderEvents.ToList();
+                //Removes the last control point
+                var elementToRemove = sliderEventsList.ElementAt(sliderEvents.Count() - 2);
+                sliderEventsList.Remove(elementToRemove);
+                sliderEvents = sliderEventsList;
+            }
+
+            foreach (var e in sliderEvents)
             {
                 // generate tiny droplets since the last point
                 if (lastEvent != null)
