@@ -17,7 +17,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public void ApplyToBeatmapConverter(IBeatmapConverter beatmapConverter)
         {
             var catchBeatmapConverter = (CatchBeatmapConverter)beatmapConverter;
-            catchBeatmapConverter.OldTinyGeneration = OldTinyGeneration.Value;
+            catchBeatmapConverter.GenerationWithLegacyLastTick = OldTinyGeneration.Value;
         }
 
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)

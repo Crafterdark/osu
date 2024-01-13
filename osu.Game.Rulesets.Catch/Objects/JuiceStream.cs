@@ -66,17 +66,27 @@ namespace osu.Game.Rulesets.Catch.Objects
         /// <summary>
         /// Whether to use the LegacyLastTick for tiny tick generation. 
         /// </summary>
-        public bool LegacyLastTickGeneration { get; set; }
+        public bool GenerationUsesLegacyLastTick { get; set; }
 
         /// <summary>
-        /// Whether the LegacyLastTick prevented tiny tick generation. 
+        /// Whether the tiny tick should use the new random generator. 
         /// </summary>
-        public bool LegacyLastTickCausedTrouble { get; set; }
+        public bool UseNewRandom { get; set; }
 
         /// <summary>
-        /// Whether the LegacyLastTick was found. 
+        /// Whether the LegacyLastTick prevented all tiny ticks to appear. 
         /// </summary>
-        public bool LegacyLastTickDetected { get; set; }
+        public bool LegacyLastTickCausedMissingAllTiny { get; set; }
+
+        /// <summary>
+        /// Whether the LegacyLastTick caused extra tiny tick to not appear. 
+        /// </summary>
+        public bool LegacyLastTickCausedMissingExtraTiny { get; set; }
+
+        /// <summary>
+        /// The amount of tiny tick created by LegacyLastTick. 
+        /// </summary>
+        public int LegacyTinyTickCounter { get; set; }
 
         protected override void ApplyDefaultsToSelf(ControlPointInfo controlPointInfo, IBeatmapDifficultyInfo difficulty)
         {
@@ -104,14 +114,43 @@ namespace osu.Game.Rulesets.Catch.Objects
                 {
                     // Workaround for BUG (References the same one described in CatchBeatmapProcessor)
                     // "Todo: BUG!! Stable used the last control point as the final position of the path, but it should use the computed path instead."
-                    if (!LegacyLastTickGeneration && e.Type is SliderEventType.LegacyLastTick)
+                    if (!GenerationUsesLegacyLastTick && e.Type is SliderEventType.LegacyLastTick)
                     {
                         double sinceLastTickWithLegacy = (int)e.Time - (int)lastEvent.Value.Time;
+
                         if (sinceLastTickWithLegacy <= 100)
                         {
-                            LegacyLastTickDetected = true;
-                            continue;
+                            LegacyLastTickCausedMissingAllTiny = true;
                         }
+
+                        else
+                        {
+                            double sinceLastTickWithEndTime = (int)this.GetEndTime() - (int)lastEvent.Value.Time;
+                            int tinyTickCountLegacyLastTick;
+                            int tinyTickCountEndTime;
+                            double legacyLastTickSlice = sinceLastTickWithLegacy;
+                            double EndTimeSlice = sinceLastTickWithEndTime;
+
+                            while (legacyLastTickSlice > 100)
+                            {
+                                legacyLastTickSlice /= 2;
+                            }
+
+                            while (EndTimeSlice > 100)
+                            {
+                                EndTimeSlice /= 2;
+                            }
+
+                            tinyTickCountLegacyLastTick = (int)Math.Round((sinceLastTickWithLegacy - legacyLastTickSlice) / legacyLastTickSlice);
+                            tinyTickCountEndTime = (int)Math.Round((sinceLastTickWithEndTime - EndTimeSlice) / EndTimeSlice);
+
+                            if (tinyTickCountEndTime > tinyTickCountLegacyLastTick)
+                            {
+                                LegacyLastTickCausedMissingExtraTiny = true;
+                                LegacyTinyTickCounter = tinyTickCountLegacyLastTick;
+                            }
+                        }
+                        continue;
                     }
 
                     double sinceLastTick = (int)e.Time - (int)lastEvent.Value.Time;
@@ -120,8 +159,8 @@ namespace osu.Game.Rulesets.Catch.Objects
                     {
                         double timeBetweenTiny = sinceLastTick;
 
-                        if (LegacyLastTickDetected && timeBetweenTiny > 100)
-                            LegacyLastTickCausedTrouble = true;
+                        if (LegacyLastTickCausedMissingAllTiny && timeBetweenTiny > 100)
+                            UseNewRandom = true;
 
                         while (timeBetweenTiny > 100)
                             timeBetweenTiny /= 2;
@@ -130,11 +169,19 @@ namespace osu.Game.Rulesets.Catch.Objects
                         {
                             cancellationToken.ThrowIfCancellationRequested();
 
+                            if (LegacyLastTickCausedMissingExtraTiny)
+                            {
+                                if (LegacyTinyTickCounter > 0)
+                                    LegacyTinyTickCounter--;
+                                else if (LegacyTinyTickCounter == 0)
+                                    UseNewRandom = true;
+                            }
+
                             AddNested(new TinyDroplet
                             {
                                 StartTime = t + lastEvent.Value.Time,
                                 X = EffectiveX + Path.PositionAt(lastEvent.Value.PathProgress + (t / sinceLastTick) * (e.PathProgress - lastEvent.Value.PathProgress)).X,
-                                IsUsingOldRandom = !LegacyLastTickCausedTrouble
+                                IsUsingOldRandom = !UseNewRandom
                             });
                         }
                     }
