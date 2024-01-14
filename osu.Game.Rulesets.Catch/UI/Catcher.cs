@@ -15,9 +15,11 @@ using osu.Game.Configuration;
 using osu.Game.Rulesets.Catch.Judgements;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.Objects.Drawables;
+using osu.Game.Rulesets.Catch.Replays;
 using osu.Game.Rulesets.Catch.Skinning;
 using osu.Game.Rulesets.Judgements;
 using osu.Game.Rulesets.Objects.Legacy;
+using osu.Game.Rulesets.UI;
 using osu.Game.Skinning;
 using osuTK;
 using osuTK.Graphics;
@@ -205,6 +207,29 @@ namespace osu.Game.Rulesets.Catch.UI
                 return false;
 
             float halfCatchWidth = CatchWidth * 0.5f;
+
+            if (GetContainingInputManager().CurrentState is RulesetInputManagerInputState<CatchAction> { LastReplayState: CatchFramedReplayInputHandler.CatchReplayState replayState })
+            {
+                if (replayState.ReplayFrames != null)
+                {
+                    CatchReplayFrame? startFrame = (CatchReplayFrame?)replayState.ReplayFrames.Where(x => x.Time <= hitObject.StartTime).MaxBy(x => x.Time);
+                    CatchReplayFrame? endFrame = null;
+
+                    if (startFrame != null)
+                    {
+                        endFrame = (CatchReplayFrame?)replayState.ReplayFrames.Where(x => x.Time > hitObject.StartTime).MinBy(x => x.Time);
+
+                        if (endFrame != null)
+                        {
+                            float catcherRealisticPositionReplay = Interpolation.ValueAt((int)hitObject.StartTime, startFrame.Position, endFrame.Position, startFrame.Time, endFrame.Time);
+
+                            return fruit.EffectiveX >= catcherRealisticPositionReplay - halfCatchWidth &&
+                               fruit.EffectiveX <= catcherRealisticPositionReplay + halfCatchWidth;
+                        }
+                    }
+                }
+            }
+
             return fruit.EffectiveX >= X - halfCatchWidth &&
                    fruit.EffectiveX <= X + halfCatchWidth;
         }
