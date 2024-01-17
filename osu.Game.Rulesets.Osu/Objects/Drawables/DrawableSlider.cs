@@ -11,6 +11,7 @@ using osu.Framework.Allocation;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
+using osu.Framework.Layout;
 using osu.Game.Audio;
 using osu.Game.Graphics.Containers;
 using osu.Game.Rulesets.Objects;
@@ -66,6 +67,8 @@ namespace osu.Game.Rulesets.Osu.Objects.Drawables
         private Container<DrawableSliderRepeat> repeatContainer;
         private PausableSkinnableSound slidingSample;
 
+        private readonly LayoutValue drawSizeLayout;
+
         public DrawableSlider()
             : this(null)
         {
@@ -82,6 +85,7 @@ namespace osu.Game.Rulesets.Osu.Objects.Drawables
                 AlwaysPresent = true,
                 Alpha = 0
             };
+            AddLayout(drawSizeLayout = new LayoutValue(Invalidation.DrawSize | Invalidation.MiscGeometry));
         }
 
         [BackgroundDependencyLoader]
@@ -240,27 +244,35 @@ namespace osu.Game.Rulesets.Osu.Objects.Drawables
                 else if (slidingSample.IsPlaying)
                     slidingSample.Stop();
             }
+        }
+
+        protected override void UpdateAfterChildren()
+        {
+            base.UpdateAfterChildren();
+
+            // During slider path editing, the PlaySliderBody is scheduled to refresh once on Update.
+            // It is crucial to perform the code below in UpdateAfterChildren. This ensures that the SliderBody has the opportunity
+            // to update its Size and PathOffset beforehand, ensuring correct placement.
 
             double completionProgress = Math.Clamp((Time.Current - HitObject.StartTime) / HitObject.Duration, 0, 1);
 
             Ball.UpdateProgress(completionProgress);
             SliderBody?.UpdateProgress(HeadCircle.IsHit ? completionProgress : 0);
 
-            foreach (DrawableHitObject hitObject in NestedHitObjects)
-            {
-                if (hitObject is ITrackSnaking s)
-                    s.UpdateSnakingPosition(HitObject.Path.PositionAt(SliderBody?.SnakedStart ?? 0), HitObject.Path.PositionAt(SliderBody?.SnakedEnd ?? 0));
-            }
+            foreach (DrawableSliderRepeat repeat in repeatContainer)
+                repeat.UpdateSnakingPosition(HitObject.Path.PositionAt(SliderBody?.SnakedStart ?? 0), HitObject.Path.PositionAt(SliderBody?.SnakedEnd ?? 0));
 
             Size = SliderBody?.Size ?? Vector2.Zero;
             OriginPosition = SliderBody?.PathOffset ?? Vector2.Zero;
 
-            if (DrawSize != Vector2.Zero)
+            if (!drawSizeLayout.IsValid)
             {
-                var childAnchorPosition = Vector2.Divide(OriginPosition, DrawSize);
+                Vector2 pos = Vector2.Divide(OriginPosition, DrawSize);
                 foreach (var obj in NestedHitObjects)
-                    obj.RelativeAnchorPosition = childAnchorPosition;
-                Ball.RelativeAnchorPosition = childAnchorPosition;
+                    obj.RelativeAnchorPosition = pos;
+                Ball.RelativeAnchorPosition = pos;
+
+                drawSizeLayout.Validate();
             }
         }
 
