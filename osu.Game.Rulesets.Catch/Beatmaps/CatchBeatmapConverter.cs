@@ -21,7 +21,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         }
 
         /// <summary>
-        /// Every beatmap from Stable had osu!standard tail leniency applied to tiny tick generation. 
+        /// Every beatmap from osu!stable had osu!standard tail leniency applied to tiny droplet generation. 
         /// </summary>
         public bool GenerationWithLegacyLastTick { get; set; }
 

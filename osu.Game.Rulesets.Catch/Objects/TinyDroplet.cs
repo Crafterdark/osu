@@ -8,6 +8,9 @@ namespace osu.Game.Rulesets.Catch.Objects
 {
     public class TinyDroplet : Droplet
     {
+        /// <summary>
+        /// Must be always true for osu!stable beatmaps. Might be false for osu!lazer beatmaps.
+        /// </summary>
         public bool IsUsingOldRandom { get; set; } = true;
         public override Judgement CreateJudgement() => new CatchTinyDropletJudgement();
     }

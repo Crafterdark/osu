@@ -11,7 +11,7 @@ namespace osu.Game.Rulesets.Catch.Mods
 {
     public class CatchModClassic : ModClassic, IApplicableToBeatmapConverter, IApplicableToBeatmapProcessor
     {
-        [SettingSource("Old tiny droplet generation", "Old beatmaps did not generate tiny droplets at the end of sliders on certain conditions.")]
+        [SettingSource("Old tiny droplet generation", "Old beatmaps mistimed or prevented tiny droplet generation under particular conditions.")]
         public Bindable<bool> OldTinyGeneration { get; } = new BindableBool(true);
 
         public void ApplyToBeatmapConverter(IBeatmapConverter beatmapConverter)
