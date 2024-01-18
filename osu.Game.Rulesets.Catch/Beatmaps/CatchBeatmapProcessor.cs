@@ -17,6 +17,8 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         public bool HardRockOffsets { get; set; }
 
+        public bool IsOldTinyGeneration { get; set; }
+
         public CatchBeatmapProcessor(IBeatmap beatmap)
             : base(beatmap)
         {
@@ -63,6 +65,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         {
             var rng = new LegacyRandom(RNG_SEED);
 
+            //Independent RNG for new tiny droplet
+            var rngNew = !IsOldTinyGeneration ? new Random(RNG_SEED) : null;
+
             float? lastPosition = null;
             double lastStartTime = 0;
 
@@ -100,8 +105,8 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                             var catchObject = (CatchHitObject)nested;
                             catchObject.XOffset = 0;
 
-                            if (catchObject is TinyDroplet)
-                                catchObject.XOffset = Math.Clamp(rng.Next(-20, 20), -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
+                            if (catchObject is TinyDroplet tiny)
+                                catchObject.XOffset = Math.Clamp(tiny.IsUsingOldRandom ? rng.Next(-20, 20) : rngNew != null ? rngNew.Next(-20, 20) : 0, -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
                             else if (catchObject is Droplet)
                                 rng.Next(); // osu!stable retrieved a random droplet rotation
                         }
