@@ -253,6 +253,8 @@ namespace osu.Game.Rulesets.Catch.UI
 
                     if (allowHyperDash)
                         SetHyperDashState(Math.Abs(velocity) / BASE_DASH_SPEED, target.EffectiveX);
+                    else
+                        SetHyperDashState();
                 }
                 else
                     SetHyperDashState();
