@@ -155,8 +155,6 @@ namespace osu.Game.Rulesets.Catch.Replays
                 double currKey = -1;
                 PalpableCatchHitObject currObj = null!;
                 bool hasCombo = false;
-                bool hasTiny = false;
-                bool hasBanana = false;
                 List<PalpableCatchHitObject> aspireTemporaryPatternObjects = new List<PalpableCatchHitObject>();
 
                 bool priorityByAccuracy = true;
@@ -191,7 +189,7 @@ namespace osu.Game.Rulesets.Catch.Replays
                             float leftSide;
                             float rightSide;
 
-                            for (float currPosition = (float)((CatchPlayfield.WIDTH / 2) + (512 * Catcher.BASE_WALK_SPEED)); currPosition >= 0; currPosition = (float)(currPosition - Catcher.BASE_WALK_SPEED))
+                            for (float currPosition = CatchPlayfield.WIDTH; currPosition >= 0; currPosition = (float)(currPosition - Catcher.BASE_WALK_SPEED))
                             {
                                 leftSide = currPosition - halfCatchWidth;
                                 rightSide = currPosition + halfCatchWidth;
@@ -224,11 +222,6 @@ namespace osu.Game.Rulesets.Catch.Replays
 
                                     bestBananaValue = localBananaValue;
                                     bestBananaPosition = currPosition;
-
-                                    Logger.Log("Time: " + currKey);
-                                    Logger.Log("Best location Combo: " + bestComboPosition);
-                                    Logger.Log("Best location Tiny: " + bestTinyPosition);
-                                    Logger.Log("Half Catch Width: " + halfCatchWidth);
                                 }
                                 //If the best combo didn't decrease, find new best tiny or banana
                                 else if (bestComboValue == localComboValue)
@@ -254,6 +247,13 @@ namespace osu.Game.Rulesets.Catch.Replays
                                 else
                                     theoreticalBestPosition = bestComboPosition;
                             }
+                            else
+                            {
+                                if (bestComboPosition != bestBananaPosition)
+                                    theoreticalBestPosition = bestBananaPosition;
+                                else
+                                    theoreticalBestPosition = bestComboPosition;
+                            }
 
                             //Virtual Fruit: Only used to place the best position in the Auto generator
                             finalAspireList.Add(new Fruit()
@@ -271,14 +271,117 @@ namespace osu.Game.Rulesets.Catch.Replays
                         //There's no combo in this pattern -> priority can be given to tiny or banana
                         else
                         {
-                            if (hasTiny)
-                            {
+                            float bestTinyPosition = 0;
+                            int bestTinyValue = 0;
+                            float bestBananaPosition = 0;
+                            int bestBananaValue = 0;
 
-                            }
-                            else if (hasBanana)
-                            {
+                            float theoreticalBestPosition = 0;
 
+                            int localTinyValue = 0;
+                            int localBananaValue = 0;
+
+                            float leftSide;
+                            float rightSide;
+
+                            for (float currPosition = CatchPlayfield.WIDTH; currPosition >= 0; currPosition = (float)(currPosition - Catcher.BASE_WALK_SPEED))
+                            {
+                                leftSide = currPosition - halfCatchWidth;
+                                rightSide = currPosition + halfCatchWidth;
+
+                                localTinyValue = 0;
+                                localBananaValue = 0;
+
+                                foreach (var hitObject in aspireTemporaryPatternObjects.OrderBy(x => x.EffectiveX).ToList())
+                                {
+                                    if (leftSide <= hitObject.EffectiveX && hitObject.EffectiveX <= rightSide)
+                                    {
+                                        if (hitObject is TinyDroplet)
+                                            localTinyValue++;
+                                        else if (hitObject is Banana)
+                                            localBananaValue++;
+                                    }
+                                }
+
+                                //Tiny droplet has the highest priority! Older best banana values are scrapped
+
+                                if (priorityByAccuracy && bestTinyValue < localTinyValue)
+                                {
+                                    bestTinyValue = localTinyValue;
+                                    bestTinyPosition = currPosition;
+
+                                    bestBananaValue = localBananaValue;
+                                    bestBananaPosition = currPosition;
+                                }
+                                //Banana has the highest priority! Older best tiny values are scrapped
+                                else if (!priorityByAccuracy && bestBananaValue < localBananaValue)
+                                {
+                                    bestTinyValue = localTinyValue;
+                                    bestTinyPosition = currPosition;
+
+                                    bestBananaValue = localBananaValue;
+                                    bestBananaPosition = currPosition;
+                                }
+
+                                //If the best tiny didn't decrease, find new best banana
+                                if (priorityByAccuracy && bestTinyValue == localTinyValue)
+                                {
+                                    if (bestTinyValue < localTinyValue)
+                                    {
+                                        bestTinyValue = localTinyValue;
+                                        bestTinyPosition = currPosition;
+                                    }
+
+                                    if (bestBananaValue < localBananaValue)
+                                    {
+                                        bestBananaValue = localBananaValue;
+                                        bestBananaPosition = currPosition;
+                                    }
+                                }
+                                //If the best banana didn't decrease, find new best tiny
+                                else if (!priorityByAccuracy && bestBananaValue == localBananaValue)
+                                {
+                                    if (bestTinyValue < localTinyValue)
+                                    {
+                                        bestTinyValue = localTinyValue;
+                                        bestTinyPosition = currPosition;
+                                    }
+
+                                    if (bestBananaValue < localBananaValue)
+                                    {
+                                        bestBananaValue = localBananaValue;
+                                        bestBananaPosition = currPosition;
+                                    }
+                                }
                             }
+
+                            if (priorityByAccuracy)
+                            {
+                                if (bestTinyPosition != bestBananaPosition)
+                                    theoreticalBestPosition = bestBananaPosition;
+                                else
+                                    theoreticalBestPosition = bestTinyPosition;
+                            }
+                            else
+                            {
+                                if (bestBananaPosition != bestTinyPosition)
+                                    theoreticalBestPosition = bestTinyPosition;
+                                else
+                                    theoreticalBestPosition = bestBananaPosition;
+                            }
+
+
+                            //Virtual Fruit: Only used to place the best position in the Auto generator
+                            finalAspireList.Add(new Fruit()
+                            {
+                                StartTime = currObj.StartTime,
+                                OriginalX = theoreticalBestPosition,
+                                XOffset = 0
+                            });
+
+                            //Logger.Log(theoreticalBestObjects.ToArray().ToString());
+                            //Logger.Log("Count" + theoreticalBestObjects.ToArray().Count());
+                            //Logger.Log("StartTime" + currObj.StartTime);
                         }
 
 
@@ -286,18 +389,12 @@ namespace osu.Game.Rulesets.Catch.Replays
                         currKey = item.Key;
                         currObj = item.Value;
                         hasCombo = false;
-                        hasTiny = false;
-                        hasBanana = false;
                         aspireTemporaryPatternObjects = new List<PalpableCatchHitObject>();
                     }
 
                     //Updates the status of the aspireObjects pattern
                     if (isComboHitObject(item.Value))
                         hasCombo = true;
-                    else if (item.Value is TinyDroplet)
-                        hasTiny = true;
-                    else if (item.Value is Banana)
-                        hasBanana = true;
 
                     currKey = item.Key;
                     currObj = item.Value;
