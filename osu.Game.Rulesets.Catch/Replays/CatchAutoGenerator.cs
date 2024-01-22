@@ -189,7 +189,7 @@ namespace osu.Game.Rulesets.Catch.Replays
                             float leftSide;
                             float rightSide;
 
-                            for (float currPosition = CatchPlayfield.WIDTH; currPosition >= 0; currPosition = (float)(currPosition - Catcher.BASE_WALK_SPEED))
+                            for (float currPosition = 0; currPosition <= CatchPlayfield.WIDTH; currPosition = (float)(currPosition + Catcher.BASE_WALK_SPEED))
                             {
                                 leftSide = currPosition - halfCatchWidth;
                                 rightSide = currPosition + halfCatchWidth;
@@ -284,7 +284,7 @@ namespace osu.Game.Rulesets.Catch.Replays
                             float leftSide;
                             float rightSide;
 
-                            for (float currPosition = CatchPlayfield.WIDTH; currPosition >= 0; currPosition = (float)(currPosition - Catcher.BASE_WALK_SPEED))
+                            for (float currPosition = 0; currPosition <= CatchPlayfield.WIDTH; currPosition = (float)(currPosition + Catcher.BASE_WALK_SPEED))
                             {
                                 leftSide = currPosition - halfCatchWidth;
                                 rightSide = currPosition + halfCatchWidth;
