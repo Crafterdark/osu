@@ -21,11 +21,11 @@ namespace osu.Game.Rulesets.Catch.Replays
         //Default Autoplay priority: Maximum accuracy on the beatmap.
         public PriorityType AutoplayPriorityType { get; set; } = PriorityType.Accuracy;
 
-        public ObjectTracker ComboTracker = new ObjectTracker(PriorityTypeObject.Combo, 0, 0, 0);
+        public ObjectTracker ComboTracker = new ObjectTracker(0, 0, 0);
 
-        public ObjectTracker TinyDropletTracker = new ObjectTracker(PriorityTypeObject.TinyDroplet, 0, 0, 0);
+        public ObjectTracker TinyDropletTracker = new ObjectTracker(0, 0, 0);
 
-        public ObjectTracker BananaTracker = new ObjectTracker(PriorityTypeObject.TinyDroplet, 0, 0, 0);
+        public ObjectTracker BananaTracker = new ObjectTracker(0, 0, 0);
 
         public CatchAutoGenerator(IBeatmap beatmap)
             : base(beatmap)
@@ -401,25 +401,15 @@ namespace osu.Game.Rulesets.Catch.Replays
             Score
         }
 
-        public enum PriorityTypeObject
-        {
-            Combo,
-            TinyDroplet,
-            Banana
-        }
-
         public class ObjectTracker
         {
-            public PriorityTypeObject PriorityTypeObject;
-
             public int LocalBestValue;
-
             public int GlobalBestValue;
+
             public float GlobalBestPosition;
 
-            public ObjectTracker(PriorityTypeObject priorityTypeObject, int localBestValue, int globalBestValue, float globalBestPosition)
+            public ObjectTracker(int localBestValue, int globalBestValue, float globalBestPosition)
             {
-                PriorityTypeObject = priorityTypeObject;
                 LocalBestValue = localBestValue;
                 GlobalBestValue = globalBestValue;
                 GlobalBestPosition = globalBestPosition;
