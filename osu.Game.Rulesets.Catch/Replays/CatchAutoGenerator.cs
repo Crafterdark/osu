@@ -161,6 +161,9 @@ namespace osu.Game.Rulesets.Catch.Replays
 
                 bool priorityByAccuracy = true;
 
+                //Placeholder value used to allow the last aspire object list to process
+                KeyValuePairAspireObjectList.Add(new KeyValuePair<double, PalpableCatchHitObject>(double.MaxValue, null!));
+
                 foreach (var item in KeyValuePairAspireObjectList.OrderBy(x => x.Key))
                 {
                     if (currObj != null && currKey != item.Key)
@@ -188,7 +191,7 @@ namespace osu.Game.Rulesets.Catch.Replays
                             float leftSide;
                             float rightSide;
 
-                            for (float currPosition = halfCatchWidth; currPosition < CatchPlayfield.WIDTH - halfCatchWidth; currPosition += 0.5f)
+                            for (float currPosition = (float)((CatchPlayfield.WIDTH / 2) + (512 * Catcher.BASE_WALK_SPEED)); currPosition >= 0; currPosition = (float)(currPosition - Catcher.BASE_WALK_SPEED))
                             {
                                 leftSide = currPosition - halfCatchWidth;
                                 rightSide = currPosition + halfCatchWidth;
@@ -298,7 +301,8 @@ namespace osu.Game.Rulesets.Catch.Replays
 
                     currKey = item.Key;
                     currObj = item.Value;
-                    aspireTemporaryPatternObjects.Add(currObj);
+                    if (currObj != null)
+                        aspireTemporaryPatternObjects.Add(currObj);
                 }
 
             }
