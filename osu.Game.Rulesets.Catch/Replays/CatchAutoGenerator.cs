@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using osu.Framework.Logging;
 using osu.Framework.Utils;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Catch.Beatmaps;
@@ -17,6 +16,16 @@ namespace osu.Game.Rulesets.Catch.Replays
     internal class CatchAutoGenerator : AutoGenerator<CatchReplayFrame>
     {
         public new CatchBeatmap Beatmap => (CatchBeatmap)base.Beatmap;
+        public bool HasAspirePatterns { get; set; }
+
+        //Default Autoplay priority: Maximum accuracy on the beatmap.
+        public PriorityType AutoplayPriorityType { get; set; } = PriorityType.Accuracy;
+
+        public ObjectTracker ComboTracker = new ObjectTracker(PriorityTypeObject.Combo, 0, 0, 0);
+
+        public ObjectTracker TinyDropletTracker = new ObjectTracker(PriorityTypeObject.TinyDroplet, 0, 0, 0);
+
+        public ObjectTracker BananaTracker = new ObjectTracker(PriorityTypeObject.TinyDroplet, 0, 0, 0);
 
         public CatchAutoGenerator(IBeatmap beatmap)
             : base(beatmap)
@@ -32,7 +41,6 @@ namespace osu.Game.Rulesets.Catch.Replays
 
             float lastPosition = CatchPlayfield.CENTER_X;
             double lastTime = 0;
-            bool isAspire = false;
 
             void moveToNext(PalpableCatchHitObject h)
             {
@@ -50,14 +58,19 @@ namespace osu.Game.Rulesets.Catch.Replays
                 double speedRequired = positionChange == 0 ? 0 : positionChange / timeAvailable;
 
                 bool dashRequired = speedRequired > Catcher.BASE_WALK_SPEED;
-                bool impossibleJump = speedRequired > Catcher.BASE_DASH_SPEED || isAspire;
-
-                // todo: get correct catcher size, based on difficulty CS.
-                //const float catcher_width_half = Catcher.BASE_SIZE * 0.3f * 0.5f;
+                bool impossibleJump = speedRequired > Catcher.BASE_DASH_SPEED;
 
                 float halfCatcherWidth = Catcher.CalculateCatchWidth(Beatmap.Difficulty) * 0.5f;
 
-                if (!isAspire && lastPosition - halfCatcherWidth < h.EffectiveX && lastPosition + halfCatcherWidth > h.EffectiveX)
+                if (HasAspirePatterns)
+                {
+                    addFrame(h.StartTime, h.EffectiveX);
+                    lastTime = h.StartTime;
+                    lastPosition = h.EffectiveX;
+                    return;
+                }
+
+                if (lastPosition - halfCatcherWidth < h.EffectiveX && lastPosition + halfCatcherWidth > h.EffectiveX)
                 {
                     // we are already in the correct range.
                     lastTime = h.StartTime;
@@ -101,7 +114,9 @@ namespace osu.Game.Rulesets.Catch.Replays
             }
 
             List<PalpableCatchHitObject> toFilterFinalObjectList = new List<PalpableCatchHitObject>();
+
             List<PalpableCatchHitObject> finalObjectList = new List<PalpableCatchHitObject>();
+
             List<PalpableCatchHitObject> finalAspireList = new List<PalpableCatchHitObject>();
 
             List<KeyValuePair<double, PalpableCatchHitObject>> KeyValuePairAspireObjectList = new List<KeyValuePair<double, PalpableCatchHitObject>>();
@@ -150,14 +165,11 @@ namespace osu.Game.Rulesets.Catch.Replays
 
             if (KeyValuePairAspireObjectList.Count > 0)
             {
-                Logger.Log("It is Aspire");
-
                 double currKey = -1;
-                PalpableCatchHitObject currObj = null!;
-                bool hasCombo = false;
-                List<PalpableCatchHitObject> aspireTemporaryPatternObjects = new List<PalpableCatchHitObject>();
 
-                bool priorityByAccuracy = true;
+                PalpableCatchHitObject currObj = null!;
+
+                List<PalpableCatchHitObject> aspireTemporaryPatternObjects = new List<PalpableCatchHitObject>();
 
                 //Placeholder value used to allow the last aspire object list to process
                 KeyValuePairAspireObjectList.Add(new KeyValuePair<double, PalpableCatchHitObject>(double.MaxValue, null!));
@@ -170,231 +182,53 @@ namespace osu.Game.Rulesets.Catch.Replays
 
                         float halfCatchWidth = Catcher.CalculateCatchWidth(Beatmap.Difficulty) * 0.5f;
 
-                        //There's combo in this pattern -> maximum priority to combo
-                        if (hasCombo)
+                        float leftSide;
+                        float rightSide;
+
+                        ComboTracker.GlobalBestValue = 0;
+                        TinyDropletTracker.GlobalBestValue = 0;
+                        BananaTracker.GlobalBestValue = 0;
+
+                        for (float currPosition = 0; currPosition <= CatchPlayfield.WIDTH; currPosition = (float)(currPosition + Catcher.BASE_WALK_SPEED))
                         {
-                            float bestComboPosition = 0;
-                            int bestComboValue = 0;
-                            float bestTinyPosition = 0;
-                            int bestTinyValue = 0;
-                            float bestBananaPosition = 0;
-                            int bestBananaValue = 0;
+                            leftSide = currPosition - halfCatchWidth;
+                            rightSide = currPosition + halfCatchWidth;
 
-                            float theoreticalBestPosition = 0;
+                            ComboTracker.LocalBestValue = 0;
+                            TinyDropletTracker.LocalBestValue = 0;
+                            BananaTracker.LocalBestValue = 0;
 
-                            int localComboValue = 0;
-                            int localTinyValue = 0;
-                            int localBananaValue = 0;
-
-                            float leftSide;
-                            float rightSide;
-
-                            for (float currPosition = 0; currPosition <= CatchPlayfield.WIDTH; currPosition = (float)(currPosition + Catcher.BASE_WALK_SPEED))
+                            foreach (var hitObject in aspireTemporaryPatternObjects.OrderBy(x => x.EffectiveX).ToList())
                             {
-                                leftSide = currPosition - halfCatchWidth;
-                                rightSide = currPosition + halfCatchWidth;
-
-                                localComboValue = 0;
-                                localTinyValue = 0;
-                                localBananaValue = 0;
-
-                                foreach (var hitObject in aspireTemporaryPatternObjects.OrderBy(x => x.EffectiveX).ToList())
+                                if (leftSide <= hitObject.EffectiveX && hitObject.EffectiveX <= rightSide)
                                 {
-                                    if (leftSide <= hitObject.EffectiveX && hitObject.EffectiveX <= rightSide)
-                                    {
-                                        if (isComboHitObject(hitObject))
-                                            localComboValue++;
-                                        else if (hitObject is TinyDroplet)
-                                            localTinyValue++;
-                                        else if (hitObject is Banana)
-                                            localBananaValue++;
-                                    }
-                                }
-
-                                //Combo has the highest priority! Older best tiny or banana values are scrapped
-                                if (bestComboValue < localComboValue)
-                                {
-                                    bestComboValue = localComboValue;
-                                    bestComboPosition = currPosition;
-
-                                    bestTinyValue = localTinyValue;
-                                    bestTinyPosition = currPosition;
-
-                                    bestBananaValue = localBananaValue;
-                                    bestBananaPosition = currPosition;
-                                }
-                                //If the best combo didn't decrease, find new best tiny or banana
-                                else if (bestComboValue == localComboValue)
-                                {
-                                    if (bestTinyValue < localTinyValue)
-                                    {
-                                        bestTinyValue = localTinyValue;
-                                        bestTinyPosition = currPosition;
-                                    }
-
-                                    if (bestBananaValue < localBananaValue)
-                                    {
-                                        bestBananaValue = localBananaValue;
-                                        bestBananaPosition = currPosition;
-                                    }
+                                    if (isComboHitObject(hitObject))
+                                        ComboTracker.LocalBestValue++;
+                                    else if (hitObject is TinyDroplet)
+                                        TinyDropletTracker.LocalBestValue++;
+                                    else if (hitObject is Banana)
+                                        BananaTracker.LocalBestValue++;
                                 }
                             }
 
-                            if (priorityByAccuracy)
-                            {
-                                if (bestComboPosition != bestTinyPosition)
-                                    theoreticalBestPosition = bestTinyPosition;
-                                else
-                                    theoreticalBestPosition = bestComboPosition;
-                            }
-                            else
-                            {
-                                if (bestComboPosition != bestBananaPosition)
-                                    theoreticalBestPosition = bestBananaPosition;
-                                else
-                                    theoreticalBestPosition = bestComboPosition;
-                            }
-
-                            //Virtual Fruit: Only used to place the best position in the Auto generator
-                            finalAspireList.Add(new Fruit()
-                            {
-                                StartTime = currObj.StartTime,
-                                OriginalX = theoreticalBestPosition,
-                                XOffset = 0
-                            });
-
-                            //Logger.Log(theoreticalBestObjects.ToArray().ToString());
-                            //Logger.Log("Count" + theoreticalBestObjects.ToArray().Count());
-                            //Logger.Log("StartTime" + currObj.StartTime);
+                            UpdateTrackersWithPriority(AutoplayPriorityType, currPosition);
                         }
 
-                        //There's no combo in this pattern -> priority can be given to tiny or banana
-                        else
+                        float theoreticalBestPosition = GetBestPositionWithPriority(AutoplayPriorityType);
+
+                        //Virtual Fruit: Only used to place the best position in the Auto generator
+                        finalAspireList.Add(new Fruit()
                         {
-                            float bestTinyPosition = 0;
-                            int bestTinyValue = 0;
-                            float bestBananaPosition = 0;
-                            int bestBananaValue = 0;
-
-                            float theoreticalBestPosition = 0;
-
-                            int localTinyValue = 0;
-                            int localBananaValue = 0;
-
-                            float leftSide;
-                            float rightSide;
-
-                            for (float currPosition = 0; currPosition <= CatchPlayfield.WIDTH; currPosition = (float)(currPosition + Catcher.BASE_WALK_SPEED))
-                            {
-                                leftSide = currPosition - halfCatchWidth;
-                                rightSide = currPosition + halfCatchWidth;
-
-                                localTinyValue = 0;
-                                localBananaValue = 0;
-
-                                foreach (var hitObject in aspireTemporaryPatternObjects.OrderBy(x => x.EffectiveX).ToList())
-                                {
-                                    if (leftSide <= hitObject.EffectiveX && hitObject.EffectiveX <= rightSide)
-                                    {
-                                        if (hitObject is TinyDroplet)
-                                            localTinyValue++;
-                                        else if (hitObject is Banana)
-                                            localBananaValue++;
-                                    }
-                                }
-
-                                //Tiny droplet has the highest priority! Older best banana values are scrapped
-
-                                if (priorityByAccuracy && bestTinyValue < localTinyValue)
-                                {
-                                    bestTinyValue = localTinyValue;
-                                    bestTinyPosition = currPosition;
-
-                                    bestBananaValue = localBananaValue;
-                                    bestBananaPosition = currPosition;
-                                }
-                                //Banana has the highest priority! Older best tiny values are scrapped
-                                else if (!priorityByAccuracy && bestBananaValue < localBananaValue)
-                                {
-                                    bestTinyValue = localTinyValue;
-                                    bestTinyPosition = currPosition;
-
-                                    bestBananaValue = localBananaValue;
-                                    bestBananaPosition = currPosition;
-                                }
-
-                                //If the best tiny didn't decrease, find new best banana
-                                if (priorityByAccuracy && bestTinyValue == localTinyValue)
-                                {
-                                    if (bestTinyValue < localTinyValue)
-                                    {
-                                        bestTinyValue = localTinyValue;
-                                        bestTinyPosition = currPosition;
-                                    }
-
-                                    if (bestBananaValue < localBananaValue)
-                                    {
-                                        bestBananaValue = localBananaValue;
-                                        bestBananaPosition = currPosition;
-                                    }
-                                }
-                                //If the best banana didn't decrease, find new best tiny
-                                else if (!priorityByAccuracy && bestBananaValue == localBananaValue)
-                                {
-                                    if (bestTinyValue < localTinyValue)
-                                    {
-                                        bestTinyValue = localTinyValue;
-                                        bestTinyPosition = currPosition;
-                                    }
-
-                                    if (bestBananaValue < localBananaValue)
-                                    {
-                                        bestBananaValue = localBananaValue;
-                                        bestBananaPosition = currPosition;
-                                    }
-                                }
-                            }
-
-                            if (priorityByAccuracy)
-                            {
-                                if (bestTinyPosition != bestBananaPosition)
-                                    theoreticalBestPosition = bestBananaPosition;
-                                else
-                                    theoreticalBestPosition = bestTinyPosition;
-                            }
-                            else
-                            {
-                                if (bestBananaPosition != bestTinyPosition)
-                                    theoreticalBestPosition = bestTinyPosition;
-                                else
-                                    theoreticalBestPosition = bestBananaPosition;
-                            }
-
-
-                            //Virtual Fruit: Only used to place the best position in the Auto generator
-                            finalAspireList.Add(new Fruit()
-                            {
-                                StartTime = currObj.StartTime,
-                                OriginalX = theoreticalBestPosition,
-                                XOffset = 0
-                            });
-
-                            //Logger.Log(theoreticalBestObjects.ToArray().ToString());
-                            //Logger.Log("Count" + theoreticalBestObjects.ToArray().Count());
-                            //Logger.Log("StartTime" + currObj.StartTime);
-                        }
-
+                            StartTime = currObj.StartTime,
+                            OriginalX = theoreticalBestPosition,
+                            XOffset = 0
+                        });
 
                         //New iteration of aspireObjects Time
                         currKey = item.Key;
                         currObj = item.Value;
-                        hasCombo = false;
                         aspireTemporaryPatternObjects = new List<PalpableCatchHitObject>();
                     }
-
-                    //Updates the status of the aspireObjects pattern
-                    if (isComboHitObject(item.Value))
-                        hasCombo = true;
 
                     currKey = item.Key;
                     currObj = item.Value;
@@ -403,15 +237,11 @@ namespace osu.Game.Rulesets.Catch.Replays
                 }
 
             }
-            else
-            {
-                Logger.Log("It is not Aspire");
-            }
 
             //Aspire List, generation of Auto frames after concatenating and reordering the new Aspire positions
             if (finalAspireList.Count > 0)
             {
-                isAspire = true;
+                HasAspirePatterns = true;
 
                 finalObjectList = finalObjectList.Concat(finalAspireList).OrderBy(x => x.StartTime).ToList();
 
@@ -426,6 +256,8 @@ namespace osu.Game.Rulesets.Catch.Replays
             //No Aspire List, regular generation of Auto frames
             else
             {
+                HasAspirePatterns = false;
+
                 foreach (var obj in Beatmap.HitObjects)
                 {
                     if (obj is PalpableCatchHitObject palpableObject)
@@ -448,6 +280,150 @@ namespace osu.Game.Rulesets.Catch.Replays
         private void addFrame(double time, float? position = null, bool dashing = false)
         {
             Frames.Add(new CatchReplayFrame(time, position, dashing, LastFrame));
+        }
+
+        public void UpdateTrackersWithPriority(PriorityType priorityType, float currPosition)
+        {
+            //Combo always has maximum priority regardless of PriorityType
+            if (ComboTracker.LocalBestValue > 0 || ComboTracker.GlobalBestValue > 0)
+            {
+                if (ComboTracker.GlobalBestValue < ComboTracker.LocalBestValue)
+                {
+                    ComboTracker.GlobalBestValue = ComboTracker.LocalBestValue;
+                    ComboTracker.GlobalBestPosition = currPosition;
+
+                    TinyDropletTracker.GlobalBestValue = TinyDropletTracker.LocalBestValue;
+                    TinyDropletTracker.GlobalBestPosition = currPosition;
+
+                    BananaTracker.GlobalBestValue = BananaTracker.LocalBestValue;
+                    BananaTracker.GlobalBestPosition = currPosition;
+                }
+                else if (ComboTracker.GlobalBestValue == ComboTracker.LocalBestValue)
+                {
+                    if (TinyDropletTracker.GlobalBestValue < TinyDropletTracker.LocalBestValue)
+                    {
+                        TinyDropletTracker.GlobalBestValue = TinyDropletTracker.LocalBestValue;
+                        TinyDropletTracker.GlobalBestPosition = currPosition;
+                    }
+
+                    if (BananaTracker.GlobalBestValue < BananaTracker.LocalBestValue)
+                    {
+                        BananaTracker.GlobalBestValue = BananaTracker.LocalBestValue;
+                        BananaTracker.GlobalBestPosition = currPosition;
+                    }
+
+                }
+            }
+            else if (priorityType == PriorityType.Accuracy)
+            {
+                if (TinyDropletTracker.GlobalBestValue < TinyDropletTracker.LocalBestValue)
+                {
+                    TinyDropletTracker.GlobalBestValue = TinyDropletTracker.LocalBestValue;
+                    TinyDropletTracker.GlobalBestPosition = currPosition;
+
+                    BananaTracker.GlobalBestValue = BananaTracker.LocalBestValue;
+                    BananaTracker.GlobalBestPosition = currPosition;
+                }
+                else if (TinyDropletTracker.GlobalBestValue == TinyDropletTracker.LocalBestValue)
+                {
+                    if (BananaTracker.GlobalBestValue < BananaTracker.LocalBestValue)
+                    {
+                        BananaTracker.GlobalBestValue = BananaTracker.LocalBestValue;
+                        BananaTracker.GlobalBestPosition = currPosition;
+                    }
+                }
+            }
+            else if (priorityType == PriorityType.Score)
+            {
+                if (BananaTracker.GlobalBestValue < BananaTracker.LocalBestValue)
+                {
+                    TinyDropletTracker.GlobalBestValue = TinyDropletTracker.LocalBestValue;
+                    TinyDropletTracker.GlobalBestPosition = currPosition;
+
+                    BananaTracker.GlobalBestValue = BananaTracker.LocalBestValue;
+                    BananaTracker.GlobalBestPosition = currPosition;
+                }
+                else if (BananaTracker.GlobalBestValue == BananaTracker.LocalBestValue)
+                {
+                    if (TinyDropletTracker.GlobalBestValue < TinyDropletTracker.LocalBestValue)
+                    {
+                        TinyDropletTracker.GlobalBestValue = TinyDropletTracker.LocalBestValue;
+                        TinyDropletTracker.GlobalBestPosition = currPosition;
+                    }
+                }
+            }
+        }
+
+        public float GetBestPositionWithPriority(PriorityType priorityType)
+        {
+            if (ComboTracker.LocalBestValue > 0 || ComboTracker.GlobalBestValue > 0)
+            {
+                if (priorityType == PriorityType.Accuracy)
+                {
+                    if (TinyDropletTracker.GlobalBestValue > 0 && ComboTracker.GlobalBestPosition != TinyDropletTracker.GlobalBestPosition)
+                        return TinyDropletTracker.GlobalBestPosition;
+                    else
+                        return ComboTracker.GlobalBestPosition;
+                }
+                else if (priorityType == PriorityType.Score)
+                {
+                    if (BananaTracker.GlobalBestValue > 0 && ComboTracker.GlobalBestPosition != BananaTracker.GlobalBestPosition)
+                        return BananaTracker.GlobalBestPosition;
+                    else
+                        return ComboTracker.GlobalBestPosition;
+                }
+            }
+            else
+            {
+                if (priorityType == PriorityType.Accuracy)
+                {
+                    if (BananaTracker.GlobalBestValue > 0 && TinyDropletTracker.GlobalBestPosition != BananaTracker.GlobalBestPosition)
+                        return BananaTracker.GlobalBestPosition;
+                    else
+                        return TinyDropletTracker.GlobalBestPosition;
+                }
+                else if (priorityType == PriorityType.Score)
+                {
+                    if (TinyDropletTracker.GlobalBestValue > 0 && BananaTracker.GlobalBestPosition != TinyDropletTracker.GlobalBestPosition)
+                        return TinyDropletTracker.GlobalBestPosition;
+                    else
+                        return BananaTracker.GlobalBestPosition;
+                }
+            }
+
+            //This value means something went wrong
+            return -1337;
+        }
+
+        public enum PriorityType
+        {
+            Accuracy,
+            Score
+        }
+
+        public enum PriorityTypeObject
+        {
+            Combo,
+            TinyDroplet,
+            Banana
+        }
+
+        public class ObjectTracker
+        {
+            public PriorityTypeObject PriorityTypeObject;
+
+            public int LocalBestValue;
+
+            public int GlobalBestValue;
+            public float GlobalBestPosition;
+
+            public ObjectTracker(PriorityTypeObject priorityTypeObject, int localBestValue, int globalBestValue, float globalBestPosition)
+            {
+                PriorityTypeObject = priorityTypeObject;
+                LocalBestValue = localBestValue;
+                GlobalBestValue = globalBestValue;
+                GlobalBestPosition = globalBestPosition;
+            }
         }
     }
 }
