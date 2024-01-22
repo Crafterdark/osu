@@ -11,7 +11,6 @@ using osu.Game.Rulesets.Catch.Beatmaps;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Replays;
-using TagLib.Ape;
 
 namespace osu.Game.Rulesets.Catch.Replays
 {
@@ -24,7 +23,7 @@ namespace osu.Game.Rulesets.Catch.Replays
         {
         }
 
-        private bool isComboHitObject(PalpableCatchHitObject hitObject) => hitObject is Fruit || hitObject is Droplet && hitObject is not TinyDroplet;
+        private bool isComboHitObject(PalpableCatchHitObject hitObject) => hitObject is Fruit || (hitObject is Droplet && hitObject is not TinyDroplet);
 
         protected override void GenerateFrames()
         {
@@ -33,6 +32,7 @@ namespace osu.Game.Rulesets.Catch.Replays
 
             float lastPosition = CatchPlayfield.CENTER_X;
             double lastTime = 0;
+            bool isAspire = false;
 
             void moveToNext(PalpableCatchHitObject h)
             {
@@ -50,12 +50,14 @@ namespace osu.Game.Rulesets.Catch.Replays
                 double speedRequired = positionChange == 0 ? 0 : positionChange / timeAvailable;
 
                 bool dashRequired = speedRequired > Catcher.BASE_WALK_SPEED;
-                bool impossibleJump = speedRequired > Catcher.BASE_DASH_SPEED;
+                bool impossibleJump = speedRequired > Catcher.BASE_DASH_SPEED || isAspire;
 
                 // todo: get correct catcher size, based on difficulty CS.
-                const float catcher_width_half = Catcher.BASE_SIZE * 0.3f * 0.5f;
+                //const float catcher_width_half = Catcher.BASE_SIZE * 0.3f * 0.5f;
 
-                if (lastPosition - catcher_width_half < h.EffectiveX && lastPosition + catcher_width_half > h.EffectiveX)
+                float halfCatcherWidth = Catcher.CalculateCatchWidth(Beatmap.Difficulty) * 0.5f;
+
+                if (!isAspire && lastPosition - halfCatcherWidth < h.EffectiveX && lastPosition + halfCatcherWidth > h.EffectiveX)
                 {
                     // we are already in the correct range.
                     lastTime = h.StartTime;
@@ -98,44 +100,55 @@ namespace osu.Game.Rulesets.Catch.Replays
                 lastPosition = h.EffectiveX;
             }
 
-            List<PalpableCatchHitObject> objList = new List<PalpableCatchHitObject>();
+            List<PalpableCatchHitObject> toFilterFinalObjectList = new List<PalpableCatchHitObject>();
+            List<PalpableCatchHitObject> finalObjectList = new List<PalpableCatchHitObject>();
+            List<PalpableCatchHitObject> finalAspireList = new List<PalpableCatchHitObject>();
 
-            List<KeyValuePair<double, PalpableCatchHitObject>> aspireObjectList = new List<KeyValuePair<double, PalpableCatchHitObject>>();
+            List<KeyValuePair<double, PalpableCatchHitObject>> KeyValuePairAspireObjectList = new List<KeyValuePair<double, PalpableCatchHitObject>>();
 
-            //Detect if the beatmap has two or more notes happening at the same time
-            bool isAspire = false;
-
+            //Add objects to toFilterFinalObjectList and KeyValuePairAspireObjectList
             foreach (var obj in Beatmap.HitObjects)
             {
                 if (obj is PalpableCatchHitObject palpableObject)
                 {
-                    if (objList.Exists(x => x.StartTime == obj.StartTime))
+                    if (toFilterFinalObjectList.Exists(x => x.StartTime == obj.StartTime))
                     {
-                        isAspire = true;
-                        aspireObjectList.Add(new KeyValuePair<double, PalpableCatchHitObject>(obj.StartTime, palpableObject));
+                        KeyValuePairAspireObjectList.Add(new KeyValuePair<double, PalpableCatchHitObject>(obj.StartTime, palpableObject));
                     }
                     else
-                        objList.Add(palpableObject);
+                        toFilterFinalObjectList.Add(palpableObject);
                 }
 
                 foreach (var nestedObj in obj.NestedHitObjects.Cast<CatchHitObject>())
                 {
                     if (nestedObj is PalpableCatchHitObject palpableNestedObject)
                     {
-                        if (objList.Exists(x => x.StartTime == nestedObj.StartTime))
+                        if (toFilterFinalObjectList.Exists(x => x.StartTime == nestedObj.StartTime))
                         {
-                            isAspire = true;
-                            aspireObjectList.Add(new KeyValuePair<double, PalpableCatchHitObject>(nestedObj.StartTime, palpableNestedObject));
+                            KeyValuePairAspireObjectList.Add(new KeyValuePair<double, PalpableCatchHitObject>(nestedObj.StartTime, palpableNestedObject));
                         }
                         else
-                            objList.Add(palpableNestedObject);
+                            toFilterFinalObjectList.Add(palpableNestedObject);
                     }
                 }
             }
 
-            List<PalpableCatchHitObject> theoreticalBestObjects = new List<PalpableCatchHitObject>();
+            //filter the toFilterFinalObjectList into finalObjectList and add remaining objects to KeyValuePairAspireObjectList
+            foreach (var obj in toFilterFinalObjectList)
+            {
+                if (obj is PalpableCatchHitObject palpableObject)
+                {
+                    if (!KeyValuePairAspireObjectList.Exists(x => x.Key == obj.StartTime))
+                    {
+                        finalObjectList.Add(palpableObject);
+                    }
+                    else
+                        KeyValuePairAspireObjectList.Add(new KeyValuePair<double, PalpableCatchHitObject>(obj.StartTime, palpableObject));
 
-            if (isAspire)
+                }
+            }
+
+            if (KeyValuePairAspireObjectList.Count > 0)
             {
                 Logger.Log("It is Aspire");
 
@@ -144,40 +157,47 @@ namespace osu.Game.Rulesets.Catch.Replays
                 bool hasCombo = false;
                 bool hasTiny = false;
                 bool hasBanana = false;
-                List<PalpableCatchHitObject> aspirePatternObjects = new List<PalpableCatchHitObject>();
+                List<PalpableCatchHitObject> aspireTemporaryPatternObjects = new List<PalpableCatchHitObject>();
 
                 bool priorityByAccuracy = true;
 
-                foreach (var item in aspireObjectList.OrderBy(x => x.Key))
+                foreach (var item in KeyValuePairAspireObjectList.OrderBy(x => x.Key))
                 {
                     if (currObj != null && currKey != item.Key)
                     {
                         //Last execution iteration of aspireObjects Time
 
-                        float halfCatchWidth = Catcher.CalculateCatchWidth(Beatmap.Difficulty) / 2;
+                        float halfCatchWidth = Catcher.CalculateCatchWidth(Beatmap.Difficulty) * 0.5f;
 
                         //There's combo in this pattern -> maximum priority to combo
                         if (hasCombo)
                         {
-                            float bestComboPosition = -1;
-                            int bestComboValue = -1;
-                            float bestTinyPosition = -1;
-                            int bestTinyValue = -1;
-                            float bestBananaPosition = -1;
-                            int bestBananaValue = -1;
+                            float bestComboPosition = 0;
+                            int bestComboValue = 0;
+                            float bestTinyPosition = 0;
+                            int bestTinyValue = 0;
+                            float bestBananaPosition = 0;
+                            int bestBananaValue = 0;
 
-                            float theoreticalBestPosition = -1;
+                            float theoreticalBestPosition = 0;
 
-                            for (float currPosition = 0; currPosition < CatchPlayfield.WIDTH; currPosition += (float)Catcher.BASE_WALK_SPEED)
+                            int localComboValue = 0;
+                            int localTinyValue = 0;
+                            int localBananaValue = 0;
+
+                            float leftSide;
+                            float rightSide;
+
+                            for (float currPosition = halfCatchWidth; currPosition < CatchPlayfield.WIDTH - halfCatchWidth; currPosition += 0.5f)
                             {
-                                float leftSide = currPosition - halfCatchWidth;
-                                float rightSide = currPosition + halfCatchWidth;
+                                leftSide = currPosition - halfCatchWidth;
+                                rightSide = currPosition + halfCatchWidth;
 
-                                int localComboValue = 0;
-                                int localTinyValue = 0;
-                                int localBananaValue = 0;
+                                localComboValue = 0;
+                                localTinyValue = 0;
+                                localBananaValue = 0;
 
-                                foreach (var hitObject in aspirePatternObjects.OrderBy(x => x.EffectiveX))
+                                foreach (var hitObject in aspireTemporaryPatternObjects.OrderBy(x => x.EffectiveX).ToList())
                                 {
                                     if (leftSide <= hitObject.EffectiveX && hitObject.EffectiveX <= rightSide)
                                     {
@@ -188,37 +208,38 @@ namespace osu.Game.Rulesets.Catch.Replays
                                         else if (hitObject is Banana)
                                             localBananaValue++;
                                     }
-                                    else
+                                }
+
+                                //Combo has the highest priority! Older best tiny or banana values are scrapped
+                                if (bestComboValue < localComboValue)
+                                {
+                                    bestComboValue = localComboValue;
+                                    bestComboPosition = currPosition;
+
+                                    bestTinyValue = localTinyValue;
+                                    bestTinyPosition = currPosition;
+
+                                    bestBananaValue = localBananaValue;
+                                    bestBananaPosition = currPosition;
+
+                                    Logger.Log("Time: " + currKey);
+                                    Logger.Log("Best location Combo: " + bestComboPosition);
+                                    Logger.Log("Best location Tiny: " + bestTinyPosition);
+                                    Logger.Log("Half Catch Width: " + halfCatchWidth);
+                                }
+                                //If the best combo didn't decrease, find new best tiny or banana
+                                else if (bestComboValue == localComboValue)
+                                {
+                                    if (bestTinyValue < localTinyValue)
                                     {
-                                        //Combo has the highest priority! Older best tiny or banana values are scrapped
-                                        if (bestComboValue < localComboValue)
-                                        {
-                                            bestComboValue = localComboValue;
-                                            bestComboPosition = currPosition;
+                                        bestTinyValue = localTinyValue;
+                                        bestTinyPosition = currPosition;
+                                    }
 
-                                            bestTinyValue = localTinyValue;
-                                            bestTinyPosition = currPosition;
-
-                                            bestBananaValue = localBananaValue;
-                                            bestBananaPosition = currPosition;
-                                        }
-                                        //If the best combo didn't decrease, find new best tiny or banana
-                                        else if (bestComboValue == localComboValue)
-                                        {
-                                            if (bestTinyValue <= localTinyValue)
-                                            {
-                                                bestTinyValue = localTinyValue;
-                                                bestTinyPosition = currPosition;
-                                            }
-
-                                            if (bestBananaValue <= localBananaValue)
-                                            {
-                                                bestBananaValue = localBananaValue;
-                                                bestBananaPosition = currPosition;
-                                            }
-                                        }
-
-                                        break;
+                                    if (bestBananaValue < localBananaValue)
+                                    {
+                                        bestBananaValue = localBananaValue;
+                                        bestBananaPosition = currPosition;
                                     }
                                 }
                             }
@@ -232,15 +253,16 @@ namespace osu.Game.Rulesets.Catch.Replays
                             }
 
                             //Virtual Fruit: Only used to place the best position in the Auto generator
-                            theoreticalBestObjects.Add(new Fruit()
+                            finalAspireList.Add(new Fruit()
                             {
                                 StartTime = currObj.StartTime,
-                                X = theoreticalBestPosition
+                                OriginalX = theoreticalBestPosition,
+                                XOffset = 0
                             });
 
-                            Logger.Log(theoreticalBestObjects.ToArray().ToString());
-                            Logger.Log("Count" + theoreticalBestObjects.ToArray().Count());
-                            Logger.Log("StartTime" + currObj.StartTime);
+                            //Logger.Log(theoreticalBestObjects.ToArray().ToString());
+                            //Logger.Log("Count" + theoreticalBestObjects.ToArray().Count());
+                            //Logger.Log("StartTime" + currObj.StartTime);
                         }
 
                         //There's no combo in this pattern -> priority can be given to tiny or banana
@@ -263,7 +285,7 @@ namespace osu.Game.Rulesets.Catch.Replays
                         hasCombo = false;
                         hasTiny = false;
                         hasBanana = false;
-                        aspirePatternObjects = new List<PalpableCatchHitObject>();
+                        aspireTemporaryPatternObjects = new List<PalpableCatchHitObject>();
                     }
 
                     //Updates the status of the aspireObjects pattern
@@ -276,7 +298,7 @@ namespace osu.Game.Rulesets.Catch.Replays
 
                     currKey = item.Key;
                     currObj = item.Value;
-                    aspirePatternObjects.Add(currObj);
+                    aspireTemporaryPatternObjects.Add(currObj);
                 }
 
             }
@@ -285,32 +307,37 @@ namespace osu.Game.Rulesets.Catch.Replays
                 Logger.Log("It is not Aspire");
             }
 
-            if (theoreticalBestObjects != null)
+            //Aspire List, generation of Auto frames after concatenating and reordering the new Aspire positions
+            if (finalAspireList.Count > 0)
             {
-                foreach (var item in theoreticalBestObjects)
-                {
-                    var preObj = objList.Find(x => x.StartTime < item.StartTime);
+                isAspire = true;
 
-                    if (preObj != null)
+                finalObjectList = finalObjectList.Concat(finalAspireList).OrderBy(x => x.StartTime).ToList();
+
+                foreach (var obj in finalObjectList)
+                {
+                    if (obj is PalpableCatchHitObject palpableObject)
                     {
-                        int indexToAppend = objList.IndexOf(preObj);
-                        objList.Insert(indexToAppend, item);
+                        moveToNext(palpableObject);
                     }
                 }
             }
-
-            foreach (var obj in Beatmap.HitObjects)
+            //No Aspire List, regular generation of Auto frames
+            else
             {
-                if (obj is PalpableCatchHitObject palpableObject)
+                foreach (var obj in Beatmap.HitObjects)
                 {
-                    moveToNext(palpableObject);
-                }
-
-                foreach (var nestedObj in obj.NestedHitObjects.Cast<CatchHitObject>())
-                {
-                    if (nestedObj is PalpableCatchHitObject palpableNestedObject)
+                    if (obj is PalpableCatchHitObject palpableObject)
                     {
-                        moveToNext(palpableNestedObject);
+                        moveToNext(palpableObject);
+                    }
+
+                    foreach (var nestedObj in obj.NestedHitObjects.Cast<CatchHitObject>())
+                    {
+                        if (nestedObj is PalpableCatchHitObject palpableNestedObject)
+                        {
+                            moveToNext(palpableNestedObject);
+                        }
                     }
                 }
             }
