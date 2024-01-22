@@ -62,7 +62,8 @@ namespace osu.Game.Rulesets.Catch.Replays
 
                 float halfCatcherWidth = Catcher.CalculateCatchWidth(Beatmap.Difficulty) * 0.5f;
 
-                if (HasAspirePatterns)
+                //If it's an aspire position, the catcher must precisely move there in one frame
+                if (h is VirtualFruit)
                 {
                     addFrame(h.StartTime, h.EffectiveX);
                     lastTime = h.StartTime;
@@ -121,29 +122,48 @@ namespace osu.Game.Rulesets.Catch.Replays
 
             List<KeyValuePair<double, PalpableCatchHitObject>> KeyValuePairAspireObjectList = new List<KeyValuePair<double, PalpableCatchHitObject>>();
 
+            //Used to detect aspire patterns
+            double lastStartTime = 0;
+
             //Add objects to toFilterFinalObjectList and KeyValuePairAspireObjectList
             foreach (var obj in Beatmap.HitObjects)
             {
                 if (obj is PalpableCatchHitObject palpableObject)
                 {
+                    if (lastStartTime > obj.StartTime)
+                    {
+                        //Enable aspire autoplay when there are notes that start in the past
+                        HasAspirePatterns = true;
+                    }
+
                     if (toFilterFinalObjectList.Exists(x => x.StartTime == obj.StartTime))
                     {
                         KeyValuePairAspireObjectList.Add(new KeyValuePair<double, PalpableCatchHitObject>(obj.StartTime, palpableObject));
                     }
                     else
                         toFilterFinalObjectList.Add(palpableObject);
+
+                    lastStartTime = obj.StartTime;
                 }
 
                 foreach (var nestedObj in obj.NestedHitObjects.Cast<CatchHitObject>())
                 {
                     if (nestedObj is PalpableCatchHitObject palpableNestedObject)
                     {
+                        if (lastStartTime > nestedObj.StartTime)
+                        {
+                            //Enable aspire autoplay when there are notes that start in the past
+                            HasAspirePatterns = true;
+                        }
+
                         if (toFilterFinalObjectList.Exists(x => x.StartTime == nestedObj.StartTime))
                         {
                             KeyValuePairAspireObjectList.Add(new KeyValuePair<double, PalpableCatchHitObject>(nestedObj.StartTime, palpableNestedObject));
                         }
                         else
                             toFilterFinalObjectList.Add(palpableNestedObject);
+
+                        lastStartTime = nestedObj.StartTime;
                     }
                 }
             }
@@ -165,6 +185,9 @@ namespace osu.Game.Rulesets.Catch.Replays
 
             if (KeyValuePairAspireObjectList.Count > 0)
             {
+                //Enable aspire autoplay when there are notes that start at the same time
+                HasAspirePatterns = true;
+
                 double currKey = -1;
 
                 PalpableCatchHitObject currObj = null!;
@@ -185,18 +208,18 @@ namespace osu.Game.Rulesets.Catch.Replays
                         float leftSide;
                         float rightSide;
 
-                        ComboTracker.GlobalBestValue = 0;
-                        TinyDropletTracker.GlobalBestValue = 0;
-                        BananaTracker.GlobalBestValue = 0;
+                        ComboTracker.ResetGlobalTracking();
+                        TinyDropletTracker.ResetGlobalTracking();
+                        BananaTracker.ResetGlobalTracking();
 
                         for (float currPosition = 0; currPosition <= CatchPlayfield.WIDTH; currPosition = (float)(currPosition + Catcher.BASE_WALK_SPEED))
                         {
                             leftSide = currPosition - halfCatchWidth;
                             rightSide = currPosition + halfCatchWidth;
 
-                            ComboTracker.LocalBestValue = 0;
-                            TinyDropletTracker.LocalBestValue = 0;
-                            BananaTracker.LocalBestValue = 0;
+                            ComboTracker.ResetLocalTracking();
+                            TinyDropletTracker.ResetLocalTracking();
+                            BananaTracker.ResetLocalTracking();
 
                             foreach (var hitObject in aspireTemporaryPatternObjects.OrderBy(x => x.EffectiveX).ToList())
                             {
@@ -209,15 +232,48 @@ namespace osu.Game.Rulesets.Catch.Replays
                                     else if (hitObject is Banana)
                                         BananaTracker.LocalBestValue++;
                                 }
+                                else if (hitObject.EffectiveX > rightSide)
+                                {
+                                    break;
+                                }
                             }
 
-                            UpdateTrackersWithPriority(AutoplayPriorityType, currPosition);
+                            UpdateTrackersWithPriority(currPosition);
                         }
 
-                        float theoreticalBestPosition = GetBestPositionWithPriority(AutoplayPriorityType);
+                        float theoreticalBestPosition = GetBestPositionWithPriority();
+
+                        leftSide = theoreticalBestPosition - halfCatchWidth;
+                        rightSide = theoreticalBestPosition + halfCatchWidth;
+
+                        bool isFirstEnabled = true;
+
+                        float leftEdgeBestPosition = 0;
+                        float rightEdgeBestPosition = 0;
+
+                        foreach (var hitObject in aspireTemporaryPatternObjects.OrderBy(x => x.EffectiveX).ToList())
+                        {
+                            if (leftSide <= hitObject.EffectiveX && hitObject.EffectiveX <= rightSide)
+                            {
+                                if (isFirstEnabled)
+                                {
+                                    leftEdgeBestPosition = hitObject.EffectiveX;
+                                    isFirstEnabled = false;
+                                }
+
+                                rightEdgeBestPosition = hitObject.EffectiveX;
+                            }
+                            else if (hitObject.EffectiveX > rightSide)
+                            {
+                                break;
+                            }
+                        }
+
+                        while (theoreticalBestPosition < (leftEdgeBestPosition + rightEdgeBestPosition) / 2)
+                            theoreticalBestPosition = (float)(theoreticalBestPosition + Catcher.BASE_WALK_SPEED);
 
                         //Virtual Fruit: Only used to place the best position in the Auto generator
-                        finalAspireList.Add(new Fruit()
+                        finalAspireList.Add(new VirtualFruit()
                         {
                             StartTime = currObj.StartTime,
                             OriginalX = theoreticalBestPosition,
@@ -239,10 +295,8 @@ namespace osu.Game.Rulesets.Catch.Replays
             }
 
             //Aspire List, generation of Auto frames after concatenating and reordering the new Aspire positions
-            if (finalAspireList.Count > 0)
+            if (HasAspirePatterns)
             {
-                HasAspirePatterns = true;
-
                 finalObjectList = finalObjectList.Concat(finalAspireList).OrderBy(x => x.StartTime).ToList();
 
                 foreach (var obj in finalObjectList)
@@ -282,90 +336,75 @@ namespace osu.Game.Rulesets.Catch.Replays
             Frames.Add(new CatchReplayFrame(time, position, dashing, LastFrame));
         }
 
-        public void UpdateTrackersWithPriority(PriorityType priorityType, float currPosition)
+        public void UpdateTrackersWithPriority(float currPosition)
         {
             //Combo always has maximum priority regardless of PriorityType
             if (ComboTracker.LocalBestValue > 0 || ComboTracker.GlobalBestValue > 0)
             {
                 if (ComboTracker.GlobalBestValue < ComboTracker.LocalBestValue)
                 {
-                    ComboTracker.GlobalBestValue = ComboTracker.LocalBestValue;
-                    ComboTracker.GlobalBestPosition = currPosition;
-
-                    TinyDropletTracker.GlobalBestValue = TinyDropletTracker.LocalBestValue;
-                    TinyDropletTracker.GlobalBestPosition = currPosition;
-
-                    BananaTracker.GlobalBestValue = BananaTracker.LocalBestValue;
-                    BananaTracker.GlobalBestPosition = currPosition;
+                    ComboTracker.UpdatePosition(currPosition);
+                    TinyDropletTracker.UpdatePosition(currPosition);
+                    BananaTracker.UpdatePosition(currPosition);
                 }
                 else if (ComboTracker.GlobalBestValue == ComboTracker.LocalBestValue)
                 {
                     if (TinyDropletTracker.GlobalBestValue < TinyDropletTracker.LocalBestValue)
                     {
-                        TinyDropletTracker.GlobalBestValue = TinyDropletTracker.LocalBestValue;
-                        TinyDropletTracker.GlobalBestPosition = currPosition;
+                        TinyDropletTracker.UpdatePosition(currPosition);
                     }
 
                     if (BananaTracker.GlobalBestValue < BananaTracker.LocalBestValue)
                     {
-                        BananaTracker.GlobalBestValue = BananaTracker.LocalBestValue;
-                        BananaTracker.GlobalBestPosition = currPosition;
+                        BananaTracker.UpdatePosition(currPosition);
                     }
 
                 }
             }
-            else if (priorityType == PriorityType.Accuracy)
+            else if (AutoplayPriorityType == PriorityType.Accuracy)
             {
                 if (TinyDropletTracker.GlobalBestValue < TinyDropletTracker.LocalBestValue)
                 {
-                    TinyDropletTracker.GlobalBestValue = TinyDropletTracker.LocalBestValue;
-                    TinyDropletTracker.GlobalBestPosition = currPosition;
-
-                    BananaTracker.GlobalBestValue = BananaTracker.LocalBestValue;
-                    BananaTracker.GlobalBestPosition = currPosition;
+                    TinyDropletTracker.UpdatePosition(currPosition);
+                    BananaTracker.UpdatePosition(currPosition);
                 }
                 else if (TinyDropletTracker.GlobalBestValue == TinyDropletTracker.LocalBestValue)
                 {
                     if (BananaTracker.GlobalBestValue < BananaTracker.LocalBestValue)
                     {
-                        BananaTracker.GlobalBestValue = BananaTracker.LocalBestValue;
-                        BananaTracker.GlobalBestPosition = currPosition;
+                        BananaTracker.UpdatePosition(currPosition);
                     }
                 }
             }
-            else if (priorityType == PriorityType.Score)
+            else if (AutoplayPriorityType == PriorityType.Score)
             {
                 if (BananaTracker.GlobalBestValue < BananaTracker.LocalBestValue)
                 {
-                    TinyDropletTracker.GlobalBestValue = TinyDropletTracker.LocalBestValue;
-                    TinyDropletTracker.GlobalBestPosition = currPosition;
-
-                    BananaTracker.GlobalBestValue = BananaTracker.LocalBestValue;
-                    BananaTracker.GlobalBestPosition = currPosition;
+                    TinyDropletTracker.UpdatePosition(currPosition);
+                    BananaTracker.UpdatePosition(currPosition);
                 }
                 else if (BananaTracker.GlobalBestValue == BananaTracker.LocalBestValue)
                 {
                     if (TinyDropletTracker.GlobalBestValue < TinyDropletTracker.LocalBestValue)
                     {
-                        TinyDropletTracker.GlobalBestValue = TinyDropletTracker.LocalBestValue;
-                        TinyDropletTracker.GlobalBestPosition = currPosition;
+                        TinyDropletTracker.UpdatePosition(currPosition);
                     }
                 }
             }
         }
 
-        public float GetBestPositionWithPriority(PriorityType priorityType)
+        public float GetBestPositionWithPriority()
         {
             if (ComboTracker.LocalBestValue > 0 || ComboTracker.GlobalBestValue > 0)
             {
-                if (priorityType == PriorityType.Accuracy)
+                if (AutoplayPriorityType == PriorityType.Accuracy)
                 {
                     if (TinyDropletTracker.GlobalBestValue > 0 && ComboTracker.GlobalBestPosition != TinyDropletTracker.GlobalBestPosition)
                         return TinyDropletTracker.GlobalBestPosition;
                     else
                         return ComboTracker.GlobalBestPosition;
                 }
-                else if (priorityType == PriorityType.Score)
+                else if (AutoplayPriorityType == PriorityType.Score)
                 {
                     if (BananaTracker.GlobalBestValue > 0 && ComboTracker.GlobalBestPosition != BananaTracker.GlobalBestPosition)
                         return BananaTracker.GlobalBestPosition;
@@ -375,14 +414,14 @@ namespace osu.Game.Rulesets.Catch.Replays
             }
             else
             {
-                if (priorityType == PriorityType.Accuracy)
+                if (AutoplayPriorityType == PriorityType.Accuracy)
                 {
                     if (BananaTracker.GlobalBestValue > 0 && TinyDropletTracker.GlobalBestPosition != BananaTracker.GlobalBestPosition)
                         return BananaTracker.GlobalBestPosition;
                     else
                         return TinyDropletTracker.GlobalBestPosition;
                 }
-                else if (priorityType == PriorityType.Score)
+                else if (AutoplayPriorityType == PriorityType.Score)
                 {
                     if (TinyDropletTracker.GlobalBestValue > 0 && BananaTracker.GlobalBestPosition != TinyDropletTracker.GlobalBestPosition)
                         return TinyDropletTracker.GlobalBestPosition;
@@ -414,6 +453,29 @@ namespace osu.Game.Rulesets.Catch.Replays
                 GlobalBestValue = globalBestValue;
                 GlobalBestPosition = globalBestPosition;
             }
+
+            public void UpdatePosition(float newGlobalBestPosition)
+            {
+                GlobalBestValue = LocalBestValue;
+                GlobalBestPosition = newGlobalBestPosition;
+            }
+
+            public void ResetLocalTracking()
+            {
+                LocalBestValue = 0;
+            }
+
+            public void ResetGlobalTracking()
+            {
+                GlobalBestValue = 0;
+                GlobalBestPosition = 0;
+            }
         }
+
+        //Represents the best location chosen by Autoplay to handle aspire patterns
+        public class VirtualFruit : PalpableCatchHitObject
+        {
+        }
+
     }
 }
