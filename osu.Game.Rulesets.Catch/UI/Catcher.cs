@@ -242,11 +242,19 @@ namespace osu.Game.Rulesets.Catch.UI
             {
                 if (result.IsHit && hitObject.HyperDashTarget is CatchHitObject target)
                 {
+                    bool allowHyperDash = true;
                     double timeDifference = target.StartTime - hitObject.StartTime;
                     double positionDifference = target.EffectiveX - X;
                     double velocity = positionDifference / Math.Max(1.0, timeDifference - 1000.0 / 60.0);
 
-                    SetHyperDashState(Math.Abs(velocity) / BASE_DASH_SPEED, target.EffectiveX);
+                    //if a hyper fruit is trying to reach its target in the same frame, do not trigger a hyperdash (should match stable behavior)
+                    if (hitObject.StartTime == target.StartTime)
+                        allowHyperDash = false;
+
+                    if (allowHyperDash)
+                        SetHyperDashState(Math.Abs(velocity) / BASE_DASH_SPEED, target.EffectiveX);
+                    else
+                        SetHyperDashState();
                 }
                 else
                     SetHyperDashState();
