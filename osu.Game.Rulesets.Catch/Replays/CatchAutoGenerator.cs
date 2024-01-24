@@ -339,22 +339,22 @@ namespace osu.Game.Rulesets.Catch.Replays
         public void UpdateTrackersWithPriority(float currPosition)
         {
             //Combo always has maximum priority regardless of PriorityType
-            if (ComboTracker.LocalBestValue > 0 || ComboTracker.GlobalBestValue > 0)
+            if (ComboTracker.HasLocalValue() || ComboTracker.HasGlobalValue())
             {
-                if (ComboTracker.GlobalBestValue < ComboTracker.LocalBestValue)
+                if (ComboTracker.HasHigherLocalValue())
                 {
                     ComboTracker.UpdatePosition(currPosition);
                     TinyDropletTracker.UpdatePosition(currPosition);
                     BananaTracker.UpdatePosition(currPosition);
                 }
-                else if (ComboTracker.GlobalBestValue == ComboTracker.LocalBestValue)
+                else if (ComboTracker.HasUnchangedValue())
                 {
-                    if (TinyDropletTracker.GlobalBestValue < TinyDropletTracker.LocalBestValue)
+                    if (TinyDropletTracker.HasHigherLocalValue())
                     {
                         TinyDropletTracker.UpdatePosition(currPosition);
                     }
 
-                    if (BananaTracker.GlobalBestValue < BananaTracker.LocalBestValue)
+                    if (BananaTracker.HasHigherLocalValue())
                     {
                         BananaTracker.UpdatePosition(currPosition);
                     }
@@ -363,14 +363,14 @@ namespace osu.Game.Rulesets.Catch.Replays
             }
             else if (AutoplayPriorityType == PriorityType.Accuracy)
             {
-                if (TinyDropletTracker.GlobalBestValue < TinyDropletTracker.LocalBestValue)
+                if (TinyDropletTracker.HasHigherLocalValue())
                 {
                     TinyDropletTracker.UpdatePosition(currPosition);
                     BananaTracker.UpdatePosition(currPosition);
                 }
-                else if (TinyDropletTracker.GlobalBestValue == TinyDropletTracker.LocalBestValue)
+                else if (TinyDropletTracker.HasUnchangedValue())
                 {
-                    if (BananaTracker.GlobalBestValue < BananaTracker.LocalBestValue)
+                    if (BananaTracker.HasHigherLocalValue())
                     {
                         BananaTracker.UpdatePosition(currPosition);
                     }
@@ -378,14 +378,14 @@ namespace osu.Game.Rulesets.Catch.Replays
             }
             else if (AutoplayPriorityType == PriorityType.Score)
             {
-                if (BananaTracker.GlobalBestValue < BananaTracker.LocalBestValue)
+                if (BananaTracker.HasHigherLocalValue())
                 {
                     TinyDropletTracker.UpdatePosition(currPosition);
                     BananaTracker.UpdatePosition(currPosition);
                 }
-                else if (BananaTracker.GlobalBestValue == BananaTracker.LocalBestValue)
+                else if (BananaTracker.HasUnchangedValue())
                 {
-                    if (TinyDropletTracker.GlobalBestValue < TinyDropletTracker.LocalBestValue)
+                    if (TinyDropletTracker.HasHigherLocalValue())
                     {
                         TinyDropletTracker.UpdatePosition(currPosition);
                     }
@@ -395,18 +395,18 @@ namespace osu.Game.Rulesets.Catch.Replays
 
         public float GetBestPositionWithPriority()
         {
-            if (ComboTracker.LocalBestValue > 0 || ComboTracker.GlobalBestValue > 0)
+            if (ComboTracker.HasLocalValue() || ComboTracker.HasGlobalValue())
             {
                 if (AutoplayPriorityType == PriorityType.Accuracy)
                 {
-                    if (TinyDropletTracker.GlobalBestValue > 0 && ComboTracker.GlobalBestPosition != TinyDropletTracker.GlobalBestPosition)
+                    if (TinyDropletTracker.HasGlobalValue() && !ComboTracker.HasGlobalPositionEqualTo(TinyDropletTracker))
                         return TinyDropletTracker.GlobalBestPosition;
                     else
                         return ComboTracker.GlobalBestPosition;
                 }
                 else if (AutoplayPriorityType == PriorityType.Score)
                 {
-                    if (BananaTracker.GlobalBestValue > 0 && ComboTracker.GlobalBestPosition != BananaTracker.GlobalBestPosition)
+                    if (BananaTracker.HasGlobalValue() && !ComboTracker.HasGlobalPositionEqualTo(BananaTracker))
                         return BananaTracker.GlobalBestPosition;
                     else
                         return ComboTracker.GlobalBestPosition;
@@ -416,14 +416,14 @@ namespace osu.Game.Rulesets.Catch.Replays
             {
                 if (AutoplayPriorityType == PriorityType.Accuracy)
                 {
-                    if (BananaTracker.GlobalBestValue > 0 && TinyDropletTracker.GlobalBestPosition != BananaTracker.GlobalBestPosition)
+                    if (BananaTracker.HasGlobalValue() && !TinyDropletTracker.HasGlobalPositionEqualTo(BananaTracker))
                         return BananaTracker.GlobalBestPosition;
                     else
                         return TinyDropletTracker.GlobalBestPosition;
                 }
                 else if (AutoplayPriorityType == PriorityType.Score)
                 {
-                    if (TinyDropletTracker.GlobalBestValue > 0 && BananaTracker.GlobalBestPosition != TinyDropletTracker.GlobalBestPosition)
+                    if (TinyDropletTracker.HasGlobalValue() && !BananaTracker.HasGlobalPositionEqualTo(TinyDropletTracker))
                         return TinyDropletTracker.GlobalBestPosition;
                     else
                         return BananaTracker.GlobalBestPosition;
@@ -446,6 +446,16 @@ namespace osu.Game.Rulesets.Catch.Replays
             public int GlobalBestValue;
 
             public float GlobalBestPosition;
+
+            public bool HasGlobalPositionEqualTo(ObjectTracker objectTracker) => GlobalBestPosition == objectTracker.GlobalBestPosition;
+
+            public bool HasHigherLocalValue() => LocalBestValue > GlobalBestValue;
+
+            public bool HasUnchangedValue() => LocalBestValue == GlobalBestValue;
+
+            public bool HasLocalValue() => LocalBestValue > 0;
+
+            public bool HasGlobalValue() => GlobalBestValue > 0;
 
             public ObjectTracker(int localBestValue, int globalBestValue, float globalBestPosition)
             {
