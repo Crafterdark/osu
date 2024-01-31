@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using osu.Framework.Allocation;
@@ -15,9 +16,13 @@ using osu.Game.Configuration;
 using osu.Game.Rulesets.Catch.Judgements;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.Objects.Drawables;
+using osu.Game.Rulesets.Catch.Replays;
 using osu.Game.Rulesets.Catch.Skinning;
 using osu.Game.Rulesets.Judgements;
+using osu.Game.Rulesets.Objects;
 using osu.Game.Rulesets.Objects.Legacy;
+using osu.Game.Rulesets.Replays;
+using osu.Game.Rulesets.UI;
 using osu.Game.Skinning;
 using osuTK;
 using osuTK.Graphics;
@@ -203,6 +208,49 @@ namespace osu.Game.Rulesets.Catch.UI
         {
             if (!(hitObject is PalpableCatchHitObject fruit))
                 return false;
+
+            //This code prevents CanCatch to be randomly off during replays. Might not be necessary and it's still inaccurate.
+            if (GetContainingInputManager().CurrentState is RulesetInputManagerInputState<CatchAction> { LastReplayState: CatchFramedReplayInputHandler.CatchReplayState replayState })
+            {
+                var fixFrames = replayState.Frames?.FindAll(x => (int)x.Time == (int)hitObject.GetEndTime());
+                int msCounter = 1;
+
+                while (fixFrames == null || fixFrames.Count() <= 0)
+                {
+                    fixFrames = replayState.Frames?.FindAll(x => (int)x.Time == (int)hitObject.GetEndTime() - msCounter);
+                    if (fixFrames != null && fixFrames.Count() > 1)
+                        break;
+                    msCounter++;
+                }
+
+                if (fixFrames != null && fixFrames.Count() > 0)
+                {
+                    CatchReplayFrame fixFrame = fixFrame = (CatchReplayFrame)fixFrames.ToArray()[0];
+
+                    if (fixFrame != null)
+                    {
+                        if ((int)fixFrame.Time == (int)hitObject.GetEndTime() && fixFrames.Count() > 1)
+                        {
+                            X = fixFrame.Position;
+                        }
+                        else
+                        {
+                            msCounter = 1;
+                            List<ReplayFrame>? fixEndFrames = null;
+                            while (fixEndFrames == null || fixEndFrames.Count() <= 0)
+                            {
+                                fixEndFrames = replayState.Frames?.FindAll(x => (int)x.Time == (int)hitObject.GetEndTime() + msCounter);
+                                if (fixEndFrames != null && fixEndFrames.Count() > 1)
+                                    break;
+                                msCounter++;
+                            }
+                            CatchReplayFrame endFixFrame = (CatchReplayFrame)fixEndFrames.ToArray()[0];
+                            X = Interpolation.ValueAt((int)hitObject.StartTime, fixFrame.Position, endFixFrame.Position, fixFrame.Time, endFixFrame.Time);
+                        }
+                    }
+
+                }
+            }
 
             float halfCatchWidth = CatchWidth * 0.5f;
             return fruit.EffectiveX >= X - halfCatchWidth &&

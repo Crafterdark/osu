@@ -26,12 +26,14 @@ namespace osu.Game.Rulesets.Catch.Replays
             inputs.Add(new CatchReplayState
             {
                 PressedActions = CurrentFrame?.Actions ?? new List<CatchAction>(),
-                CatcherX = position
+                CatcherX = position,
+                Frames = Frames
             });
         }
 
         public class CatchReplayState : ReplayState<CatchAction>
         {
+            public List<ReplayFrame>? Frames { get; set; }
             public float? CatcherX { get; set; }
         }
     }

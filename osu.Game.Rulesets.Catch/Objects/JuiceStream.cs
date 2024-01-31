@@ -118,7 +118,7 @@ namespace osu.Game.Rulesets.Catch.Objects
                         AddNested(new Droplet
                         {
                             Samples = dropletSamples,
-                            StartTime = Math.Floor(e.Time),
+                            StartTime = e.Time,
                             X = EffectiveX + Path.PositionAt(e.PathProgress).X,
                         });
                         break;
@@ -129,7 +129,7 @@ namespace osu.Game.Rulesets.Catch.Objects
                         AddNested(new Fruit
                         {
                             Samples = this.GetNodeSamples(nodeIndex++),
-                            StartTime = Math.Floor(e.Time),
+                            StartTime = e.Time,
                             X = EffectiveX + Path.PositionAt(e.PathProgress).X,
                         });
                         break;
@@ -142,11 +142,12 @@ namespace osu.Game.Rulesets.Catch.Objects
         [JsonIgnore]
         public double Duration
         {
-            get => Math.Floor(this.SpanCount() * Path.Distance / Velocity);
+            //Stable seems to have used Integer precision here. (Probably this is done wrong, but it works for some maps)
+            get => (int)(this.SpanCount() * Path.Distance / Velocity);
             set => throw new NotSupportedException($"Adjust via {nameof(RepeatCount)} instead"); // can be implemented if/when needed.
         }
 
-        public double EndTime => Math.Floor(StartTime) + Duration;
+        public double EndTime => StartTime + Duration;
 
         private readonly SliderPath path = new SliderPath();
 
