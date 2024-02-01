@@ -210,14 +210,14 @@ namespace osu.Game.Rulesets.Catch.UI
                 return false;
 
             //This code prevents CanCatch to be randomly off during replays. Might not be necessary and it's still inaccurate.
-            if (GetContainingInputManager().CurrentState is RulesetInputManagerInputState<CatchAction> { LastReplayState: CatchFramedReplayInputHandler.CatchReplayState replayState })
+            if (GetContainingInputManager().CurrentState is RulesetInputManagerInputState<CatchAction> { LastReplayState: CatchFramedReplayInputHandler.CatchReplayState replayState } && replayState.Frames != null)
             {
-                var fixFrames = replayState.Frames?.FindAll(x => (int)x.Time == (int)hitObject.GetEndTime());
+                var fixFrames = replayState.Frames.FindAll(x => (int)x.Time == (int)hitObject.GetEndTime());
                 int msCounter = 1;
 
-                while (fixFrames == null || fixFrames.Count() <= 0)
+                while ((fixFrames == null || fixFrames.Count() <= 0) && replayState.Frames.Exists(x => (int)x.Time <= (int)hitObject.GetEndTime() - msCounter))
                 {
-                    fixFrames = replayState.Frames?.FindAll(x => (int)x.Time == (int)hitObject.GetEndTime() - msCounter);
+                    fixFrames = replayState.Frames.FindAll(x => (int)x.Time == (int)hitObject.GetEndTime() - msCounter);
                     if (fixFrames != null && fixFrames.Count() > 1)
                         break;
                     msCounter++;
@@ -230,25 +230,27 @@ namespace osu.Game.Rulesets.Catch.UI
                     if (fixFrame != null)
                     {
                         if ((int)fixFrame.Time == (int)hitObject.GetEndTime() && fixFrames.Count() > 1)
-                        {
                             X = fixFrame.Position;
-                        }
                         else
                         {
                             msCounter = 1;
                             List<ReplayFrame>? fixEndFrames = null;
-                            while (fixEndFrames == null || fixEndFrames.Count() <= 0)
+
+                            while ((fixEndFrames == null || fixEndFrames.Count() <= 0) && replayState.Frames.Exists(x => (int)x.Time >= (int)hitObject.GetEndTime() + msCounter))
                             {
-                                fixEndFrames = replayState.Frames?.FindAll(x => (int)x.Time == (int)hitObject.GetEndTime() + msCounter);
+                                fixEndFrames = replayState.Frames.FindAll(x => (int)x.Time == (int)hitObject.GetEndTime() + msCounter);
                                 if (fixEndFrames != null && fixEndFrames.Count() > 1)
                                     break;
                                 msCounter++;
                             }
-                            CatchReplayFrame endFixFrame = (CatchReplayFrame)fixEndFrames.ToArray()[0];
-                            X = Interpolation.ValueAt((int)hitObject.StartTime, fixFrame.Position, endFixFrame.Position, fixFrame.Time, endFixFrame.Time);
+                            CatchReplayFrame endFixFrame;
+                            if (fixEndFrames != null)
+                            {
+                                endFixFrame = (CatchReplayFrame)fixEndFrames.ToArray()[0];
+                                X = Interpolation.ValueAt((int)hitObject.StartTime, fixFrame.Position, endFixFrame.Position, fixFrame.Time, endFixFrame.Time);
+                            }
                         }
                     }
-
                 }
             }
 
