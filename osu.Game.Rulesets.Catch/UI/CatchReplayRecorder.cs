@@ -18,6 +18,11 @@ namespace osu.Game.Rulesets.Catch.UI
             : base(target)
         {
             this.playfield = playfield;
+
+            playfield.NewResult += (d, r) =>
+            {
+                HasJudgement = true;
+            };
         }
 
         protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<CatchAction> actions, ReplayFrame previousFrame)

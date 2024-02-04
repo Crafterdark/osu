@@ -29,6 +29,8 @@ namespace osu.Game.Rulesets.UI
 
         public int RecordFrameRate = 60;
 
+        public bool HasJudgement;
+
         [Resolved]
         private SpectatorClient spectatorClient { get; set; }
 
@@ -50,7 +52,8 @@ namespace osu.Game.Rulesets.UI
         protected override void Update()
         {
             base.Update();
-            recordFrame(false);
+            recordFrame(HasJudgement);
+            HasJudgement = false;
         }
 
         protected override bool OnMouseMove(MouseMoveEvent e)
