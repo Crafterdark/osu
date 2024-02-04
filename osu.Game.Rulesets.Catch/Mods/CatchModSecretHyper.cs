@@ -11,9 +11,9 @@ namespace osu.Game.Rulesets.Catch.Mods
 {
     public class CatchModSecretHyper : Mod, IApplicableToDrawableHitObject
     {
-        public override LocalisableString Description => @"Hyperdash effect on fruits is no longer visible...";
+        public override LocalisableString Description => @"Hyperdash on fruits is no longer visible...";
         public override string Name => "Secret Hyper";
-        public override double ScoreMultiplier => UsesDefaultConfiguration ? 1 : 1;
+        public override double ScoreMultiplier => 1;
         public override string Acronym => "SH";
         public override ModType Type => ModType.Fun;
 
