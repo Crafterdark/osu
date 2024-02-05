@@ -21,7 +21,7 @@ namespace osu.Game.Rulesets.Osu.UI
             };
         }
 
-        protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<OsuAction> actions, ReplayFrame previousFrame)
+        protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<OsuAction> actions, ReplayFrame previousFrame, TypeCaller typeCaller)
             => new OsuReplayFrame(Time.Current, mousePosition, actions.ToArray());
     }
 }

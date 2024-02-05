@@ -162,7 +162,7 @@ namespace osu.Game.Rulesets.Mania.UI
 
         protected override ReplayInputHandler CreateReplayInputHandler(Replay replay) => new ManiaFramedReplayInputHandler(replay);
 
-        protected override ReplayRecorder CreateReplayRecorder(Score score) => new ManiaReplayRecorder(score);
+        protected override ReplayRecorder CreateReplayRecorder(Score score) => new ManiaReplayRecorder(score, Playfield);
 
         protected override void Dispose(bool isDisposing)
         {

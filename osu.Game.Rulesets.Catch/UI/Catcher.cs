@@ -15,9 +15,11 @@ using osu.Game.Configuration;
 using osu.Game.Rulesets.Catch.Judgements;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.Objects.Drawables;
+using osu.Game.Rulesets.Catch.Replays;
 using osu.Game.Rulesets.Catch.Skinning;
 using osu.Game.Rulesets.Judgements;
 using osu.Game.Rulesets.Objects.Legacy;
+using osu.Game.Rulesets.UI;
 using osu.Game.Skinning;
 using osuTK;
 using osuTK.Graphics;
@@ -203,6 +205,17 @@ namespace osu.Game.Rulesets.Catch.UI
         {
             if (!(hitObject is PalpableCatchHitObject fruit))
                 return false;
+
+            //Note: This might be removed in the future. Currently CanCatch might run after the current CatchReplayFrame, so this code is added to "catch" up to the replay. (To get the same judgements)
+            if (GetContainingInputManager().CurrentState is RulesetInputManagerInputState<CatchAction> { LastReplayState: CatchFramedReplayInputHandler.CatchReplayState replayState })
+            {
+                var syncFrame = (CatchReplayFrame?)replayState.Frames?.Find(x => x.Time >= (int)hitObject.StartTime && ((CatchReplayFrame)x).LastFrameExists);
+
+                if (syncFrame != null)
+                {
+                    X = syncFrame.Position;
+                }
+            }
 
             float halfCatchWidth = CatchWidth * 0.5f;
             return fruit.EffectiveX >= X - halfCatchWidth &&

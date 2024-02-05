@@ -15,6 +15,7 @@ namespace osu.Game.Rulesets.Catch.Replays
 
         public float Position;
         public bool Dashing;
+        public bool LastFrameExists;
 
         public CatchReplayFrame()
         {
@@ -42,6 +43,7 @@ namespace osu.Game.Rulesets.Catch.Replays
         {
             Position = currentFrame.Position.X;
             Dashing = currentFrame.ButtonState == ReplayButtonState.Left1;
+            LastFrameExists = lastFrame != null;
 
             if (Dashing)
                 Actions.Add(CatchAction.Dash);
