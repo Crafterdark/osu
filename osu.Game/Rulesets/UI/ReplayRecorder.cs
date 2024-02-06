@@ -61,7 +61,7 @@ namespace osu.Game.Rulesets.UI
 
         protected override bool OnMouseMove(MouseMoveEvent e)
         {
-            recordFrame(false, FrameRecordHandler.Input);
+            recordFrame(false, FrameRecordHandler.Mouse);
             return base.OnMouseMove(e);
         }
 
@@ -80,7 +80,7 @@ namespace osu.Game.Rulesets.UI
 
         private void recordFrame(bool important, FrameRecordHandler recordHandler)
         {
-            var last = target.Replay.Frames.LastOrDefault();
+            var last = GetLastFrameRecordHandler(recordHandler, target.Replay.Frames);
 
             if (!important && last != null && Time.Current - last.Time < (1000d / RecordFrameRate))
                 return;
@@ -97,6 +97,7 @@ namespace osu.Game.Rulesets.UI
             }
         }
 
+        protected virtual ReplayFrame GetLastFrameRecordHandler(FrameRecordHandler recordHandler, List<ReplayFrame> replayFrames) => replayFrames.LastOrDefault();
         protected abstract ReplayFrame HandleFrame(Vector2 mousePosition, List<T> actions, ReplayFrame previousFrame, FrameRecordHandler recordHandler);
     }
 

@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System.Collections.Generic;
+using System.Linq;
 using osu.Game.Rulesets.Catch.Replays;
 using osu.Game.Rulesets.Replays;
 using osu.Game.Rulesets.UI;
@@ -25,6 +26,8 @@ namespace osu.Game.Rulesets.Catch.UI
             };
         }
 
+        protected override ReplayFrame? GetLastFrameRecordHandler(FrameRecordHandler recordHandler, List<ReplayFrame> replayFrames) => replayFrames.Where(x => ((CatchReplayFrame)x).RecordHandler == recordHandler).LastOrDefault();
+
         protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<CatchAction> actions, ReplayFrame previousFrame, FrameRecordHandler recordHandler)
         {
             if (recordHandler == FrameRecordHandler.Judgement)
@@ -33,7 +36,9 @@ namespace osu.Game.Rulesets.Catch.UI
                 HasJudgement = false;
             }
 
-            return new CatchReplayFrame(Time.Current, playfield.Catcher.X, actions.Contains(CatchAction.Dash), (int)recordHandler, previousFrame as CatchReplayFrame);
+            int direction = actions.Contains(CatchAction.MoveLeft) ? -1 : (actions.Contains(CatchAction.MoveRight) ? 1 : 0);
+
+            return new CatchReplayFrame(Time.Current, playfield.Catcher.X, actions.Contains(CatchAction.Dash), direction, (int)recordHandler, previousFrame as CatchReplayFrame);
         }
     }
 }
