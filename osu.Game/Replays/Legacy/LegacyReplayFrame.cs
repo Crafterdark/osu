@@ -57,13 +57,13 @@ namespace osu.Game.Replays.Legacy
         [IgnoreMember]
         public int RecordHandler;
 
-        public LegacyReplayFrame(double time, float? mouseX, float? mouseY, ReplayButtonState buttonState, int isUpdate = 0)
+        public LegacyReplayFrame(double time, float? mouseX, float? mouseY, ReplayButtonState buttonState, int recordHandler = 0)
             : base(time)
         {
             MouseX = mouseX;
             MouseY = mouseY;
             ButtonState = buttonState;
-            RecordHandler = isUpdate;
+            RecordHandler = recordHandler;
         }
 
         public override string ToString()
