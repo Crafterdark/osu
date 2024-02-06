@@ -25,18 +25,15 @@ namespace osu.Game.Rulesets.Catch.UI
             };
         }
 
-        protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<CatchAction> actions, ReplayFrame previousFrame, TypeCaller typeCaller)
+        protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<CatchAction> actions, ReplayFrame previousFrame, FrameRecordHandler recordHandler)
         {
-            //If the current frame is a judgement then don't store the previous frame, otherwise store it
-            int isUpdate = 0;
-
-            if (typeCaller == TypeCaller.Update)
+            if (recordHandler == FrameRecordHandler.Judgement)
             {
+                //Reset judgement status for the next frame
                 HasJudgement = false;
-                isUpdate = 1;
             }
 
-            return new CatchReplayFrame(Time.Current, playfield.Catcher.X, actions.Contains(CatchAction.Dash), isUpdate, previousFrame as CatchReplayFrame);
+            return new CatchReplayFrame(Time.Current, playfield.Catcher.X, actions.Contains(CatchAction.Dash), (int)recordHandler, previousFrame as CatchReplayFrame);
         }
     }
 }

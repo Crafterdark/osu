@@ -274,16 +274,16 @@ namespace osu.Game.Scoring.Legacy
                 if (diff < 0)
                     continue;
 
-                int isUpdate = 0;
+                int recordHandler = 0;
 
                 if (split.Length == 5)
-                    isUpdate = Parsing.ParseInt(split[4]); ;
+                    recordHandler = Parsing.ParseInt(split[4]);
 
                 currentFrame = convertFrame(new LegacyReplayFrame(lastTime,
                 mouseX,
                 mouseY,
                 (ReplayButtonState)Parsing.ParseInt(split[3]),
-                isUpdate), currentFrame);
+                recordHandler), currentFrame);
 
                 replay.Frames.Add(currentFrame);
             }

@@ -6,6 +6,7 @@ using osu.Game.Beatmaps;
 using osu.Game.Replays.Legacy;
 using osu.Game.Rulesets.Replays;
 using osu.Game.Rulesets.Replays.Types;
+using osu.Game.Rulesets.UI;
 
 namespace osu.Game.Rulesets.Catch.Replays
 {
@@ -15,23 +16,23 @@ namespace osu.Game.Rulesets.Catch.Replays
 
         public float Position;
         public bool Dashing;
-        public bool IsUpdateFrame;
+        public FrameRecordHandler RecordHandler;
 
         public CatchReplayFrame()
         {
         }
 
-        public CatchReplayFrame(double time, float? position = null, bool dashing = false, int isUpdate = 0, CatchReplayFrame? lastFrame = null)
+        public CatchReplayFrame(double time, float? position = null, bool dashing = false, int recordHandler = 0, CatchReplayFrame? lastFrame = null)
             : base(time)
         {
             Position = position ?? -1;
             Dashing = dashing;
-            IsUpdateFrame = isUpdate > 0;
+            RecordHandler = (FrameRecordHandler)recordHandler;
 
             if (Dashing)
                 Actions.Add(CatchAction.Dash);
 
-            if (lastFrame != null && !IsUpdateFrame)
+            if (lastFrame != null && RecordHandler == FrameRecordHandler.Input)
             {
                 if (Position > lastFrame.Position)
                     lastFrame.Actions.Add(CatchAction.MoveRight);
@@ -44,13 +45,13 @@ namespace osu.Game.Rulesets.Catch.Replays
         {
             Position = currentFrame.Position.X;
             Dashing = currentFrame.ButtonState == ReplayButtonState.Left1;
-            IsUpdateFrame = currentFrame.IsUpdate > 0;
+            RecordHandler = (FrameRecordHandler)currentFrame.RecordHandler;
 
             if (Dashing)
                 Actions.Add(CatchAction.Dash);
 
             // this probably needs some cross-checking with osu-stable to ensure it is actually correct.
-            if (lastFrame is CatchReplayFrame lastCatchFrame && !IsUpdateFrame)
+            if (lastFrame is CatchReplayFrame lastCatchFrame && RecordHandler == FrameRecordHandler.Input)
             {
                 if (Position > lastCatchFrame.Position)
                     lastCatchFrame.Actions.Add(CatchAction.MoveRight);
@@ -65,7 +66,7 @@ namespace osu.Game.Rulesets.Catch.Replays
 
             if (Actions.Contains(CatchAction.Dash)) state |= ReplayButtonState.Left1;
 
-            return new LegacyReplayFrame(Time, Position, null, state, IsUpdateFrame ? 1 : 0);
+            return new LegacyReplayFrame(Time, Position, null, state, (int)RecordHandler);
         }
     }
 }

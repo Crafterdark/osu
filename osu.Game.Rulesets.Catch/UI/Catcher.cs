@@ -209,7 +209,7 @@ namespace osu.Game.Rulesets.Catch.UI
             //Note: This might be removed in the future. Currently CanCatch might run after the current CatchReplayFrame, so this code is added to "catch" up to the replay. (To get the same judgements)
             if (GetContainingInputManager().CurrentState is RulesetInputManagerInputState<CatchAction> { LastReplayState: CatchFramedReplayInputHandler.CatchReplayState replayState })
             {
-                var syncFrame = (CatchReplayFrame?)replayState.Frames?.Find(x => x.Time >= (int)hitObject.StartTime && ((CatchReplayFrame)x).IsUpdateFrame);
+                var syncFrame = (CatchReplayFrame?)replayState.Frames?.Find(x => x.Time >= (int)hitObject.StartTime && ((CatchReplayFrame)x).RecordHandler == FrameRecordHandler.Judgement);
 
                 if (syncFrame != null)
                 {

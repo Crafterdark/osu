@@ -55,7 +55,7 @@ namespace osu.Game.Replays.Legacy
 
         [JsonIgnore]
         [IgnoreMember]
-        public int IsUpdate;
+        public int RecordHandler;
 
         public LegacyReplayFrame(double time, float? mouseX, float? mouseY, ReplayButtonState buttonState, int isUpdate = 0)
             : base(time)
@@ -63,12 +63,12 @@ namespace osu.Game.Replays.Legacy
             MouseX = mouseX;
             MouseY = mouseY;
             ButtonState = buttonState;
-            IsUpdate = isUpdate;
+            RecordHandler = isUpdate;
         }
 
         public override string ToString()
         {
-            return $"{Time}\t({MouseX},{MouseY})\t{MouseLeft}\t{MouseRight}\t{MouseLeft1}\t{MouseRight1}\t{MouseLeft2}\t{MouseRight2}\t{ButtonState}\t{IsUpdate}";
+            return $"{Time}\t({MouseX},{MouseY})\t{MouseLeft}\t{MouseRight}\t{MouseLeft1}\t{MouseRight1}\t{MouseLeft2}\t{MouseRight2}\t{ButtonState}\t{RecordHandler}";
         }
     }
 }

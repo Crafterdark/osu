@@ -21,7 +21,7 @@ namespace osu.Game.Rulesets.Taiko.UI
             };
         }
 
-        protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<TaikoAction> actions, ReplayFrame previousFrame, TypeCaller typeCaller) =>
+        protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<TaikoAction> actions, ReplayFrame previousFrame, FrameRecordHandler recordHandler) =>
             new TaikoReplayFrame(Time.Current, actions.ToArray());
     }
 }

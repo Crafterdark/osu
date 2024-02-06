@@ -21,7 +21,7 @@ namespace osu.Game.Rulesets.Mania.UI
             };
         }
 
-        protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<ManiaAction> actions, ReplayFrame previousFrame, TypeCaller typeCaller)
+        protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<ManiaAction> actions, ReplayFrame previousFrame, FrameRecordHandler recordHandler)
             => new ManiaReplayFrame(Time.Current, actions.ToArray());
     }
 }

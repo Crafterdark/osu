@@ -151,7 +151,7 @@ namespace osu.Game.Scoring.Legacy
 
                         // Rounding because stable could only parse integral values
                         int time = (int)Math.Round(legacyFrame.Time + offset);
-                        replayData.Append(FormattableString.Invariant($"{time - lastTime}|{legacyFrame.MouseX ?? 0}|{legacyFrame.MouseY ?? 0}|{(int)legacyFrame.ButtonState}|{legacyFrame.IsUpdate},"));
+                        replayData.Append(FormattableString.Invariant($"{time - lastTime}|{legacyFrame.MouseX ?? 0}|{legacyFrame.MouseY ?? 0}|{(int)legacyFrame.ButtonState}|{legacyFrame.RecordHandler},"));
                         lastTime = time;
                     }
                 }

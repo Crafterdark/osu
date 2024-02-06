@@ -52,30 +52,33 @@ namespace osu.Game.Rulesets.UI
         protected override void Update()
         {
             base.Update();
+
             if (HasJudgement)
-                recordFrame(true, TypeCaller.Update);
+                recordFrame(true, FrameRecordHandler.Judgement);
+
+            recordFrame(false, FrameRecordHandler.Update);
         }
 
         protected override bool OnMouseMove(MouseMoveEvent e)
         {
-            recordFrame(false, TypeCaller.OnMouseMove);
+            recordFrame(false, FrameRecordHandler.Input);
             return base.OnMouseMove(e);
         }
 
         public bool OnPressed(KeyBindingPressEvent<T> e)
         {
             pressedActions.Add(e.Action);
-            recordFrame(true, TypeCaller.OnPressed);
+            recordFrame(true, FrameRecordHandler.Input);
             return false;
         }
 
         public void OnReleased(KeyBindingReleaseEvent<T> e)
         {
             pressedActions.Remove(e.Action);
-            recordFrame(true, TypeCaller.OnReleased);
+            recordFrame(true, FrameRecordHandler.Input);
         }
 
-        private void recordFrame(bool important, TypeCaller typeCaller)
+        private void recordFrame(bool important, FrameRecordHandler recordHandler)
         {
             var last = target.Replay.Frames.LastOrDefault();
 
@@ -84,7 +87,7 @@ namespace osu.Game.Rulesets.UI
 
             var position = ScreenSpaceToGamefield?.Invoke(inputManager.CurrentState.Mouse.Position) ?? inputManager.CurrentState.Mouse.Position;
 
-            var frame = HandleFrame(position, pressedActions, last, typeCaller);
+            var frame = HandleFrame(position, pressedActions, last, recordHandler);
 
             if (frame != null)
             {
@@ -94,18 +97,11 @@ namespace osu.Game.Rulesets.UI
             }
         }
 
-        protected abstract ReplayFrame HandleFrame(Vector2 mousePosition, List<T> actions, ReplayFrame previousFrame, TypeCaller typeCaller);
+        protected abstract ReplayFrame HandleFrame(Vector2 mousePosition, List<T> actions, ReplayFrame previousFrame, FrameRecordHandler typeCaller);
     }
 
     public abstract partial class ReplayRecorder : Component
     {
         public Func<Vector2, Vector2> ScreenSpaceToGamefield;
-    }
-    public enum TypeCaller
-    {
-        OnPressed,
-        OnReleased,
-        OnMouseMove,
-        Update
     }
 }
