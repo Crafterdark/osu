@@ -93,7 +93,6 @@ namespace osu.Game.Rulesets.UI
                 spectatorClient?.HandleFrame(frame);
             }
         }
-        //protected virtual bool HandleActionOnUpdate(List<T> actions) => actions.Any();
 
         protected abstract ReplayFrame HandleFrame(Vector2 mousePosition, List<T> actions, ReplayFrame previousFrame, TypeCaller typeCaller);
     }

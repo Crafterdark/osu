@@ -110,9 +110,9 @@ namespace osu.Game.Rulesets.Catch.Replays
             }
         }
 
-        private void addFrame(double time, float? position = null, bool dashing = false)
+        private void addFrame(double time, float? position = null, bool dashing = false, int isUpdate = 0)
         {
-            Frames.Add(new CatchReplayFrame(time, position, dashing, LastFrame));
+            Frames.Add(new CatchReplayFrame(time, position, dashing, isUpdate, LastFrame));
         }
     }
 }

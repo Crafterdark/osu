@@ -15,22 +15,23 @@ namespace osu.Game.Rulesets.Catch.Replays
 
         public float Position;
         public bool Dashing;
-        public bool LastFrameExists;
+        public bool IsUpdateFrame;
 
         public CatchReplayFrame()
         {
         }
 
-        public CatchReplayFrame(double time, float? position = null, bool dashing = false, CatchReplayFrame? lastFrame = null)
+        public CatchReplayFrame(double time, float? position = null, bool dashing = false, int isUpdate = 0, CatchReplayFrame? lastFrame = null)
             : base(time)
         {
             Position = position ?? -1;
             Dashing = dashing;
+            IsUpdateFrame = isUpdate > 0;
 
             if (Dashing)
                 Actions.Add(CatchAction.Dash);
 
-            if (lastFrame != null)
+            if (lastFrame != null && !IsUpdateFrame)
             {
                 if (Position > lastFrame.Position)
                     lastFrame.Actions.Add(CatchAction.MoveRight);
@@ -43,13 +44,13 @@ namespace osu.Game.Rulesets.Catch.Replays
         {
             Position = currentFrame.Position.X;
             Dashing = currentFrame.ButtonState == ReplayButtonState.Left1;
-            LastFrameExists = lastFrame != null;
+            IsUpdateFrame = currentFrame.IsUpdate > 0;
 
             if (Dashing)
                 Actions.Add(CatchAction.Dash);
 
             // this probably needs some cross-checking with osu-stable to ensure it is actually correct.
-            if (lastFrame is CatchReplayFrame lastCatchFrame)
+            if (lastFrame is CatchReplayFrame lastCatchFrame && !IsUpdateFrame)
             {
                 if (Position > lastCatchFrame.Position)
                     lastCatchFrame.Actions.Add(CatchAction.MoveRight);
@@ -64,7 +65,7 @@ namespace osu.Game.Rulesets.Catch.Replays
 
             if (Actions.Contains(CatchAction.Dash)) state |= ReplayButtonState.Left1;
 
-            return new LegacyReplayFrame(Time, Position, null, state);
+            return new LegacyReplayFrame(Time, Position, null, state, IsUpdateFrame ? 1 : 0);
         }
     }
 }
