@@ -8,6 +8,7 @@ namespace osu.Game.Rulesets.UI
         Update = 0,
         Input = 1,
         Judgement = 2,
-        Mouse = 3
+        Mouse = 3,
+        LegacyUpdateJudgement = 4
     }
 }

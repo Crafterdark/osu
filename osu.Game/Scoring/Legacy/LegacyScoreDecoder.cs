@@ -21,6 +21,7 @@ using osu.Game.Rulesets;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Replays;
 using osu.Game.Rulesets.Scoring;
+using osu.Game.Rulesets.UI;
 using SharpCompress.Compressors.LZMA;
 
 namespace osu.Game.Scoring.Legacy
@@ -114,7 +115,7 @@ namespace osu.Game.Scoring.Legacy
                     compressedScoreInfo = sr.ReadByteArray();
 
                 if (compressedReplay?.Length > 0)
-                    readCompressedData(compressedReplay, reader => readLegacyReplay(score.Replay, reader));
+                    readCompressedData(compressedReplay, reader => readLegacyReplay(score.Replay, reader, scoreInfo.IsLegacyScore));
 
                 if (compressedScoreInfo?.Length > 0)
                 {
@@ -237,12 +238,18 @@ namespace osu.Game.Scoring.Legacy
 #pragma warning restore CS0618
         }
 
-        private void readLegacyReplay(Replay replay, StreamReader reader)
+        private void readLegacyReplay(Replay replay, StreamReader reader, bool isLegacyScore)
         {
             float lastTime = beatmapOffset;
             ReplayFrame currentFrame = null;
 
             string[] frames = reader.ReadToEnd().Split(',');
+
+            float lastLegacyMouseX = 256f;
+            bool lastDashStatus = false;
+            int lastDirection = 0;
+            bool currentDashStatus;
+            int currentDirection;
 
             for (int i = 0; i < frames.Length; i++)
             {
@@ -260,8 +267,34 @@ namespace osu.Game.Scoring.Legacy
                 float diff = Parsing.ParseFloat(split[0]);
                 float mouseX = Parsing.ParseFloat(split[1], Parsing.MAX_COORDINATE_VALUE);
                 float mouseY = Parsing.ParseFloat(split[2], Parsing.MAX_COORDINATE_VALUE);
+                int recordHandler;
 
                 lastTime += diff;
+
+                //Lazer frames retrieved with their expected data.
+                if (!isLegacyScore)
+                {
+                    currentDirection = Parsing.ParseInt(split[4]);
+                    recordHandler = Parsing.ParseInt(split[5]);
+                }
+
+                //Legacy frames converted into their respective types.
+                else
+                {
+                    currentDirection = (lastLegacyMouseX > mouseX) ? -1 : (lastLegacyMouseX < mouseX) ? 1 : 0;
+                    currentDashStatus = Parsing.ParseInt(split[3]) > 0;
+                    if (currentDashStatus != lastDashStatus || currentDirection != lastDirection)
+                    {
+                        recordHandler = (int)FrameRecordHandler.Input;
+                    }
+                    else
+                    {
+                        recordHandler = (int)FrameRecordHandler.LegacyUpdateJudgement;
+                    }
+                    lastLegacyMouseX = mouseX;
+                    lastDashStatus = currentDashStatus;
+                    lastDirection = currentDirection;
+                }
 
                 if (i < 2 && mouseX == 256 && mouseY == -500)
                     // at the start of the replay, stable places two replay frames, at time 0 and SkipBoundary - 1, respectively.
@@ -274,20 +307,11 @@ namespace osu.Game.Scoring.Legacy
                 if (diff < 0)
                     continue;
 
-                int direction = 0;
-                int recordHandler = 0;
-
-                if (split.Length == 6)
-                {
-                    direction = Parsing.ParseInt(split[4]);
-                    recordHandler = Parsing.ParseInt(split[5]);
-                }
-
                 currentFrame = convertFrame(new LegacyReplayFrame(lastTime,
                 mouseX,
                 mouseY,
                 (ReplayButtonState)Parsing.ParseInt(split[3]),
-                direction,
+                currentDirection,
                 recordHandler), currentFrame);
 
                 replay.Frames.Add(currentFrame);
