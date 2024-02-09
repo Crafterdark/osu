@@ -35,24 +35,10 @@ namespace osu.Game.Rulesets.Catch.Replays
             if (Dashing)
                 Actions.Add(CatchAction.Dash);
 
-            if (Direction == 0)
-                return;
-            else if (Direction != 0)
-            {
-                if (Direction == 1)
-                    Actions.Add(CatchAction.MoveRight);
-                else
-                    Actions.Add(CatchAction.MoveLeft);
-                return;
-            }
-
-            if (lastFrame != null)
-            {
-                if (Position > lastFrame.Position)
-                    lastFrame.Actions.Add(CatchAction.MoveRight);
-                else if (Position < lastFrame.Position)
-                    lastFrame.Actions.Add(CatchAction.MoveLeft);
-            }
+            if (Direction == 1)
+                Actions.Add(CatchAction.MoveRight);
+            else if (Direction == -1)
+                Actions.Add(CatchAction.MoveLeft);
         }
 
         public void FromLegacy(LegacyReplayFrame currentFrame, IBeatmap beatmap, ReplayFrame? lastFrame = null)
@@ -65,25 +51,10 @@ namespace osu.Game.Rulesets.Catch.Replays
             if (Dashing)
                 Actions.Add(CatchAction.Dash);
 
-            if (Direction == 0)
-                return;
-            else if (Direction != 0)
-            {
-                if (Direction == 1)
-                    Actions.Add(CatchAction.MoveRight);
-                else
-                    Actions.Add(CatchAction.MoveLeft);
-                return;
-            }
-
-            // this probably needs some cross-checking with osu-stable to ensure it is actually correct.
-            if (lastFrame is CatchReplayFrame lastCatchFrame)
-            {
-                if (Position > lastCatchFrame.Position)
-                    lastCatchFrame.Actions.Add(CatchAction.MoveRight);
-                else if (Position < lastCatchFrame.Position)
-                    lastCatchFrame.Actions.Add(CatchAction.MoveLeft);
-            }
+            if (Direction == 1)
+                Actions.Add(CatchAction.MoveRight);
+            else if (Direction == -1)
+                Actions.Add(CatchAction.MoveLeft);
         }
 
         public LegacyReplayFrame ToLegacy(IBeatmap beatmap)

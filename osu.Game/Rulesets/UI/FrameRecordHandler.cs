@@ -9,6 +9,7 @@ namespace osu.Game.Rulesets.UI
         Input = 1,
         Judgement = 2,
         Mouse = 3,
-        LegacyUpdateJudgement = 4
+        LegacyUpdateJudgement = 4,
+        LegacyInputJudgement = 5,
     }
 }
