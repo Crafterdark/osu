@@ -209,7 +209,16 @@ namespace osu.Game.Rulesets.Catch.UI
             //Note: This might be removed in the future. Currently CanCatch might run after the current CatchReplayFrame, so this code is added to "catch" up to the replay. (To get the same judgements)
             if (GetContainingInputManager().CurrentState is RulesetInputManagerInputState<CatchAction> { LastReplayState: CatchFramedReplayInputHandler.CatchReplayState replayState })
             {
-                var syncFrame = (CatchReplayFrame?)replayState.Frames?.Find(x => x.Time >= (int)hitObject.StartTime && FrameRecordHandlerUtils.IsRecordHandlerValidForJudgement(((CatchReplayFrame)x).RecordHandler));
+                CatchReplayFrame? syncFrame;
+
+                if (replayState.Frames != null && replayState.Frames.Exists(x => ((CatchReplayFrame)x).RecordHandler == FrameRecordHandler.LegacyUpdateJudgement || ((CatchReplayFrame)x).RecordHandler == FrameRecordHandler.LegacyInputJudgement))
+                {
+                    //NOTE: WORKAROUND [!!!] This code is only meant to run for Classic replays as a way to minimize the mismatching caused by floating point errors. When a new proper fix for Lazer to Stable maps will be done and the maps will entirely match... then this code must be entirely removed.
+                    syncFrame = (CatchReplayFrame?)replayState.Frames?.Find(x => x.Time >= ((int)hitObject.StartTime - 1) && FrameRecordHandlerUtils.IsRecordHandlerValidForJudgement(((CatchReplayFrame)x).RecordHandler));
+                }
+
+                else
+                    syncFrame = (CatchReplayFrame?)replayState.Frames?.Find(x => x.Time >= (int)hitObject.StartTime && FrameRecordHandlerUtils.IsRecordHandlerValidForJudgement(((CatchReplayFrame)x).RecordHandler));
 
                 if (syncFrame != null)
                 {
