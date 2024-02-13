@@ -140,6 +140,8 @@ namespace osu.Game.Rulesets.Catch.UI
         private readonly DrawablePool<CaughtBanana> caughtBananaPool;
         private readonly DrawablePool<CaughtDroplet> caughtDropletPool;
 
+        private bool isCatcherLegacy;
+
         public Catcher(DroppedObjectContainer droppedObjectTarget, IBeatmapDifficultyInfo? difficulty = null)
         {
             this.droppedObjectTarget = droppedObjectTarget;
@@ -199,6 +201,11 @@ namespace osu.Game.Rulesets.Catch.UI
         public static float CalculateCatchWidth(IBeatmapDifficultyInfo difficulty) => CalculateCatchWidth(calculateScale(difficulty));
 
         /// <summary>
+        /// Set the catcher legacy status.
+        /// </summary>
+        public void SetCatcherLegacy(bool legacyStatus = false) => isCatcherLegacy = legacyStatus;
+
+        /// <summary>
         /// Determine if this catcher can catch a <see cref="CatchHitObject"/> in the current position.
         /// </summary>
         public bool CanCatch(CatchHitObject hitObject)
@@ -211,9 +218,9 @@ namespace osu.Game.Rulesets.Catch.UI
             {
                 CatchReplayFrame? syncFrame;
 
-                if (replayState.Frames != null && replayState.Frames.Exists(x => ((CatchReplayFrame)x).RecordHandler == FrameRecordHandler.LegacyUpdateJudgement || ((CatchReplayFrame)x).RecordHandler == FrameRecordHandler.LegacyInputJudgement))
+                if (isCatcherLegacy)
                 {
-                    //NOTE: WORKAROUND [!!!] This code is only meant to run for Classic replays as a way to minimize the mismatching caused by floating point errors. When a new proper fix for Lazer to Stable maps will be done and the maps will entirely match... then this code must be entirely removed.
+                    //NOTE: WORKAROUND [!!!] This code is only meant to run for Classic (Legacy) replays as a way to minimize the mismatching caused by floating point errors. When a new proper fix for Lazer to Stable maps will be done and the maps will entirely match... then this code must be entirely removed.
                     syncFrame = (CatchReplayFrame?)replayState.Frames?.Find(x => x.Time >= ((int)hitObject.StartTime - 1) && FrameRecordHandlerUtils.IsRecordHandlerValidForJudgement(((CatchReplayFrame)x).RecordHandler));
                 }
 

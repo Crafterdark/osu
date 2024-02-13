@@ -53,6 +53,8 @@ namespace osu.Game.Scoring.Legacy
 
                 scoreInfo.IsLegacyScore = version < LegacyScoreEncoder.FIRST_LAZER_VERSION;
 
+                score.Replay.IsLegacy = scoreInfo.IsLegacyScore;
+
                 // TotalScoreVersion gets initialised to LATEST_VERSION.
                 // In the case where the incoming score has either an osu!stable or old lazer version, we need
                 // to mark it with the correct version increment to trigger reprocessing to new standardised scoring.
@@ -89,7 +91,7 @@ namespace osu.Game.Scoring.Legacy
 
                 // lazer replays get a really high version number.
                 if (version < LegacyScoreEncoder.FIRST_LAZER_VERSION)
-                    scoreInfo.Mods = scoreInfo.Mods.Append(currentRuleset.CreateMod<ModClassic>()).ToArray();
+                    scoreInfo.Mods = scoreInfo.Mods.Append(currentRuleset.CreateMod<ModClassicLegacy>()).ToArray();
 
                 currentBeatmap = workingBeatmap.GetPlayableBeatmap(currentRuleset.RulesetInfo, scoreInfo.Mods);
                 scoreInfo.BeatmapInfo = currentBeatmap.BeatmapInfo;
@@ -115,7 +117,7 @@ namespace osu.Game.Scoring.Legacy
                     compressedScoreInfo = sr.ReadByteArray();
 
                 if (compressedReplay?.Length > 0)
-                    readCompressedData(compressedReplay, reader => readLegacyReplay(score.Replay, reader, scoreInfo.IsLegacyScore));
+                    readCompressedData(compressedReplay, reader => readLegacyReplay(score.Replay, reader));
 
                 if (compressedScoreInfo?.Length > 0)
                 {
@@ -266,7 +268,7 @@ namespace osu.Game.Scoring.Legacy
             return true;
         }
 
-        private void readLegacyReplay(Replay replay, StreamReader reader, bool isLegacyScore)
+        private void readLegacyReplay(Replay replay, StreamReader reader)
         {
             float lastTime = beatmapOffset;
             ReplayFrame currentFrame = null;
@@ -300,7 +302,7 @@ namespace osu.Game.Scoring.Legacy
                     continue;
 
                 //Lazer frames retrieved with their expected data.
-                if (!isLegacyScore)
+                if (!replay.IsLegacy)
                 {
                     currentDirection = Parsing.ParseInt(split[4]);
                     recordHandler = Parsing.ParseInt(split[5]);

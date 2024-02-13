@@ -16,6 +16,11 @@ namespace osu.Game.Replays
         /// </summary>
         public bool HasReceivedAllFrames = true;
 
+        /// <summary>
+        /// Whether this replay is older than the first Lazer version (Legacy).
+        /// </summary>
+        public bool IsLegacy;
+
         public List<ReplayFrame> Frames = new List<ReplayFrame>();
 
         public Replay DeepClone()

@@ -171,6 +171,7 @@ namespace osu.Game.Rulesets.Taiko
                     return new Mod[]
                     {
                         new ModScoreV2(),
+                        new ModClassicLegacy(),
                     };
 
                 default:

@@ -295,6 +295,7 @@ namespace osu.Game.Rulesets.Mania
                     return new Mod[]
                     {
                         new ModScoreV2(),
+                        new ModClassicLegacy(),
                     };
 
                 default:
