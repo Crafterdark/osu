@@ -6,6 +6,7 @@ using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Input.Bindings;
 using osu.Framework.Input.Events;
+using osu.Framework.Logging;
 using osu.Game.Rulesets.Catch.Objects.Drawables;
 using osu.Game.Rulesets.Catch.Replays;
 using osu.Game.Rulesets.Judgements;
@@ -45,6 +46,9 @@ namespace osu.Game.Rulesets.Catch.UI
 
         // TODO: support replay rewind
         private bool lastHyperDashState;
+
+        //Current Clock Time for the catcher to receive a movement input 
+        private double pressedInputMovementClockCurrentTime;
 
         /// <remarks>
         /// <see cref="Catcher"/> must be set before loading.
@@ -86,9 +90,19 @@ namespace osu.Game.Rulesets.Catch.UI
 
             var replayState = (GetContainingInputManager().CurrentState as RulesetInputManagerInputState<CatchAction>)?.LastReplayState as CatchFramedReplayInputHandler.CatchReplayState;
 
+            if (pressedInputMovementClockCurrentTime > 0)
+            {
+                pressedInputMovementClockCurrentTime = Math.Clamp(Clock.CurrentTime - pressedInputMovementClockCurrentTime, 0, double.PositiveInfinity);
+            }
+
+            double timeToUse = (pressedInputMovementClockCurrentTime > 0) ? pressedInputMovementClockCurrentTime : Clock.ElapsedFrameTime;
+
             SetCatcherPosition(
                 replayState?.CatcherX ??
-                (float)(Catcher.X + Catcher.Speed * currentDirection * Clock.ElapsedFrameTime));
+                (float)(Catcher.X + Catcher.Speed * currentDirection * timeToUse));
+
+            if (pressedInputMovementClockCurrentTime > 0)
+                pressedInputMovementClockCurrentTime = 0;
         }
 
         protected override void UpdateAfterChildren()
@@ -137,10 +151,12 @@ namespace osu.Game.Rulesets.Catch.UI
             switch (e.Action)
             {
                 case CatchAction.MoveLeft:
+                    pressedInputMovementClockCurrentTime = Clock.CurrentTime;
                     currentDirection--;
                     return true;
 
                 case CatchAction.MoveRight:
+                    pressedInputMovementClockCurrentTime = Clock.CurrentTime;
                     currentDirection++;
                     return true;
 
