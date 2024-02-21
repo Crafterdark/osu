@@ -16,6 +16,12 @@ namespace osu.Game.Rulesets.Catch.Tests
     [TestFixture]
     public class CatchBeatmapConversionTest : BeatmapConversionTest<ConvertValue>
     {
+        public CatchBeatmapConversionTest()
+        {
+            LazerConversionMappings = true;
+            StartTimeIsInteger = false;
+            PositionIsInteger = false;
+        }
         protected override string ResourceAssembly => "osu.Game.Rulesets.Catch.Tests";
 
         [TestCase("basic")]
@@ -61,21 +67,38 @@ namespace osu.Game.Rulesets.Catch.Tests
             {
                 case JuiceStream stream:
                     foreach (var nested in stream.NestedHitObjects)
-                        yield return new ConvertValue((CatchHitObject)nested);
+                        yield return new ConvertValue(ApplyPrecisionConversion((CatchHitObject)nested));
 
                     break;
 
                 case BananaShower shower:
                     foreach (var nested in shower.NestedHitObjects)
-                        yield return new ConvertValue((CatchHitObject)nested);
+                        yield return new ConvertValue(ApplyPrecisionConversion((CatchHitObject)nested));
 
                     break;
 
                 default:
-                    yield return new ConvertValue((CatchHitObject)hitObject);
+                    yield return new ConvertValue(ApplyPrecisionConversion((CatchHitObject)hitObject));
 
                     break;
             }
+        }
+
+
+        public CatchHitObject ApplyPrecisionConversion(CatchHitObject catchHitObject)
+        {
+            if (StartTimeIsInteger)
+                catchHitObject.StartTime = (int)catchHitObject.StartTime;
+
+            if (PositionIsInteger)
+            {
+                //Workaround to integer crop the position
+                float tempX = (int)catchHitObject.EffectiveX;
+                catchHitObject.OriginalX = tempX;
+                catchHitObject.XOffset = 0;
+            }
+
+            return catchHitObject;
         }
 
         protected override Ruleset CreateRuleset() => new CatchRuleset();

@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -33,6 +34,13 @@ namespace osu.Game.Tests.Beatmaps
     {
         private const string resource_namespace = "Testing.Beatmaps";
         private const string expected_conversion_suffix = "-expected-conversion";
+        private const string expected_lazer_conversion_suffix = "-expected-lazer-conversion";
+
+        public bool LazerConversionMappings { get; set; }
+
+        public bool StartTimeIsInteger { get; set; }
+
+        public bool PositionIsInteger { get; set; }
 
         protected abstract string ResourceAssembly { get; }
 
@@ -41,11 +49,23 @@ namespace osu.Game.Tests.Beatmaps
             var ourResult = convert(name, mods.Select(m => (Mod)Activator.CreateInstance(m)).ToArray());
             var expectedResult = read(name);
 
+            FileStream createdFile = null!;
+
+            if (LazerConversionMappings)
+            {
+                createdFile = createFile(name);
+            }
+
             foreach (var m in ourResult.Mappings)
                 m.PostProcess();
 
             foreach (var m in expectedResult.Mappings)
                 m.PostProcess();
+
+            if (createdFile != null)
+                writeToFile(createdFile, ourResult);
+
+            createdFile?.Close();
 
             Assert.Multiple(() =>
             {
@@ -172,7 +192,7 @@ namespace osu.Game.Tests.Beatmaps
             using (var resStream = openResource($"{resource_namespace}.{name}.osu"))
             using (var stream = new LineBufferedReader(resStream))
             {
-                var decoder = Decoder.GetDecoder<Beatmap>(stream);
+                var decoder = Game.Beatmaps.Formats.Decoder.GetDecoder<Beatmap>(stream);
                 ((LegacyBeatmapDecoder)decoder).ApplyOffsets = false;
                 var beatmap = decoder.Decode(stream);
 
@@ -187,6 +207,31 @@ namespace osu.Game.Tests.Beatmaps
         {
             string localPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).AsNonNull();
             return Assembly.LoadFrom(Path.Combine(localPath, $"{ResourceAssembly}.dll")).GetManifestResourceStream($@"{ResourceAssembly}.Resources.{name}");
+        }
+
+        private FileStream createFile(string name)
+        {
+            string localPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).AsNonNull();
+            string directoryName = Path.GetDirectoryName(localPath);
+
+            while (localPath != null)
+            {
+                if (Path.GetFileName(directoryName) == ResourceAssembly)
+                {
+                    return File.Create(directoryName + @"\" + "Resources\\Testing\\Beatmaps" + @"\" + name + expected_lazer_conversion_suffix + ".json");
+                }
+                else
+                    directoryName = Path.GetDirectoryName(directoryName);
+            }
+
+            return null;
+        }
+
+        private void writeToFile(FileStream fileToWrite, ConvertResult convertResult)
+        {
+            UTF8Encoding uTF8Encoding = new UTF8Encoding();
+            string jsonToStore = JsonConvert.SerializeObject(convertResult);
+            fileToWrite.Write(uTF8Encoding.GetBytes(jsonToStore), 0, uTF8Encoding.GetByteCount(jsonToStore));
         }
 
         /// <summary>
@@ -260,10 +305,10 @@ namespace osu.Game.Tests.Beatmaps
         [JsonProperty]
         public double StartTime;
 
-        [JsonIgnore]
+        [JsonProperty("Objects")]
         public List<TConvertValue> Objects = new List<TConvertValue>();
 
-        [JsonProperty("Objects")]
+        [JsonIgnore]
         private List<TConvertValue> setObjects
         {
             set => Objects = value;
