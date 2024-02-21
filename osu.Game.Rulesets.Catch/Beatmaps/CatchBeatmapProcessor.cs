@@ -80,7 +80,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                     case BananaShower bananaShower:
                         foreach (var banana in bananaShower.NestedHitObjects.OfType<Banana>())
                         {
-                            banana.XOffset = (float)(rng.NextDouble() * CatchPlayfield.WIDTH);
+                            banana.XOffset = (int)(rng.NextDouble() * CatchPlayfield.WIDTH);
                             rng.Next(); // osu!stable retrieved a random banana type
                             rng.Next(); // osu!stable retrieved a random banana rotation
                             rng.Next(); // osu!stable retrieved a random banana colour

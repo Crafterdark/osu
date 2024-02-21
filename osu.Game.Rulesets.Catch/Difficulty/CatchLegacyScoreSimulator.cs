@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using osu.Framework.Utils;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Catch.Mods;
 using osu.Game.Rulesets.Catch.Objects;
@@ -204,10 +205,16 @@ namespace osu.Game.Rulesets.Catch.Difficulty
                 {
                     foreach (var banana in bananaShower.NestedHitObjects)
                     {
-                        float? catcherX = ((CatchReplayFrame?)score.Replay.Frames.Find(x => x.Time >= (int)Math.Round(banana.StartTime)))?.Position;
-                        if (catcherX != null)
-                            if (CanCatchObject((CatchHitObject)banana, (float)catcherX, halfCatchWidth))
-                                caughtBananaCount++;
+                        CatchReplayFrame? startFrame = ((CatchReplayFrame?)score.Replay.Frames.FindLast(x => x.Time <= (int)banana.StartTime - 1));
+                        CatchReplayFrame? endFrame = ((CatchReplayFrame?)score.Replay.Frames.Find(x => x.Time >= (int)banana.StartTime));
+
+                        float? catcherXInterpolation = null;
+
+                        if (startFrame != null && endFrame != null)
+                            catcherXInterpolation = Interpolation.ValueAt((int)banana.StartTime, startFrame.Position, endFrame.Position, startFrame.Time, endFrame.Time);
+
+                        if (catcherXInterpolation != null && CanCatchObject((CatchHitObject)banana, (float)catcherXInterpolation, halfCatchWidth))
+                            caughtBananaCount++;
                     }
 
                     totalBananaCount += bananaShower.NestedHitObjects.Count;
