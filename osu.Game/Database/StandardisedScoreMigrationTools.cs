@@ -597,6 +597,29 @@ namespace osu.Game.Database
             }
         }
 
+        public static void SetLegacyLargeBonusCountOnScore(Score score, Ruleset ruleset, WorkingBeatmap beatmap)
+        {
+            var scoreInfo = score.ScoreInfo;
+
+            if (!scoreInfo.IsLegacyScore)
+                return;
+
+            if (ruleset is not ILegacyRuleset legacyRuleset)
+                return;
+
+            var mods = scoreInfo.Mods;
+            if (mods.Any(mod => mod is ModScoreV2))
+                return;
+
+            var playableBeatmap = beatmap.GetPlayableBeatmap(ruleset.RulesetInfo, scoreInfo.Mods);
+
+            if (playableBeatmap.HitObjects.Count == 0)
+                throw new InvalidOperationException("Beatmap contains no hit objects!");
+
+            ILegacyScoreSimulator sv1Simulator = legacyRuleset.CreateLegacyScoreSimulator();
+            sv1Simulator.SetLegacyLargeBonusCount(playableBeatmap, score, mods);
+        }
+
         private static double computeAccuracy(ScoreInfo scoreInfo, ScoreProcessor scoreProcessor)
         {
             int baseScore = scoreInfo.Statistics.Where(kvp => kvp.Key.AffectsAccuracy())

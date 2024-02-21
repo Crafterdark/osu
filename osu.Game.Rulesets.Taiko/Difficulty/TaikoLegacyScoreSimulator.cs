@@ -14,6 +14,7 @@ using osu.Game.Rulesets.Scoring.Legacy;
 using osu.Game.Rulesets.Taiko.Mods;
 using osu.Game.Rulesets.Taiko.Objects;
 using osu.Game.Rulesets.Taiko.Scoring;
+using osu.Game.Scoring;
 
 namespace osu.Game.Rulesets.Taiko.Difficulty
 {
@@ -239,6 +240,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             }
 
             return multiplier;
+        }
+
+        public void SetLegacyLargeBonusCount(IBeatmap beatmap, Score score, IReadOnlyList<Mod> mods)
+        {
         }
     }
 }

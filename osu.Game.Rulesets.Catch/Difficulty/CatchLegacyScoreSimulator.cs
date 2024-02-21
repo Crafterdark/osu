@@ -7,13 +7,16 @@ using System.Linq;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Catch.Mods;
 using osu.Game.Rulesets.Catch.Objects;
+using osu.Game.Rulesets.Catch.Replays;
 using osu.Game.Rulesets.Catch.Scoring;
+using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Objects;
 using osu.Game.Rulesets.Objects.Legacy;
 using osu.Game.Rulesets.Objects.Types;
 using osu.Game.Rulesets.Scoring;
 using osu.Game.Rulesets.Scoring.Legacy;
+using osu.Game.Scoring;
 
 namespace osu.Game.Rulesets.Catch.Difficulty
 {
@@ -186,6 +189,42 @@ namespace osu.Game.Rulesets.Catch.Difficulty
             }
 
             return multiplier;
+        }
+
+        public void SetLegacyLargeBonusCount(IBeatmap beatmap, Score score, IReadOnlyList<Mod> mods)
+        {
+            int totalBananaCount = 0;
+            int caughtBananaCount = 0;
+
+            double halfCatchWidth = Catcher.CalculateCatchWidth(beatmap.Difficulty) / 2;
+
+            foreach (var h in beatmap.HitObjects)
+            {
+                if (h is BananaShower bananaShower)
+                {
+                    foreach (var banana in bananaShower.NestedHitObjects)
+                    {
+                        float? catcherX = ((CatchReplayFrame?)score.Replay.Frames.Find(x => x.Time >= (int)Math.Round(banana.StartTime)))?.Position;
+                        if (catcherX != null)
+                            if (CanCatchObject((CatchHitObject)banana, (float)catcherX, halfCatchWidth))
+                                caughtBananaCount++;
+                    }
+
+                    totalBananaCount += bananaShower.NestedHitObjects.Count;
+                }
+            }
+
+            score.ScoreInfo.Statistics.Add(HitResult.LargeBonus, caughtBananaCount);
+            score.ScoreInfo.MaximumStatistics.Add(HitResult.LargeBonus, totalBananaCount);
+        }
+
+        public bool CanCatchObject(CatchHitObject hitObject, float catcherX, double halfCatchWidth)
+        {
+            if (!(hitObject is PalpableCatchHitObject fruit))
+                return false;
+
+            return fruit.EffectiveX >= catcherX - (float)halfCatchWidth &&
+                   fruit.EffectiveX <= catcherX + (float)halfCatchWidth;
         }
     }
 }

@@ -14,6 +14,7 @@ using osu.Game.Rulesets.Osu.Objects;
 using osu.Game.Rulesets.Osu.Scoring;
 using osu.Game.Rulesets.Scoring;
 using osu.Game.Rulesets.Scoring.Legacy;
+using osu.Game.Scoring;
 
 namespace osu.Game.Rulesets.Osu.Difficulty
 {
@@ -228,6 +229,10 @@ namespace osu.Game.Rulesets.Osu.Difficulty
             }
 
             return multiplier;
+        }
+
+        public void SetLegacyLargeBonusCount(IBeatmap beatmap, Score score, IReadOnlyList<Mod> mods)
+        {
         }
     }
 }

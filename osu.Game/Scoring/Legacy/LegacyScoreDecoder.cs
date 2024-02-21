@@ -139,6 +139,7 @@ namespace osu.Game.Scoring.Legacy
                 score.ScoreInfo.LegacyTotalScore = score.ScoreInfo.TotalScore;
 
             StandardisedScoreMigrationTools.UpdateFromLegacy(score.ScoreInfo, workingBeatmap);
+            StandardisedScoreMigrationTools.SetLegacyLargeBonusCountOnScore(score, currentRuleset, workingBeatmap);
 
             // before returning for database import, we must restore the database-sourced BeatmapInfo.
             // if not, the clone operation in GetPlayableBeatmap will cause a dereference and subsequent database exception.

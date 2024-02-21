@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Mods;
+using osu.Game.Scoring;
 
 namespace osu.Game.Rulesets.Scoring.Legacy
 {
@@ -26,5 +27,13 @@ namespace osu.Game.Rulesets.Scoring.Legacy
         /// <param name="difficulty">Extra difficulty parameters.</param>
         /// <returns>The legacy multiplier.</returns>
         double GetLegacyScoreMultiplier(IReadOnlyList<Mod> mods, LegacyBeatmapConversionDifficultyInfo difficulty);
+
+        /// <summary>
+        /// Returns the legacy large bonus count. This is only used during legacy score conversion.
+        /// </summary>
+        /// <param name="beatmap">The beatmap.</param>
+        /// <param name="score">The score data.</param>
+        /// <param name="mods">The mods.</param>
+        void SetLegacyLargeBonusCount(IBeatmap beatmap, Score score, IReadOnlyList<Mod> mods);
     }
 }

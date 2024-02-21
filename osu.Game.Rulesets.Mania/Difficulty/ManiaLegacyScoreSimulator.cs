@@ -8,6 +8,7 @@ using osu.Game.Rulesets.Mania.Beatmaps;
 using osu.Game.Rulesets.Mania.Mods;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Scoring.Legacy;
+using osu.Game.Scoring;
 
 namespace osu.Game.Rulesets.Mania.Difficulty
 {
@@ -65,6 +66,10 @@ namespace osu.Game.Rulesets.Mania.Difficulty
                 multiplier *= 0.9 - 0.04 * (originalColumns - actualColumns);
 
             return multiplier;
+        }
+
+        public void SetLegacyLargeBonusCount(IBeatmap beatmap, Score score, IReadOnlyList<Mod> mods)
+        {
         }
     }
 }
