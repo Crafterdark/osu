@@ -1,7 +1,6 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
-using System.Linq;
 using osu.Framework.Extensions.IEnumerableExtensions;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
@@ -36,15 +35,12 @@ namespace osu.Game.Rulesets.Catch.Mods
 
         public void FindDrawableHitObjectToApplyChanges(DrawableHitObject drawable)
         {
-            if (drawable is not DrawablePalpableCatchHitObject)
-                return;
+            bool isObjectContainer = drawable is not DrawablePalpableCatchHitObject;
 
-            var drawablePalpableCatchHitObject = (DrawablePalpableCatchHitObject)drawable;
-
-            if (drawablePalpableCatchHitObject.NestedHitObjects.Any())
-                drawablePalpableCatchHitObject.NestedHitObjects.ForEach(x => ((DrawablePalpableCatchHitObject)x).HyperDash.Value = false);
-
-            drawablePalpableCatchHitObject.HyperDash.Value = false;
+            if (isObjectContainer)
+                drawable.NestedHitObjects.ForEach(x => ((DrawablePalpableCatchHitObject)x).HyperDash.Value = false);
+            else
+                ((DrawablePalpableCatchHitObject)drawable).HyperDash.Value = false;
         }
     }
 }

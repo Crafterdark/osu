@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
+using System.Linq;
 using NUnit.Framework;
 using osu.Game.Beatmaps;
 using osu.Game.Beatmaps.ControlPoints;
@@ -18,39 +19,60 @@ namespace osu.Game.Rulesets.Catch.Tests.Mods
     public partial class TestSceneCatchModInvisibleHyperdash : ModTestScene
     {
         protected override Ruleset CreatePlayerRuleset() => new CatchRuleset();
+        protected bool HasCatcherShownHyperDash { get; set; }
+        protected bool HasHitObjectShownHyperDash { get; set; }
 
         [Test]
-        public void TestNoHyperDashFromEveryType()
+        public void TestInvisibleHyperDash()
         {
             CreateModTest(new ModTestData
             {
                 Mod = new CatchModInvisibleHyperdash(),
                 Autoplay = true,
                 Beatmap = CreateBeatmap(CreatePlayerRuleset().RulesetInfo),
-                PassCondition = () => HyperDashHidden(Beatmap.Value)
+                PassCondition = () => true,
             });
+
+            AddStep("catcher start with no hyper trail", () => CatcherHideHyperDashTrail());
+            AddUntilStep("wait for all invisible hyperdash", CatchHitObjectsTestForHyperDash);
         }
-        protected bool HyperDashHidden(IWorkingBeatmap workingBeatmap)
+        protected bool CatcherHideHyperDashTrail()
         {
             var catchDrawableRuleset = (DrawableCatchRuleset)Player.DrawableRuleset;
             var catchPlayfield = (CatchPlayfield)catchDrawableRuleset.Playfield;
 
-            foreach (DrawablePalpableCatchHitObject drawablePalpableCatchHitObject in catchPlayfield.AllHitObjects)
-            {
-                //if there's even one hitobject that is displaying the hyperdash status
-                if (drawablePalpableCatchHitObject.HyperDash.Value == true)
-                    return false;
-            }
-
             //if the catcher trail hyperdash is shown
             if (catchPlayfield.CatcherArea.Catcher.ShowHyperDashTrail == true)
-                return false;
+                HasCatcherShownHyperDash = true;
 
-            return true;
+            return !HasCatcherShownHyperDash;
+        }
+
+        protected bool CatchHitObjectsTestForHyperDash()
+        {
+            var catchDrawableRuleset = (DrawableCatchRuleset)Player.DrawableRuleset;
+            var catchPlayfield = (CatchPlayfield)catchDrawableRuleset.Playfield;
+
+            foreach (var drawableCatchHitObject in catchPlayfield.AllHitObjects)
+            {
+                bool isObjectContainer = drawableCatchHitObject is not DrawablePalpableCatchHitObject;
+
+                //if there's even one hitobject that is displaying the hyperdash status
+                if (isObjectContainer)
+                {
+                    if (drawableCatchHitObject.NestedHitObjects.Any(x => ((DrawablePalpableCatchHitObject)x).HyperDash.Value == true))
+                        HasHitObjectShownHyperDash = true;
+                }
+                else if (((DrawablePalpableCatchHitObject)drawableCatchHitObject).HyperDash.Value == true)
+                {
+                    HasHitObjectShownHyperDash = true;
+                }
+            }
+
+            return Player.GameplayState.HasPassed && !HasHitObjectShownHyperDash;
         }
 
         //Mostly copied from TestSceneHyperDash for easier comparison
-
         protected new IBeatmap CreateBeatmap(RulesetInfo ruleset)
         {
             var beatmap = new Beatmap
