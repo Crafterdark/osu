@@ -65,7 +65,7 @@ namespace osu.Game.Rulesets.Catch.UI
         public bool CatchFruitOnPlate { get; set; } = true;
 
         /// <summary>
-        /// Whether <see cref="CatcherTrailAnimation.HyperDashing"/> or <see cref="CatcherTrailAnimation.HyperDashAfterImage"/> will be displayed.
+        /// Whether <see cref="CatcherTrailAnimation.HyperDashing"/> and <see cref="CatcherTrailAnimation.HyperDashAfterImage"/> will be displayed.
         /// </summary>
         public bool ShowHyperDashTrail { get; set; } = true;
 
