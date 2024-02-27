@@ -70,6 +70,11 @@ namespace osu.Game.Rulesets.Catch.UI
         /// </summary>
         public bool LowPrecisionJudgementOnPlate { get; set; }
 
+        /// </summary>
+        /// Whether <see cref="CatcherTrailAnimation.HyperDashing"/> and <see cref="CatcherTrailAnimation.HyperDashAfterImage"/> will be displayed.
+        /// </summary>
+        public bool ShowHyperDashTrail { get; set; } = true;
+
         /// <summary>
         /// The speed of the catcher when the catcher is dashing.
         /// </summary>
@@ -343,7 +348,7 @@ namespace osu.Game.Rulesets.Catch.UI
 
         private void runHyperDashStateTransition(bool hyperDashing)
         {
-            this.FadeColour(hyperDashing ? hyperDashColour : Color4.White, HYPER_DASH_TRANSITION_DURATION, Easing.OutQuint);
+            this.FadeColour(hyperDashing && ShowHyperDashTrail ? hyperDashColour : Color4.White, HYPER_DASH_TRANSITION_DURATION, Easing.OutQuint);
         }
 
         protected override void SkinChanged(ISkinSource skin)
