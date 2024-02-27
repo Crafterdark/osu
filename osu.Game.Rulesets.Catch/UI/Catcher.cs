@@ -70,7 +70,7 @@ namespace osu.Game.Rulesets.Catch.UI
         /// </summary>
         public bool LowPrecisionJudgementOnPlate { get; set; }
 
-        /// </summary>
+        /// <summary>
         /// Whether <see cref="CatcherTrailAnimation.HyperDashing"/> and <see cref="CatcherTrailAnimation.HyperDashAfterImage"/> will be displayed.
         /// </summary>
         public bool ShowHyperDashTrail { get; set; } = true;
