@@ -24,6 +24,8 @@ namespace osu.Game.Rulesets.Catch.Difficulty
 
         private float halfCatcherWidth;
 
+        private bool isLowPrecision;
+
         public override int Version => 20220701;
 
         public CatchDifficultyCalculator(IRulesetInfo ruleset, IWorkingBeatmap beatmap)
@@ -63,8 +65,13 @@ namespace osu.Game.Rulesets.Catch.Difficulty
                 if (hitObject is Banana || hitObject is TinyDroplet)
                     continue;
 
+                float localHalfCatcherWidth = halfCatcherWidth;
+
+                if (isLowPrecision)
+                    localHalfCatcherWidth += (float)CatchModLowPrecision.CalculateHalfExtendedCollisionDistanceForHitObject(hitObject);
+
                 if (lastObject != null)
-                    objects.Add(new CatchDifficultyHitObject(hitObject, lastObject, clockRate, halfCatcherWidth, objects, objects.Count));
+                    objects.Add(new CatchDifficultyHitObject(hitObject, lastObject, clockRate, localHalfCatcherWidth, objects, objects.Count));
 
                 lastObject = hitObject;
             }
@@ -79,6 +86,8 @@ namespace osu.Game.Rulesets.Catch.Difficulty
             // For circle sizes above 5.5, reduce the catcher width further to simulate imperfect gameplay.
             halfCatcherWidth *= 1 - (Math.Max(0, beatmap.Difficulty.CircleSize - 5.5f) * 0.0625f);
 
+            isLowPrecision = mods.Any(m => m is CatchModLowPrecision);
+
             return new Skill[]
             {
                 new Movement(mods, halfCatcherWidth, clockRate),
@@ -91,6 +100,7 @@ namespace osu.Game.Rulesets.Catch.Difficulty
             new CatchModHalfTime(),
             new CatchModHardRock(),
             new CatchModEasy(),
+            new CatchModLowPrecision(),
         };
     }
 }

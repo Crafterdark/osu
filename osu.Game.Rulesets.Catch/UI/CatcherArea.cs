@@ -108,7 +108,7 @@ namespace osu.Game.Rulesets.Catch.UI
                 return;
             }
 
-            if (!lastHyperDashState && Catcher.HyperDashing)
+            if (!lastHyperDashState && Catcher.HyperDashing && Catcher.ShowHyperDashTrail)
                 displayCatcherTrail(CatcherTrailAnimation.HyperDashAfterImage);
 
             if (Catcher.Dashing || Catcher.HyperDashing)
@@ -116,7 +116,7 @@ namespace osu.Game.Rulesets.Catch.UI
                 double generationInterval = Catcher.HyperDashing ? 25 : 50;
 
                 if (Time.Current - catcherTrails.LastDashTrailTime >= generationInterval)
-                    displayCatcherTrail(Catcher.HyperDashing ? CatcherTrailAnimation.HyperDashing : CatcherTrailAnimation.Dashing);
+                    displayCatcherTrail(Catcher.HyperDashing && Catcher.ShowHyperDashTrail ? CatcherTrailAnimation.HyperDashing : CatcherTrailAnimation.Dashing);
             }
 
             lastHyperDashState = Catcher.HyperDashing;
