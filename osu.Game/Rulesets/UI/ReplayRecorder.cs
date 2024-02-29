@@ -61,6 +61,9 @@ namespace osu.Game.Rulesets.UI
 
         public bool OnPressed(KeyBindingPressEvent<T> e)
         {
+            if (!IsValidAction(e.Action))
+                return false;
+
             pressedActions.Add(e.Action);
             recordFrame(true);
             return false;
@@ -68,6 +71,9 @@ namespace osu.Game.Rulesets.UI
 
         public void OnReleased(KeyBindingReleaseEvent<T> e)
         {
+            if (!IsValidAction(e.Action))
+                return;
+
             pressedActions.Remove(e.Action);
             recordFrame(true);
         }
@@ -90,6 +96,8 @@ namespace osu.Game.Rulesets.UI
                 spectatorClient?.HandleFrame(frame);
             }
         }
+
+        protected virtual bool IsValidAction(T action) => true;
 
         protected abstract ReplayFrame HandleFrame(Vector2 mousePosition, List<T> actions, ReplayFrame previousFrame);
     }
