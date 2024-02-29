@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
+using System.Collections.Generic;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Input.Bindings;
@@ -27,6 +28,8 @@ namespace osu.Game.Rulesets.Catch.UI
             get => catcher;
             set => catcherContainer.Child = catcher = value;
         }
+
+        public List<CatchAction> InvalidCatchActionList = new List<CatchAction>();
 
         private readonly Container<Catcher> catcherContainer;
 
@@ -134,6 +137,9 @@ namespace osu.Game.Rulesets.Catch.UI
 
         public bool OnPressed(KeyBindingPressEvent<CatchAction> e)
         {
+            if (!IsValidCatchAction(e))
+                return false;
+
             switch (e.Action)
             {
                 case CatchAction.MoveLeft:
@@ -154,6 +160,9 @@ namespace osu.Game.Rulesets.Catch.UI
 
         public void OnReleased(KeyBindingReleaseEvent<CatchAction> e)
         {
+            if (!IsValidCatchAction(e))
+                return;
+
             switch (e.Action)
             {
                 case CatchAction.MoveLeft:
@@ -168,6 +177,20 @@ namespace osu.Game.Rulesets.Catch.UI
                     Catcher.Dashing = false;
                     break;
             }
+        }
+
+        /// <summary>
+        /// Check the validity of all the <see cref="CatchAction"/>.
+        /// </summary>
+        public bool IsValidCatchAction(KeyBindingEvent<CatchAction> keyEvent)
+        {
+            foreach (var invalidAction in InvalidCatchActionList)
+            {
+                if (invalidAction == keyEvent.Action)
+                    return false;
+            }
+
+            return true;
         }
 
         private void displayCatcherTrail(CatcherTrailAnimation animation) => catcherTrails.Add(new CatcherTrailEntry(Time.Current, Catcher.CurrentState, Catcher.X, Catcher.BodyScale, animation));
