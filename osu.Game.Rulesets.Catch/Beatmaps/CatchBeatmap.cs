@@ -11,6 +11,11 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 {
     public class CatchBeatmap : Beatmap<CatchHitObject>
     {
+        ///<summary>
+        /// Hyperdash on the current direction is symmetrical.
+        ///</summary>
+        public bool IsHyperDashGenerationSymmetric { get; set; }
+
         public override IEnumerable<BeatmapStatistic> GetStatistics()
         {
             int fruits = HitObjects.Count(s => s is Fruit);

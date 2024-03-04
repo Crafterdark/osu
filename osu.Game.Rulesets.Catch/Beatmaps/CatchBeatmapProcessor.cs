@@ -63,6 +63,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         {
             var rng = new LegacyRandom(RNG_SEED);
 
+            //Independent RNG for new tiny droplets
+            LegacyRandom? rngNew = null;
+
             float? lastPosition = null;
             double lastStartTime = 0;
 
@@ -100,8 +103,20 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                             var catchObject = (CatchHitObject)nested;
                             catchObject.XOffset = 0;
 
-                            if (catchObject is TinyDroplet)
-                                catchObject.XOffset = Math.Clamp(rng.Next(-20, 20), -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
+                            if (catchObject is TinyDroplet tiny)
+                            {
+                                float randomOffset;
+
+                                if (!tiny.UsesOldRandom)
+                                {
+                                    rngNew ??= new LegacyRandom(RNG_SEED);
+                                    randomOffset = rngNew.Next(-20, 20);
+                                }
+                                else
+                                    randomOffset = rng.Next(-20, 20);
+
+                                catchObject.XOffset = Math.Clamp(randomOffset, -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
+                            }
                             else if (catchObject is Droplet)
                                 rng.Next(); // osu!stable retrieved a random droplet rotation
                         }
@@ -231,6 +246,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 currentObject.DistanceToHyperDash = 0;
 
                 int thisDirection = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
+
+                if (((CatchBeatmap)beatmap).IsHyperDashGenerationSymmetric && (nextObject.EffectiveX == currentObject.EffectiveX))
+                    thisDirection = lastDirection;
 
                 // Int truncation added to match osu!stable.
                 double timeToNext = (int)nextObject.StartTime - (int)currentObject.StartTime - 1000f / 60f / 4; // 1/4th of a frame of grace time, taken from osu-stable

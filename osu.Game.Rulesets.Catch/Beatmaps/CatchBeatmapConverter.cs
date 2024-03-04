@@ -20,6 +20,11 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         {
         }
 
+        ///<summary>
+        /// Tiny droplet generation is enhanced. (No mistimed or missing tiny droplets)
+        ///</summary>
+        public bool IsTinyDropletGenerationEnhanced { get; set; }
+
         public override bool CanConvert() => Beatmap.HitObjects.All(h => h is IHasXPosition);
 
         protected override IEnumerable<CatchHitObject> ConvertHitObject(HitObject obj, IBeatmap beatmap, CancellationToken cancellationToken)
@@ -46,7 +51,8 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         // prior to v8, speed multipliers don't adjust for how many ticks are generated over the same distance.
                         // this results in more (or less) ticks being generated in <v8 maps for the same time duration.
                         TickDistanceMultiplier = beatmap.BeatmapInfo.BeatmapVersion < 8 ? 1 : ((LegacyControlPointInfo)beatmap.ControlPointInfo).DifficultyPointAt(obj.StartTime).SliderVelocity,
-                        SliderVelocityMultiplier = sliderVelocityData?.SliderVelocityMultiplier ?? 1
+                        SliderVelocityMultiplier = sliderVelocityData?.SliderVelocityMultiplier ?? 1,
+                        UsesLegacyLastTick = !IsTinyDropletGenerationEnhanced,
                     }.Yield();
 
                 case IHasDuration endTime:
