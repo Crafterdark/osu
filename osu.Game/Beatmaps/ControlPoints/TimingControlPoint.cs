@@ -26,7 +26,19 @@ namespace osu.Game.Beatmaps.ControlPoints
         /// </summary>
         private const double default_beat_length = 60000.0 / 60.0;
 
-        public bool IsNegativeBPM() => BeatLengthBindable.Value < 0;
+        /// <summary>
+        /// Whether the timing point comes from a legacy negative BPM.
+        /// </summary>
+        public readonly Bindable<bool> NegativeBpmBindable = new Bindable<bool>();
+
+        /// <summary>
+        /// Whether the timing point comes from a legacy negative BPM.
+        /// </summary>
+        public bool NegativeBpm
+        {
+            get => NegativeBpmBindable.Value;
+            set => NegativeBpmBindable.Value = value;
+        }
 
         public override Color4 GetRepresentingColour(OsuColour colours) => colours.Orange1;
 
@@ -112,6 +124,7 @@ namespace osu.Game.Beatmaps.ControlPoints
             TimeSignature = ((TimingControlPoint)other).TimeSignature;
             OmitFirstBarLine = ((TimingControlPoint)other).OmitFirstBarLine;
             BeatLength = ((TimingControlPoint)other).BeatLength;
+            NegativeBpm = ((TimingControlPoint)other).NegativeBpm;
 
             base.CopyFrom(other);
         }
@@ -124,7 +137,8 @@ namespace osu.Game.Beatmaps.ControlPoints
             => base.Equals(other)
                && TimeSignature.Equals(other.TimeSignature)
                && OmitFirstBarLine == other.OmitFirstBarLine
-               && BeatLength.Equals(other.BeatLength);
+               && BeatLength.Equals(other.BeatLength)
+               && NegativeBpm == other.NegativeBpm;
 
         public override int GetHashCode() => HashCode.Combine(base.GetHashCode(), TimeSignature, BeatLength, OmitFirstBarLine);
     }

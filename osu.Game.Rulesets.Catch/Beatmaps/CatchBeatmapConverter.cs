@@ -38,6 +38,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             var yPositionData = obj as IHasYPosition;
             var comboData = obj as IHasCombo;
             var sliderVelocityData = obj as IHasSliderVelocity;
+            var generateTicksData = obj as IHasGenerateTicks;
 
             switch (obj)
             {
@@ -56,6 +57,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         // prior to v8, speed multipliers don't adjust for how many ticks are generated over the same distance.
                         // this results in more (or less) ticks being generated in <v8 maps for the same time duration.
                         TickDistanceMultiplier = beatmap.BeatmapInfo.BeatmapVersion < 8 ? 1 : ((LegacyControlPointInfo)beatmap.ControlPointInfo).DifficultyPointAt(obj.StartTime).SliderVelocity,
+                        GenerateTicks = generateTicksData?.GenerateTicks ?? true,
                         SliderVelocityMultiplier = sliderVelocityData?.SliderVelocityMultiplier ?? 1,
                         UsesLegacyLastTick = !IsTinyDropletGenerationEnhanced,
                         IsLimitedBeatLength = IsBeatLengthLimited,

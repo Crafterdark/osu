@@ -15,12 +15,18 @@ namespace osu.Game.Beatmaps.Formats
 
         public const double MAX_PARSE_VALUE = int.MaxValue;
 
+        //Note: Must be doublechecked
+        private const bool are_bounds_allowed = true;
+
         public static float ParseFloat(string input, float parseLimit = (float)MAX_PARSE_VALUE, bool allowNaN = false)
         {
             float output = float.Parse(input, CultureInfo.InvariantCulture);
 
-            if (output < -parseLimit) throw new OverflowException("Value is too low");
-            if (output > parseLimit) throw new OverflowException("Value is too high");
+            if (!are_bounds_allowed && output < -parseLimit) throw new OverflowException("Value is too low");
+            if (!are_bounds_allowed && output > parseLimit) throw new OverflowException("Value is too high");
+
+            if (are_bounds_allowed)
+                output = Math.Clamp(output, -parseLimit, parseLimit);
 
             if (!allowNaN && float.IsNaN(output)) throw new FormatException("Not a number");
 
@@ -31,8 +37,11 @@ namespace osu.Game.Beatmaps.Formats
         {
             double output = double.Parse(input, CultureInfo.InvariantCulture);
 
-            if (output < -parseLimit) throw new OverflowException("Value is too low");
-            if (output > parseLimit) throw new OverflowException("Value is too high");
+            if (!are_bounds_allowed && output < -parseLimit) throw new OverflowException("Value is too low");
+            if (!are_bounds_allowed && output > parseLimit) throw new OverflowException("Value is too high");
+
+            if (are_bounds_allowed)
+                output = Math.Clamp(output, -parseLimit, parseLimit);
 
             if (!allowNaN && double.IsNaN(output)) throw new FormatException("Not a number");
 
@@ -43,8 +52,11 @@ namespace osu.Game.Beatmaps.Formats
         {
             int output = int.Parse(input, CultureInfo.InvariantCulture);
 
-            if (output < -parseLimit) throw new OverflowException("Value is too low");
-            if (output > parseLimit) throw new OverflowException("Value is too high");
+            if (!are_bounds_allowed && output < -parseLimit) throw new OverflowException("Value is too low");
+            if (!are_bounds_allowed && output > parseLimit) throw new OverflowException("Value is too high");
+
+            if (are_bounds_allowed)
+                output = Math.Clamp(output, -parseLimit, parseLimit);
 
             return output;
         }

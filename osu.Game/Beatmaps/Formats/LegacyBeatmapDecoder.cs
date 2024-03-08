@@ -509,6 +509,7 @@ namespace osu.Game.Beatmaps.Formats
 
                 var controlPoint = CreateTimingControlPoint();
 
+                controlPoint.NegativeBpm = beatLength < 0;
                 controlPoint.BeatLength = beatLength;
                 controlPoint.TimeSignature = timeSignature;
                 controlPoint.OmitFirstBarLine = omitFirstBarSignature;

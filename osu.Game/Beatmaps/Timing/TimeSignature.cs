@@ -18,14 +18,20 @@ namespace osu.Game.Beatmaps.Timing
         /// </summary>
         public int Numerator { get; }
 
+        /// <summary>
+        /// When the numerator of a signature is negative or null.
+        /// </summary>
+        public bool LegacyNegativeOrNull { get; }
+
         // TODO: support time signatures with a denominator other than 4
         // this in particular requires a new beatmap format.
 
         public TimeSignature(int numerator)
         {
-            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(numerator);
+            Numerator = Math.Abs(numerator);
+            LegacyNegativeOrNull = numerator <= 0;
 
-            Numerator = numerator;
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(Numerator);
         }
 
         public static TimeSignature SimpleTriple { get; } = new TimeSignature(3);
