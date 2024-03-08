@@ -468,10 +468,6 @@ namespace osu.Game.Beatmaps.Formats
             // If beatLength is NaN, speedMultiplier should still be 1 because all comparisons against NaN are false.
             double speedMultiplier = beatLength < 0 ? 100.0 / -beatLength : 1;
 
-            TimeSignature timeSignature = TimeSignature.SimpleQuadruple;
-            if (split.Length >= 3)
-                timeSignature = split[2][0] == '0' ? TimeSignature.SimpleQuadruple : new TimeSignature(Parsing.ParseInt(split[2]));
-
             LegacySampleBank sampleSet = defaultSampleBank;
             if (split.Length >= 4)
                 sampleSet = (LegacySampleBank)Parsing.ParseInt(split[3]);
@@ -487,6 +483,10 @@ namespace osu.Game.Beatmaps.Formats
             bool timingChange = true;
             if (split.Length >= 7)
                 timingChange = split[6][0] == '1';
+
+            TimeSignature timeSignature = TimeSignature.SimpleQuadruple;
+            if (split.Length >= 3 && timingChange)
+                timeSignature = (split[2][0] == '0') ? TimeSignature.SimpleQuadruple : new TimeSignature(Parsing.ParseInt(split[2]));
 
             bool kiaiMode = false;
             bool omitFirstBarSignature = false;

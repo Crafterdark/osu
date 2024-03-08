@@ -30,8 +30,6 @@ namespace osu.Game.Beatmaps.Timing
         {
             Numerator = Math.Abs(numerator);
             LegacyNegativeOrNull = numerator <= 0;
-
-            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(Numerator);
         }
 
         public static TimeSignature SimpleTriple { get; } = new TimeSignature(3);
