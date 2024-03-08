@@ -26,7 +26,7 @@ namespace osu.Game.Beatmaps.ControlPoints
         /// </summary>
         private const double default_beat_length = 60000.0 / 60.0;
 
-        public bool IsNegativeBPM() => BeatLength < 0;
+        public bool IsNegativeBPM() => BeatLengthBindable.Value < 0;
 
         public override Color4 GetRepresentingColour(OsuColour colours) => colours.Orange1;
 
