@@ -59,7 +59,7 @@ namespace osu.Game.Beatmaps
         /// <summary>
         /// Finds the most common beat length represented by the control points in this beatmap.
         /// </summary>
-        double GetMostCommonBeatLength();
+        double GetMostCommonBeatLength(bool IsLimited = true);
 
         /// <summary>
         /// Creates a shallow-clone of this beatmap and returns it.

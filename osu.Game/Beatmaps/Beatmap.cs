@@ -75,7 +75,7 @@ namespace osu.Game.Beatmaps
 
         public virtual IEnumerable<BeatmapStatistic> GetStatistics() => Enumerable.Empty<BeatmapStatistic>();
 
-        public double GetMostCommonBeatLength()
+        public double GetMostCommonBeatLength(bool IsLimited = true)
         {
             double lastTime;
 
@@ -91,14 +91,14 @@ namespace osu.Game.Beatmaps
                 ControlPointInfo.TimingPoints.Select((t, i) =>
                                 {
                                     if (t.Time > lastTime)
-                                        return (beatLength: t.BeatLength, 0);
+                                        return (beatLength: t.BeatLengthWithCondition(IsLimited), 0);
 
                                     // osu-stable forced the first control point to start at 0.
                                     // This is reproduced here to maintain compatibility around osu!mania scroll speed and song select display.
                                     double currentTime = i == 0 ? 0 : t.Time;
                                     double nextTime = i == ControlPointInfo.TimingPoints.Count - 1 ? lastTime : ControlPointInfo.TimingPoints[i + 1].Time;
 
-                                    return (beatLength: t.BeatLength, duration: nextTime - currentTime);
+                                    return (beatLength: t.BeatLengthWithCondition(IsLimited), duration: nextTime - currentTime);
                                 })
                                 // Aggregate durations into a set of (beatLength, duration) tuples for each beat length
                                 .GroupBy(t => Math.Round(t.beatLength * 1000) / 1000)

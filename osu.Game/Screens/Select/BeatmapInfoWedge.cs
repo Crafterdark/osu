@@ -32,6 +32,7 @@ using osu.Game.Rulesets.UI;
 using osu.Game.Graphics.Containers;
 using osu.Game.Resources.Localisation.Web;
 using osu.Game.Utils;
+using osu.Game.Beatmaps.ControlPoints;
 
 namespace osu.Game.Screens.Select
 {
@@ -394,6 +395,19 @@ namespace osu.Game.Screens.Select
                 }
             }
 
+            private bool checkIfBpmCanBeInteger(double value, double rate) => Math.Round(Math.Round(value) * rate) >= TimingControlPoint.VIEW_MIN_BPM_INT_CAP && Math.Round(Math.Round(value) * rate) <= TimingControlPoint.VIEW_MAX_BPM_INT_CAP;
+
+            private string getSpecialSymbol(double value, double rate)
+            {
+                if (Math.Round(Math.Round(value) * rate) < TimingControlPoint.VIEW_MIN_BPM_INT_CAP)
+                    return "O";
+                else if (Math.Round(Math.Round(value) * rate) > TimingControlPoint.VIEW_MAX_BPM_INT_CAP)
+                    return "∞";
+                //This case will only exist when there's an issue with the beat length handling or when the case isn't handled yet by the code.
+                else
+                    return "?";
+            }
+
             private void refreshBPMAndLengthLabel()
             {
                 var beatmap = working.Beatmap;
@@ -406,13 +420,24 @@ namespace osu.Game.Screens.Select
                 foreach (var mod in mods.Value.OfType<IApplicableToRate>())
                     rate = mod.ApplyToRate(0, rate);
 
-                int bpmMax = FormatUtils.RoundBPM(beatmap.ControlPointInfo.BPMMaximum, rate);
-                int bpmMin = FormatUtils.RoundBPM(beatmap.ControlPointInfo.BPMMinimum, rate);
-                int mostCommonBPM = FormatUtils.RoundBPM(60000 / beatmap.GetMostCommonBeatLength(), rate);
+                bool displayBeatLengthLimited = true;
+                foreach (var mod in mods.Value.OfType<ModWrench>())
+                    displayBeatLengthLimited = !mod.BeatmapTimingPointBeatLengthUnbounded.Value;
+
+                //Fixed placeholder, because it's unlikely that players will want to see the actual double values outside the range [1, 99999]
+                bool specialSymbols = true;
+
+                double currBPMMaximum = beatmap.ControlPointInfo.BPMMaximumWithCondition(displayBeatLengthLimited);
+                double currBPMMinimum = beatmap.ControlPointInfo.BPMMinimumWithCondition(displayBeatLengthLimited);
+                double currMostCommonBPM = 60000 / beatmap.GetMostCommonBeatLength(displayBeatLengthLimited);
+
+                string bpmMax = checkIfBpmCanBeInteger(currBPMMaximum, rate) ? FormatUtils.RoundBPM(currBPMMaximum, rate).ToString() : specialSymbols ? getSpecialSymbol(currBPMMaximum, rate) : (currBPMMaximum * rate).ToString("E1");
+                string bpmMin = checkIfBpmCanBeInteger(currBPMMinimum, rate) ? FormatUtils.RoundBPM(currBPMMinimum, rate).ToString() : specialSymbols ? getSpecialSymbol(currBPMMinimum, rate) : (currBPMMinimum * rate).ToString("E1");
+                string mostCommonBPM = checkIfBpmCanBeInteger(currMostCommonBPM, rate) ? FormatUtils.RoundBPM(currMostCommonBPM, rate).ToString() : specialSymbols ? getSpecialSymbol(currMostCommonBPM, rate) : (currMostCommonBPM * rate).ToString("E1");
 
                 string labelText = bpmMin == bpmMax
                     ? $"{bpmMin}"
-                    : $"{bpmMin}-{bpmMax} (mostly {mostCommonBPM})";
+                    : $"{bpmMin} - {bpmMax} (mostly {mostCommonBPM})";
 
                 bpmLabelContainer.Child = new InfoLabel(new BeatmapStatistic
                 {

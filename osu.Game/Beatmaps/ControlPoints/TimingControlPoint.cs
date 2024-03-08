@@ -26,6 +26,8 @@ namespace osu.Game.Beatmaps.ControlPoints
         /// </summary>
         private const double default_beat_length = 60000.0 / 60.0;
 
+        public bool IsNegativeBPM() => BeatLength < 0;
+
         public override Color4 GetRepresentingColour(OsuColour colours) => colours.Orange1;
 
         public static readonly TimingControlPoint DEFAULT = new TimingControlPoint
@@ -59,13 +61,25 @@ namespace osu.Game.Beatmaps.ControlPoints
 
         public const double DEFAULT_BEAT_LENGTH = 1000;
 
+        public const double MIN_BEAT_LENGTH_CAP = 6;
+
+        public const double MAX_BEAT_LENGTH_CAP = 60000;
+
+        public const double MIN_BEAT_LENGTH_UNCAP = double.Epsilon;
+
+        public const double MAX_BEAT_LENGTH_UNCAP = double.MaxValue;
+
+        public const double VIEW_MIN_BPM_INT_CAP = 1;
+
+        public const double VIEW_MAX_BPM_INT_CAP = 999999;
+
         /// <summary>
         /// The beat length at this control point.
         /// </summary>
         public readonly BindableDouble BeatLengthBindable = new BindableDouble(DEFAULT_BEAT_LENGTH)
         {
-            MinValue = 6,
-            MaxValue = 60000
+            MinValue = double.MinValue,
+            MaxValue = double.MaxValue
         };
 
         /// <summary>
@@ -73,14 +87,22 @@ namespace osu.Game.Beatmaps.ControlPoints
         /// </summary>
         public double BeatLength
         {
-            get => BeatLengthBindable.Value;
+            get => Math.Abs(BeatLengthBindable.Value);
             set => BeatLengthBindable.Value = value;
+        }
+
+        /// <summary>
+        /// The beat length at this control point with condition.
+        /// </summary>
+        public double BeatLengthWithCondition(bool isLimited)
+        {
+            return Math.Clamp(BeatLength, isLimited ? MIN_BEAT_LENGTH_CAP : MIN_BEAT_LENGTH_UNCAP, isLimited ? MAX_BEAT_LENGTH_CAP : MAX_BEAT_LENGTH_UNCAP);
         }
 
         /// <summary>
         /// The BPM at this control point.
         /// </summary>
-        public double BPM => 60000 / BeatLength;
+        public double BPM => 60000 / Math.Clamp(BeatLength, 60000 / double.MaxValue, double.MaxValue);
 
         // Timing points are never redundant as they can change the time signature.
         public override bool IsRedundant(ControlPoint? existing) => false;

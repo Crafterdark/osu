@@ -88,13 +88,18 @@ namespace osu.Game.Rulesets.Catch.Objects
         /// </summary>
         public bool UsesNewRandom { get; set; }
 
+        /// <summary>
+        /// Whether the beat length is limited. 
+        /// </summary>
+        public bool IsLimitedBeatLength { get; set; }
+
         protected override void ApplyDefaultsToSelf(ControlPointInfo controlPointInfo, IBeatmapDifficultyInfo difficulty)
         {
             base.ApplyDefaultsToSelf(controlPointInfo, difficulty);
 
             TimingControlPoint timingPoint = controlPointInfo.TimingPointAt(StartTime);
 
-            velocityFactor = base_scoring_distance * difficulty.SliderMultiplier / timingPoint.BeatLength;
+            velocityFactor = base_scoring_distance * difficulty.SliderMultiplier / timingPoint.BeatLengthWithCondition(IsLimitedBeatLength);
             tickDistanceFactor = base_scoring_distance * difficulty.SliderMultiplier / difficulty.SliderTickRate;
         }
 

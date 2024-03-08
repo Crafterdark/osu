@@ -2,8 +2,6 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using osu.Framework.Bindables;
-using osu.Framework.Graphics.Sprites;
-using osu.Framework.Localisation;
 using osu.Game.Beatmaps;
 using osu.Game.Configuration;
 using osu.Game.Rulesets.Catch.Beatmaps;
@@ -11,15 +9,8 @@ using osu.Game.Rulesets.Mods;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
-    public class CatchModWrench : Mod, IApplicableToBeatmapProcessor, IApplicableToBeatmapConverter
+    public class CatchModWrench : ModWrench, IApplicableToBeatmapProcessor, IApplicableToBeatmapConverter
     {
-        public override string Name => "Wrench";
-        public override string Acronym => "WH";
-        public override LocalisableString Description => "Adjust gameplay features under specific conditions.";
-        public override ModType Type => ModType.Conversion;
-        public override IconUsage? Icon => FontAwesome.Solid.Wrench;
-        public override double ScoreMultiplier => 1;
-
         [SettingSource("Symmetric hyperdash generation", "Prevents the generation of impossible or unexpected hyperdash patterns.")]
         public BindableBool BeatmapHyperDashGenerationSymmetric { get; } = new BindableBool(true);
 
@@ -28,12 +19,16 @@ namespace osu.Game.Rulesets.Catch.Mods
 
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
         {
-            ((CatchBeatmap)beatmapProcessor.Beatmap).IsHyperDashGenerationSymmetric = BeatmapHyperDashGenerationSymmetric.Value;
+            var catchBeatmapProcessor = (CatchBeatmapProcessor)beatmapProcessor;
+            ((CatchBeatmap)catchBeatmapProcessor.Beatmap).IsHyperDashGenerationSymmetric = BeatmapHyperDashGenerationSymmetric.Value;
         }
 
         public void ApplyToBeatmapConverter(IBeatmapConverter beatmapConverter)
         {
-            ((CatchBeatmapConverter)beatmapConverter).IsTinyDropletGenerationEnhanced = BeatmapEnhancedTinyDropletGeneration.Value;
+            var catchBeatmapConverter = (CatchBeatmapConverter)beatmapConverter;
+
+            catchBeatmapConverter.IsBeatLengthLimited = !BeatmapTimingPointBeatLengthUnbounded.Value;
+            catchBeatmapConverter.IsTinyDropletGenerationEnhanced = BeatmapEnhancedTinyDropletGeneration.Value;
         }
     }
 }

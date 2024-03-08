@@ -21,9 +21,14 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         }
 
         ///<summary>
-        /// Tiny droplet generation is enhanced. (No mistimed or missing tiny droplets)
+        /// Whether tiny droplet generation is enhanced. (No mistimed or missing tiny droplets)
         ///</summary>
         public bool IsTinyDropletGenerationEnhanced { get; set; }
+
+        ///<summary>
+        /// Whether the beat length is limited.
+        ///</summary>
+        public bool IsBeatLengthLimited { get; set; } = true;
 
         public override bool CanConvert() => Beatmap.HitObjects.All(h => h is IHasXPosition);
 
@@ -53,6 +58,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         TickDistanceMultiplier = beatmap.BeatmapInfo.BeatmapVersion < 8 ? 1 : ((LegacyControlPointInfo)beatmap.ControlPointInfo).DifficultyPointAt(obj.StartTime).SliderVelocity,
                         SliderVelocityMultiplier = sliderVelocityData?.SliderVelocityMultiplier ?? 1,
                         UsesLegacyLastTick = !IsTinyDropletGenerationEnhanced,
+                        IsLimitedBeatLength = IsBeatLengthLimited,
                     }.Yield();
 
                 case IHasDuration endTime:
