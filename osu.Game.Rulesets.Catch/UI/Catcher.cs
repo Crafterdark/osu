@@ -77,7 +77,12 @@ namespace osu.Game.Rulesets.Catch.UI
         /// <summary>
         /// The current speed of the catcher with the hyper-dash modifier applied.
         /// </summary>
-        public double Speed => (Dashing ? BASE_DASH_SPEED : BASE_WALK_SPEED) * hyperDashModifier;
+        public double Speed => (Dashing ? BASE_DASH_SPEED : BASE_WALK_SPEED) * CustomSpeedMultiplier.Value * hyperDashModifier;
+
+        /// <summary>
+        /// The custom speed multiplier of the catcher that is applied by mods.
+        /// </summary>
+        public BindableDouble CustomSpeedMultiplier { get; set; } = new BindableDouble(1);
 
         /// <summary>
         /// The amount by which caught fruit should be scaled down to fit on the plate.
@@ -241,7 +246,7 @@ namespace osu.Game.Rulesets.Catch.UI
                     double positionDifference = target.EffectiveX - X;
                     double velocity = positionDifference / Math.Max(1.0, timeDifference - 1000.0 / 60.0);
 
-                    SetHyperDashState(Math.Abs(velocity) / BASE_DASH_SPEED, target.EffectiveX);
+                    SetHyperDashState(Math.Abs(velocity) / (CustomSpeedMultiplier.Value * BASE_DASH_SPEED), target.EffectiveX);
                 }
                 else
                     SetHyperDashState();

@@ -147,6 +147,7 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModFloatingFruits(),
                         new CatchModMuted(),
                         new CatchModNoScope(),
+                        new CatchModSpeedrun(),
                     };
 
                 case ModType.System:
