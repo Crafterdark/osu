@@ -42,6 +42,8 @@ namespace osu.Game.Tests.Beatmaps
 
         public bool PositionIsInteger { get; set; }
 
+        public bool IsLimitedTimeTask { get; set; }
+
         protected abstract string ResourceAssembly { get; }
 
         protected void Test(string name, params Type[] mods)
@@ -160,6 +162,7 @@ namespace osu.Game.Tests.Beatmaps
                     Mappings = converterResult.Select(r =>
                     {
                         var mapping = CreateConvertMapping(r.Key);
+                        mapping.Container = GetConvertedObjectName(r.Value);
                         mapping.StartTime = r.Key.StartTime;
                         mapping.Objects.AddRange(r.Value.SelectMany(CreateConvertValue));
                         return mapping;
@@ -167,7 +170,7 @@ namespace osu.Game.Tests.Beatmaps
                 };
             }, TaskCreationOptions.LongRunning);
 
-            if (!conversionTask.Wait(10000))
+            if (IsLimitedTimeTask && !conversionTask.Wait(10000))
                 Assert.Fail("Conversion timed out");
 
             return conversionTask.GetResultSafely();
@@ -252,6 +255,8 @@ namespace osu.Game.Tests.Beatmaps
         /// <param name="hitObject">The converted <see cref="HitObject"/>.</param>
         protected abstract IEnumerable<TConvertValue> CreateConvertValue(HitObject hitObject);
 
+        protected abstract string GetConvertedObjectName(IEnumerable<HitObject> convertValue);
+
         /// <summary>
         /// Creates the <see cref="Ruleset"/> applicable to this <see cref="BeatmapConversionTest{TConvertMapping,TConvertValue}"/>.
         /// </summary>
@@ -302,6 +307,9 @@ namespace osu.Game.Tests.Beatmaps
     public class ConvertMapping<TConvertValue> : IEquatable<ConvertMapping<TConvertValue>>
         where TConvertValue : IEquatable<TConvertValue>
     {
+        [JsonProperty]
+        public string Container;
+
         [JsonProperty]
         public double StartTime;
 

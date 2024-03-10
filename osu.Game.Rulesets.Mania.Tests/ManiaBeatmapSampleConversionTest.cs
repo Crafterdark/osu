@@ -45,6 +45,8 @@ namespace osu.Game.Rulesets.Mania.Tests
                             .ToList();
 
         protected override Ruleset CreateRuleset() => new ManiaRuleset();
+
+        protected override string GetConvertedObjectName(IEnumerable<HitObject> convertValue) => "";
     }
 
     public struct SampleConvertValue : IEquatable<SampleConvertValue>

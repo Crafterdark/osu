@@ -70,6 +70,8 @@ namespace osu.Game.Rulesets.Osu.Tests
         }
 
         protected override Ruleset CreateRuleset() => new OsuRuleset();
+
+        protected override string GetConvertedObjectName(IEnumerable<HitObject> convertValue) => "";
     }
 
     public struct ConvertValue : IEquatable<ConvertValue>

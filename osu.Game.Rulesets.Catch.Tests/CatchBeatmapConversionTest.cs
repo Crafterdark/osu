@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using osu.Framework.Utils;
@@ -21,6 +22,7 @@ namespace osu.Game.Rulesets.Catch.Tests
             LazerConversionMappings = true;
             StartTimeIsInteger = false;
             PositionIsInteger = false;
+            IsLimitedTimeTask = false;
         }
         protected override string ResourceAssembly => "osu.Game.Rulesets.Catch.Tests";
 
@@ -103,6 +105,30 @@ namespace osu.Game.Rulesets.Catch.Tests
         }
 
         protected override Ruleset CreateRuleset() => new CatchRuleset();
+
+
+        public string GetContainerName(CatchHitObject catchHitObject)
+        {
+            switch (catchHitObject)
+            {
+                case Fruit:
+                    return "fruitContainer";
+                case TinyDroplet:
+                    return "tinyDropletContainer";
+                case Droplet:
+                    return "largeDropletContainer";
+                case Banana:
+                    return "bananaContainer";
+                case BananaShower:
+                    return "bananaShower";
+                case JuiceStream:
+                    return "juiceStream";
+            }
+
+            return "unknownContainer";
+        }
+
+        protected override string GetConvertedObjectName(IEnumerable<HitObject> hitObject) => GetContainerName((CatchHitObject)(hitObject.First()));
     }
 
     public struct ConvertValue : IEquatable<ConvertValue>
@@ -118,9 +144,18 @@ namespace osu.Game.Rulesets.Catch.Tests
         public ConvertValue(CatchHitObject hitObject)
         {
             HitObject = hitObject;
+            name = "";
             startTime = 0;
             position = 0;
             hyperDash = false;
+        }
+
+        private string name;
+
+        public string Name
+        {
+            get => GetObjectName(HitObject) ?? name;
+            set => name = value;
         }
 
         private double startTime;
@@ -151,5 +186,22 @@ namespace osu.Game.Rulesets.Catch.Tests
             => Precision.AlmostEquals(StartTime, other.StartTime, conversion_lenience)
                && Precision.AlmostEquals(Position, other.Position, conversion_lenience)
                && HyperDash == other.HyperDash;
+
+        public string GetObjectName(CatchHitObject catchHitObject)
+        {
+            switch (catchHitObject)
+            {
+                case Fruit:
+                    return "fruit";
+                case TinyDroplet:
+                    return "tinyDroplet";
+                case Droplet:
+                    return "largeDroplet";
+                case Banana:
+                    return "banana";
+            }
+
+            return "unknownObject";
+        }
     }
 }

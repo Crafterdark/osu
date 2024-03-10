@@ -49,6 +49,8 @@ namespace osu.Game.Rulesets.Mania.Tests
         protected override ManiaConvertMapping CreateConvertMapping(HitObject source) => new ManiaConvertMapping(rngSnapshots[source]);
 
         protected override Ruleset CreateRuleset() => new ManiaRuleset();
+
+        protected override string GetConvertedObjectName(IEnumerable<HitObject> convertValue) => "";
     }
 
     public class RngSnapshot

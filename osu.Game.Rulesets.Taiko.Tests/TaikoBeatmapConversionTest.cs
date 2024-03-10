@@ -41,6 +41,8 @@ namespace osu.Game.Rulesets.Taiko.Tests
         }
 
         protected override Ruleset CreateRuleset() => new TaikoRuleset();
+
+        protected override string GetConvertedObjectName(IEnumerable<HitObject> convertValue) => "";
     }
 
     public struct ConvertValue : IEquatable<ConvertValue>
