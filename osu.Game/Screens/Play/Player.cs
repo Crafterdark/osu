@@ -38,6 +38,7 @@ using osu.Game.Screens.Play.HUD;
 using osu.Game.Screens.Ranking;
 using osu.Game.Skinning;
 using osu.Game.Users;
+using osu.Game.Utils;
 using osuTK.Graphics;
 
 namespace osu.Game.Screens.Play
@@ -213,6 +214,12 @@ namespace osu.Game.Screens.Play
             if (playableBeatmap == null)
                 return;
 
+            if (!ModUtils.CheckModsBelongToRuleset(ruleset, gameplayMods))
+            {
+                Logger.Log($@"Gameplay was started with a mod belonging to a ruleset different than '{ruleset.Description}'.", level: LogLevel.Important);
+                return;
+            }
+
             mouseWheelDisabled = config.GetBindable<bool>(OsuSetting.MouseDisableWheel);
 
             if (game != null)
@@ -248,7 +255,7 @@ namespace osu.Game.Screens.Play
             Score.ScoreInfo.Ruleset = ruleset.RulesetInfo;
             Score.ScoreInfo.Mods = gameplayMods;
 
-            dependencies.CacheAs(GameplayState = new GameplayState(playableBeatmap, ruleset, gameplayMods, Score, ScoreProcessor));
+            dependencies.CacheAs(GameplayState = new GameplayState(playableBeatmap, ruleset, gameplayMods, Score, ScoreProcessor, Beatmap.Value.Storyboard));
 
             var rulesetSkinProvider = new RulesetSkinProvidingContainer(ruleset, playableBeatmap, Beatmap.Value.Skin);
 
@@ -271,10 +278,10 @@ namespace osu.Game.Screens.Play
                         createGameplayComponents(Beatmap.Value)
                     }
                 },
-                FailOverlay = new FailOverlay(Configuration.AllowUserInteraction)
+                FailOverlay = new FailOverlay
                 {
                     SaveReplay = async () => await prepareAndImportScoreAsync(true).ConfigureAwait(false),
-                    OnRetry = () => Restart(),
+                    OnRetry = Configuration.AllowUserInteraction ? () => Restart() : null,
                     OnQuit = () => PerformExit(true),
                 },
                 new HotkeyExitOverlay
@@ -390,7 +397,7 @@ namespace osu.Game.Screens.Play
         protected virtual GameplayClockContainer CreateGameplayClockContainer(WorkingBeatmap beatmap, double gameplayStart) => new MasterGameplayClockContainer(beatmap, gameplayStart);
 
         private Drawable createUnderlayComponents() =>
-            DimmableStoryboard = new DimmableStoryboard(Beatmap.Value.Storyboard, GameplayState.Mods) { RelativeSizeAxes = Axes.Both };
+            DimmableStoryboard = new DimmableStoryboard(GameplayState.Storyboard, GameplayState.Mods) { RelativeSizeAxes = Axes.Both };
 
         private Drawable createGameplayComponents(IWorkingBeatmap working) => new ScalingContainer(ScalingMode.Gameplay)
         {
@@ -449,7 +456,7 @@ namespace osu.Game.Screens.Play
                     {
                         RequestSkip = performUserRequestedSkip
                     },
-                    skipOutroOverlay = new SkipOverlay(Beatmap.Value.Storyboard.LatestEventTime ?? 0)
+                    skipOutroOverlay = new SkipOverlay(GameplayState.Storyboard.LatestEventTime ?? 0)
                     {
                         RequestSkip = () => progressToResults(false),
                         Alpha = 0
@@ -461,12 +468,6 @@ namespace osu.Game.Screens.Play
                         OnRetry = () => Restart(),
                         OnQuit = () => PerformExit(true),
                     },
-                    new GameplayOffsetControl
-                    {
-                        Margin = new MarginPadding(20),
-                        Anchor = Anchor.CentreRight,
-                        Origin = Anchor.CentreRight,
-                    }
                 },
             };
 
@@ -475,9 +476,6 @@ namespace osu.Game.Screens.Play
                 skipIntroOverlay.Expire();
                 skipOutroOverlay.Expire();
             }
-
-            if (GameplayClockContainer is MasterGameplayClockContainer master)
-                HUDOverlay.PlayerSettingsOverlay.PlaybackSettings.UserPlaybackRate.BindTarget = master.UserPlaybackRate;
 
             return container;
         }
@@ -547,7 +545,7 @@ namespace osu.Game.Screens.Play
 
                 if (playable.HitObjects.Count == 0)
                 {
-                    Logger.Log("Beatmap contains no hit objects!", level: LogLevel.Error);
+                    Logger.Log("Beatmap contains no hit objects!", level: LogLevel.Important);
                     return null;
                 }
             }
@@ -1078,7 +1076,7 @@ namespace osu.Game.Screens.Play
                 b.FadeColour(Color4.White, 250);
 
                 // bind component bindables.
-                b.IsBreakTime.BindTo(breakTracker.IsBreakTime);
+                ((IBindable<bool>)b.IsBreakTime).BindTo(breakTracker.IsBreakTime);
 
                 b.StoryboardReplacesBackground.BindTo(storyboardReplacesBackground);
 
@@ -1090,7 +1088,7 @@ namespace osu.Game.Screens.Play
 
             DimmableStoryboard.IsBreakTime.BindTo(breakTracker.IsBreakTime);
 
-            storyboardReplacesBackground.Value = Beatmap.Value.Storyboard.ReplacesBackground && Beatmap.Value.Storyboard.HasDrawable;
+            storyboardReplacesBackground.Value = GameplayState.Storyboard.ReplacesBackground && GameplayState.Storyboard.HasDrawable;
 
             foreach (var mod in GameplayState.Mods.OfType<IApplicableToPlayer>())
                 mod.ApplyToPlayer(this);
@@ -1226,9 +1224,10 @@ namespace osu.Game.Screens.Play
         /// </summary>
         /// <param name="score">The <see cref="ScoreInfo"/> to be displayed in the results screen.</param>
         /// <returns>The <see cref="ResultsScreen"/>.</returns>
-        protected virtual ResultsScreen CreateResults(ScoreInfo score) => new SoloResultsScreen(score, true)
+        protected virtual ResultsScreen CreateResults(ScoreInfo score) => new SoloResultsScreen(score)
         {
-            ShowUserStatistics = true
+            AllowRetry = true,
+            ShowUserStatistics = true,
         };
 
         private void fadeOut(bool instant = false)
@@ -1238,7 +1237,18 @@ namespace osu.Game.Screens.Play
 
             if (this.IsCurrentScreen())
             {
-                ApplyToBackground(b => b.IgnoreUserSettings.Value = true);
+                ApplyToBackground(b =>
+                {
+                    b.IgnoreUserSettings.Value = true;
+
+                    // May be null if the load never completed.
+                    if (breakTracker != null)
+                    {
+                        b.IsBreakTime.UnbindFrom(breakTracker.IsBreakTime);
+                        b.IsBreakTime.Value = false;
+                    }
+                });
+
                 storyboardReplacesBackground.Value = false;
             }
         }
