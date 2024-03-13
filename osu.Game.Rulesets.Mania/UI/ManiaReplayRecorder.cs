@@ -13,12 +13,8 @@ namespace osu.Game.Rulesets.Mania.UI
     public partial class ManiaReplayRecorder : ReplayRecorder<ManiaAction>
     {
         public ManiaReplayRecorder(Score score, ManiaPlayfield playfield)
-            : base(score)
+            : base(score, playfield)
         {
-            playfield.NewResult += (d, r) =>
-            {
-                HasJudgement = true;
-            };
         }
 
         protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<ManiaAction> actions, ReplayFrame previousFrame, FrameRecordHandler recordHandler)

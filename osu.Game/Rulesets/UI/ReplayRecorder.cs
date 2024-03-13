@@ -23,20 +23,22 @@ namespace osu.Game.Rulesets.UI
     {
         private readonly Score target;
 
+        private readonly Playfield playfield;
+
         private readonly List<T> pressedActions = new List<T>();
 
         private InputManager inputManager;
 
         public int RecordFrameRate = 60;
 
-        public bool HasJudgement;
-
         [Resolved]
         private SpectatorClient spectatorClient { get; set; }
 
-        protected ReplayRecorder(Score target)
+        protected ReplayRecorder(Score target, Playfield playfield)
         {
             this.target = target;
+
+            this.playfield = playfield;
 
             RelativeSizeAxes = Axes.Both;
 
@@ -53,7 +55,7 @@ namespace osu.Game.Rulesets.UI
         {
             base.Update();
 
-            if (HasJudgement)
+            if (playfield.HasJudgement)
                 recordFrame(true, FrameRecordHandler.Judgement);
 
             recordFrame(false, FrameRecordHandler.Update);
@@ -88,6 +90,10 @@ namespace osu.Game.Rulesets.UI
             var position = ScreenSpaceToGamefield?.Invoke(inputManager.CurrentState.Mouse.Position) ?? inputManager.CurrentState.Mouse.Position;
 
             var frame = HandleFrame(position, pressedActions, last, recordHandler);
+
+            //Reset judgement status for the next frame
+            if (recordHandler == FrameRecordHandler.Judgement)
+                playfield.HasJudgement = false;
 
             if (frame != null)
             {

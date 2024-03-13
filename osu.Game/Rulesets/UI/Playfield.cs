@@ -113,6 +113,8 @@ namespace osu.Game.Rulesets.UI
 
         private readonly Stack<HitObjectLifetimeEntry> judgedEntries;
 
+        public bool HasJudgement;
+
         /// <summary>
         /// Creates a new <see cref="Playfield"/>.
         /// </summary>
@@ -131,6 +133,11 @@ namespace osu.Game.Rulesets.UI
             entryManager.OnEntryRemoved += onEntryRemoved;
 
             judgedEntries = new Stack<HitObjectLifetimeEntry>();
+
+            NewResult += (d, r) =>
+            {
+                HasJudgement = true;
+            };
         }
 
         [BackgroundDependencyLoader]

@@ -16,29 +16,14 @@ namespace osu.Game.Rulesets.Catch.UI
         private readonly CatchPlayfield playfield;
 
         public CatchReplayRecorder(Score target, CatchPlayfield playfield)
-            : base(target)
+            : base(target, playfield)
         {
             this.playfield = playfield;
-
-            playfield.NewResult += (d, r) =>
-            {
-                HasJudgement = true;
-            };
         }
 
         protected override ReplayFrame? GetLastFrameRecordHandler(FrameRecordHandler recordHandler, List<ReplayFrame> replayFrames) => replayFrames.Where(x => ((CatchReplayFrame)x).RecordHandler == recordHandler).LastOrDefault();
 
         protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<CatchAction> actions, ReplayFrame previousFrame, FrameRecordHandler recordHandler)
-        {
-            if (recordHandler == FrameRecordHandler.Judgement)
-            {
-                //Reset judgement status for the next frame
-                HasJudgement = false;
-            }
-
-            int direction = actions.Contains(CatchAction.MoveLeft) ? -1 : (actions.Contains(CatchAction.MoveRight) ? 1 : 0);
-
-            return new CatchReplayFrame(Time.Current, playfield.Catcher.X, actions.Contains(CatchAction.Dash), direction, (int)recordHandler, previousFrame as CatchReplayFrame);
-        }
+            => new CatchReplayFrame(Time.Current, playfield.Catcher.X, actions.Contains(CatchAction.Dash), actions.Contains(CatchAction.MoveLeft) ? -1 : (actions.Contains(CatchAction.MoveRight) ? 1 : 0), (int)recordHandler, previousFrame as CatchReplayFrame);
     }
 }
