@@ -43,6 +43,11 @@ namespace osu.Game.Rulesets.UI
             RelativeSizeAxes = Axes.Both;
 
             Depth = float.MinValue;
+
+            playfield.NewResult += (d, r) =>
+            {
+                recordFrame(true, FrameRecordHandler.Judgement);
+            };
         }
 
         protected override void LoadComplete()
@@ -54,10 +59,6 @@ namespace osu.Game.Rulesets.UI
         protected override void Update()
         {
             base.Update();
-
-            if (playfield.HasJudgement)
-                recordFrame(true, FrameRecordHandler.Judgement);
-
             recordFrame(false, FrameRecordHandler.Update);
         }
 
@@ -90,10 +91,6 @@ namespace osu.Game.Rulesets.UI
             var position = ScreenSpaceToGamefield?.Invoke(inputManager.CurrentState.Mouse.Position) ?? inputManager.CurrentState.Mouse.Position;
 
             var frame = HandleFrame(position, pressedActions, last, recordHandler);
-
-            //Reset judgement status for the next frame
-            if (recordHandler == FrameRecordHandler.Judgement)
-                playfield.HasJudgement = false;
 
             if (frame != null)
             {

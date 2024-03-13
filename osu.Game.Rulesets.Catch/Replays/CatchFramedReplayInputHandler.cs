@@ -6,15 +6,31 @@ using System.Linq;
 using osu.Framework.Input.StateChanges;
 using osu.Framework.Utils;
 using osu.Game.Replays;
+using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Replays;
+using osu.Game.Rulesets.UI;
 
 namespace osu.Game.Rulesets.Catch.Replays
 {
     public class CatchFramedReplayInputHandler : FramedReplayInputHandler<CatchReplayFrame>
     {
-        public CatchFramedReplayInputHandler(Replay replay)
+        public CatchFramedReplayInputHandler(Replay replay, CatchPlayfield playfield)
             : base(replay)
         {
+            playfield.NewCatchReplayJudgement += (obj) =>
+            {
+                CatchReplayFrame? syncFrame;
+
+                //NOTE: WORKAROUND [!!!] This code is only meant to run for Classic (Legacy) replays as a way to minimize the mismatching caused by floating point errors. When a new proper fix for Lazer to Stable maps will be done and the maps will entirely match... then this code must be entirely removed.
+                if (playfield.Catcher.IsLegacy)
+                    syncFrame = (CatchReplayFrame?)Frames?.Find(x => x.Time >= ((int)obj.StartTime - 1) && FrameRecordHandlerUtils.IsRecordHandlerValidForJudgement(((CatchReplayFrame)x).RecordHandler));
+                //This is the correct one
+                else
+                    syncFrame = (CatchReplayFrame?)Frames?.Find(x => x.Time >= (int)obj.StartTime && FrameRecordHandlerUtils.IsRecordHandlerValidForJudgement(((CatchReplayFrame)x).RecordHandler));
+
+                if (syncFrame != null)
+                    playfield.CatcherPosition = syncFrame.Position;
+            };
         }
 
         protected override bool IsImportant(CatchReplayFrame frame) => frame.Actions.Any();

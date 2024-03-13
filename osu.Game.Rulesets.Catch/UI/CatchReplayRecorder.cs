@@ -21,9 +21,22 @@ namespace osu.Game.Rulesets.Catch.UI
             this.playfield = playfield;
         }
 
+        private int getCatcherDirection(List<CatchAction> actions)
+        {
+            int finalDirection = 0;
+
+            if (actions.Contains(CatchAction.MoveLeft))
+                finalDirection--;
+
+            if (actions.Contains(CatchAction.MoveRight))
+                finalDirection++;
+
+            return finalDirection;
+        }
+
         protected override ReplayFrame? GetLastFrameRecordHandler(FrameRecordHandler recordHandler, List<ReplayFrame> replayFrames) => replayFrames.Where(x => ((CatchReplayFrame)x).RecordHandler == recordHandler).LastOrDefault();
 
         protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<CatchAction> actions, ReplayFrame previousFrame, FrameRecordHandler recordHandler)
-            => new CatchReplayFrame(Time.Current, playfield.Catcher.X, actions.Contains(CatchAction.Dash), actions.Contains(CatchAction.MoveLeft) ? -1 : (actions.Contains(CatchAction.MoveRight) ? 1 : 0), (int)recordHandler, previousFrame as CatchReplayFrame);
+            => new CatchReplayFrame(Time.Current, playfield.Catcher.X, actions.Contains(CatchAction.Dash), getCatcherDirection(actions), (int)recordHandler, previousFrame as CatchReplayFrame);
     }
 }

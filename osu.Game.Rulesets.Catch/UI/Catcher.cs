@@ -15,11 +15,9 @@ using osu.Game.Configuration;
 using osu.Game.Rulesets.Catch.Judgements;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.Objects.Drawables;
-using osu.Game.Rulesets.Catch.Replays;
 using osu.Game.Rulesets.Catch.Skinning;
 using osu.Game.Rulesets.Judgements;
 using osu.Game.Rulesets.Objects.Legacy;
-using osu.Game.Rulesets.UI;
 using osu.Game.Skinning;
 using osuTK;
 using osuTK.Graphics;
@@ -135,7 +133,7 @@ namespace osu.Game.Rulesets.Catch.UI
         private readonly DrawablePool<CaughtBanana> caughtBananaPool;
         private readonly DrawablePool<CaughtDroplet> caughtDropletPool;
 
-        private bool isCatcherLegacy;
+        public bool IsLegacy;
 
         public Catcher(DroppedObjectContainer droppedObjectTarget, IBeatmapDifficultyInfo? difficulty = null)
         {
@@ -198,40 +196,23 @@ namespace osu.Game.Rulesets.Catch.UI
         /// <summary>
         /// Set the catcher legacy status.
         /// </summary>
-        public void SetCatcherLegacy(bool legacyStatus = false) => isCatcherLegacy = legacyStatus;
+        public void SetCatcherLegacy(bool legacyStatus = false) => IsLegacy = legacyStatus;
 
         /// <summary>
         /// Determine if this catcher can catch a <see cref="CatchHitObject"/> in the current position.
         /// </summary>
-        public bool CanCatch(CatchHitObject hitObject)
+        public bool CanCatch(CatchHitObject hitObject, float catcherX)
         {
             if (!(hitObject is PalpableCatchHitObject fruit))
                 return false;
 
-            //Note: This might be removed in the future. Currently CanCatch might run after the current CatchReplayFrame, so this code is added to "catch" up to the replay. (To get the same judgements)
-            if (GetContainingInputManager().CurrentState is RulesetInputManagerInputState<CatchAction> { LastReplayState: CatchFramedReplayInputHandler.CatchReplayState replayState })
-            {
-                CatchReplayFrame? syncFrame;
-
-                if (isCatcherLegacy)
-                {
-                    //NOTE: WORKAROUND [!!!] This code is only meant to run for Classic (Legacy) replays as a way to minimize the mismatching caused by floating point errors. When a new proper fix for Lazer to Stable maps will be done and the maps will entirely match... then this code must be entirely removed.
-                    syncFrame = (CatchReplayFrame?)replayState.Frames?.Find(x => x.Time >= ((int)hitObject.StartTime - 1) && FrameRecordHandlerUtils.IsRecordHandlerValidForJudgement(((CatchReplayFrame)x).RecordHandler));
-                }
-
-                else
-                    syncFrame = (CatchReplayFrame?)replayState.Frames?.Find(x => x.Time >= (int)hitObject.StartTime && FrameRecordHandlerUtils.IsRecordHandlerValidForJudgement(((CatchReplayFrame)x).RecordHandler));
-
-                if (syncFrame != null)
-                {
-                    X = syncFrame.Position;
-                }
-            }
-
             float halfCatchWidth = CatchWidth * 0.5f;
-            return fruit.EffectiveX >= X - halfCatchWidth &&
-                   fruit.EffectiveX <= X + halfCatchWidth;
+
+            return fruit.EffectiveX >= catcherX - halfCatchWidth &&
+                   fruit.EffectiveX <= catcherX + halfCatchWidth;
         }
+
+        public bool CanCatch(CatchHitObject hitObject) => CanCatch(hitObject, X);
 
         public void OnNewResult(DrawableCatchHitObject drawableObject, JudgementResult result)
         {
