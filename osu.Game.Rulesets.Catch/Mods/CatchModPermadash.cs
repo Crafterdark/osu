@@ -16,7 +16,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override string Acronym => "PD";
         public override LocalisableString Description => "Can't stop dashing!";
         public override double ScoreMultiplier => 1;
-        public override IconUsage? Icon => FontAwesome.Solid.Running;
+        public override IconUsage? Icon => FontAwesome.Solid.Wind;
         public override ModType Type => ModType.Fun;
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
