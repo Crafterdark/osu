@@ -23,7 +23,7 @@ namespace osu.Game.Rulesets.Catch.Mods
 
         public override double ScoreMultiplier => 1;
 
-        public override IconUsage? Icon => FontAwesome.Solid.ChevronCircleRight;
+        public override IconUsage? Icon => FontAwesome.Solid.Running;
 
         public override ModType Type => ModType.Fun;
 
