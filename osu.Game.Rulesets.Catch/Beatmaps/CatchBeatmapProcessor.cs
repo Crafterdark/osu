@@ -15,7 +15,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
     {
         public const int RNG_SEED = 1337;
 
-        public bool HardRockOffsets { get; set; }
+        public bool SpicyPatternsOffsets { get; set; }
 
         public class LimitedCatchPlayfield(double value)
         {
@@ -131,9 +131,10 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 switch (obj)
                 {
                     case Fruit fruit:
-                        if (HardRockOffsets)
-                            applyHardRockOffset(fruit, ref lastPosition, ref lastStartTime, rng);
+                        if (SpicyPatternsOffsets)
+                            applySpicyPatternsOffset(fruit, ref lastPosition, ref lastStartTime, rng);
                         catchBeatmap.LimitedCatchPlayfield?.ConvertObject(fruit);
+
                         break;
 
                     case BananaShower bananaShower:
@@ -175,7 +176,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             initialiseHyperDash(beatmap);
         }
 
-        private static void applyHardRockOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime, LegacyRandom rng)
+        private static void applySpicyPatternsOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime, LegacyRandom rng)
         {
             float offsetPosition = hitObject.OriginalX;
             double startTime = hitObject.StartTime;
