@@ -122,7 +122,7 @@ namespace osu.Game.Rulesets.Catch.UI
         public void SetCatcherPosition(float x)
         {
             float lastPosition = Catcher.X;
-            float newPosition = Math.Clamp(x, 0, CatchPlayfield.WIDTH);
+            float newPosition = Math.Clamp(x, Catcher.MinX, Catcher.MaxX);
 
             Catcher.X = newPosition;
 

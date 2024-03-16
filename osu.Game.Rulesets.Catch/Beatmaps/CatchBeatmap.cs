@@ -3,14 +3,38 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using osu.Framework.Bindables;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Objects;
+using static osu.Game.Rulesets.Catch.Beatmaps.CatchBeatmapProcessor;
 
 namespace osu.Game.Rulesets.Catch.Beatmaps
 {
     public class CatchBeatmap : Beatmap<CatchHitObject>
     {
+        /// <summary>
+        /// Whether the beatmap uses regular hyperdash generation.
+        /// </summary>
+        public BindableBool RegularHyperDashGeneration = new BindableBool(true);
+
+        /// <summary>
+        /// Whether the beatmap uses new hyperdashes generation.
+        /// </summary>
+        public BindableBool NewHyperDashGeneration = new BindableBool();
+
+        /// <summary>
+        /// Whether the beatmap uses a limited catch playfield.
+        /// </summary>
+        public BindableBool UsesLimitedCatchPlayfield = new BindableBool();
+
+        /// <summary>
+        /// The custom speed multiplier of the catcher that is applied by mods of this beatmap.
+        /// </summary>
+        public BindableDouble CatcherCustomSpeedMultiplier { get; set; } = new BindableDouble(1);
+
+        public LimitedCatchPlayfield LimitedCatchPlayfield { get; set; } = null!;
+
         public override IEnumerable<BeatmapStatistic> GetStatistics()
         {
             int fruits = HitObjects.Count(s => s is Fruit);
