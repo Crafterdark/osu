@@ -96,6 +96,16 @@ namespace osu.Game.Rulesets.Catch.UI
         public BindableDouble CustomSpeedMultiplier { get; set; } = new BindableDouble(1);
 
         /// <summary>
+        /// The minimum position allowed for the catcher position.
+        /// </summary>
+        public float MinX { get; set; } = 0;
+
+        /// <summary>
+        /// The maximum position allowed for the catcher position.
+        /// </summary>
+        public float MaxX { get; set; } = CatchPlayfield.WIDTH;
+
+        /// <summary>
         /// The amount by which caught fruit should be scaled down to fit on the plate.
         /// </summary>
         private const float caught_fruit_scale_adjust = 0.5f;
@@ -274,7 +284,7 @@ namespace osu.Game.Rulesets.Catch.UI
                     SetHyperDashState(Math.Abs(velocity) / (CustomSpeedMultiplier.Value * BASE_DASH_SPEED), target.EffectiveX);
                 }
                 else
-                    SetHyperDashState();
+                    SetHyperDashState(CustomSpeedMultiplier.Value * BASE_DASH_SPEED);
             }
 
             if (result.IsHit)
@@ -300,9 +310,9 @@ namespace osu.Game.Rulesets.Catch.UI
             if (HyperDashing != catchResult.CatcherHyperDash)
             {
                 if (catchResult.CatcherHyperDash)
-                    SetHyperDashState(2);
+                    SetHyperDashState(2 * CustomSpeedMultiplier.Value * BASE_DASH_SPEED);
                 else
-                    SetHyperDashState();
+                    SetHyperDashState(CustomSpeedMultiplier.Value * BASE_DASH_SPEED);
             }
 
             caughtObjectContainer.RemoveAll(d => d.HitObject == result.HitObject, false);
@@ -314,11 +324,11 @@ namespace osu.Game.Rulesets.Catch.UI
         /// </summary>
         /// <param name="modifier">The speed multiplier. If this is less or equals to 1, this catcher will be non-hyper-dashing state.</param>
         /// <param name="targetPosition">When this catcher crosses this position, this catcher ends hyper-dashing.</param>
-        public void SetHyperDashState(double modifier = 1, float targetPosition = -1)
+        public void SetHyperDashState(double modifier, float targetPosition = -1)
         {
             bool wasHyperDashing = HyperDashing;
 
-            if (modifier <= 1 || X == targetPosition)
+            if (modifier <= CustomSpeedMultiplier.Value * BASE_DASH_SPEED || X == targetPosition)
             {
                 hyperDashModifier = 1;
                 hyperDashDirection = 0;
@@ -382,7 +392,7 @@ namespace osu.Game.Rulesets.Catch.UI
                 (hyperDashDirection < 0 && hyperDashTargetPosition > X))
             {
                 X = hyperDashTargetPosition;
-                SetHyperDashState();
+                SetHyperDashState(CustomSpeedMultiplier.Value * BASE_DASH_SPEED);
             }
         }
 

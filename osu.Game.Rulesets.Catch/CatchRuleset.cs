@@ -149,7 +149,7 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModFloatingFruits(),
                         new CatchModMuted(),
                         new CatchModNoScope(),
-                        new CatchModSpeedRun(),
+                        new MultiMod(new CatchModSpeedRun(), new CatchModSlowWalk()),
                         new CatchModPermadash(),
                         new CatchModInvisibleHyperdash(),
                     };
