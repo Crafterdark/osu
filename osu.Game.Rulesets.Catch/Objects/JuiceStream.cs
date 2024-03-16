@@ -63,6 +63,11 @@ namespace osu.Game.Rulesets.Catch.Objects
         /// </summary>
         public double SpanDuration => Duration / this.SpanCount();
 
+        /// <summary>
+        /// This <see cref="JuiceStream"/> replaces <see cref="TinyDroplet"/> with <see cref="Droplet"/>.
+        /// </summary>
+        public bool OnlyLargeDroplets { get; set; }
+
         protected override void ApplyDefaultsToSelf(ControlPointInfo controlPointInfo, IBeatmapDifficultyInfo difficulty)
         {
             base.ApplyDefaultsToSelf(controlPointInfo, difficulty);
@@ -99,11 +104,18 @@ namespace osu.Game.Rulesets.Catch.Objects
                         {
                             cancellationToken.ThrowIfCancellationRequested();
 
-                            AddNested(new TinyDroplet
-                            {
-                                StartTime = t + lastEvent.Value.Time,
-                                X = EffectiveX + Path.PositionAt(lastEvent.Value.PathProgress + (t / sinceLastTick) * (e.PathProgress - lastEvent.Value.PathProgress)).X,
-                            });
+                            if (OnlyLargeDroplets)
+                                AddNested(new Droplet
+                                {
+                                    StartTime = t + lastEvent.Value.Time,
+                                    X = EffectiveX + Path.PositionAt(lastEvent.Value.PathProgress + (t / sinceLastTick) * (e.PathProgress - lastEvent.Value.PathProgress)).X,
+                                });
+                            else
+                                AddNested(new TinyDroplet
+                                {
+                                    StartTime = t + lastEvent.Value.Time,
+                                    X = EffectiveX + Path.PositionAt(lastEvent.Value.PathProgress + (t / sinceLastTick) * (e.PathProgress - lastEvent.Value.PathProgress)).X,
+                                });
                         }
                     }
                 }
