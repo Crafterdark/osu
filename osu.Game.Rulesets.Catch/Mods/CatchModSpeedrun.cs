@@ -13,9 +13,9 @@ using osu.Game.Rulesets.UI;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
-    public class CatchModSpeedrun : Mod, IApplicableToDrawableRuleset<CatchHitObject>
+    public class CatchModSpeedRun : Mod, IApplicableToDrawableRuleset<CatchHitObject>
     {
-        public override string Name => "Speedrun";
+        public override string Name => "Speed Run";
 
         public override string Acronym => "SR";
 
@@ -30,9 +30,9 @@ namespace osu.Game.Rulesets.Catch.Mods
         [SettingSource("Catcher speed increase", "The actual increase to apply", SettingControlType = typeof(MultiplierSettingsSlider))]
         public BindableDouble MovementSpeedIncrease { get; } = new BindableDouble(1.5)
         {
-            Precision = 0.1,
-            MinValue = 1.1,
-            MaxValue = 2.0,
+            Precision = 0.01,
+            MinValue = 1.01,
+            MaxValue = 2,
         };
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
