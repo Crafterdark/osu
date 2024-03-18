@@ -26,7 +26,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
         {
             var catchProcessor = (CatchBeatmapProcessor)beatmapProcessor;
-            catchProcessor.SpicyPatternsOffsets = true;
+            catchProcessor.SpicyPatterns = true;
         }
     }
 }

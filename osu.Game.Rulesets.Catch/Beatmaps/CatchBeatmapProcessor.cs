@@ -15,7 +15,11 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
     {
         public const int RNG_SEED = 1337;
 
-        public bool SpicyPatternsOffsets { get; set; }
+        public bool SpicyPatterns { get; set; }
+
+        public bool HardRockOffsets { get; set; }
+
+        public bool ClassicSpicyPatterns { get; set; }
 
         public class LimitedCatchPlayfield(double value)
         {
@@ -131,7 +135,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 switch (obj)
                 {
                     case Fruit fruit:
-                        if (SpicyPatternsOffsets)
+                        if (SpicyPatterns || (HardRockOffsets && ClassicSpicyPatterns))
                             applySpicyPatternsOffset(fruit, ref lastPosition, ref lastStartTime, rng);
                         catchBeatmap.LimitedCatchPlayfield?.ConvertObject(fruit);
 
@@ -278,18 +282,20 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                                               .Where(h => h is Fruit || (h is Droplet && h is not TinyDroplet))
                                               .ToArray();
 
-            double halfCatcherWidth = Catcher.CalculateCatchWidth(beatmap.Difficulty) / 2;
+            double originalHalfCatcherWidth = Catcher.CalculateCatchWidth(beatmap.BeatmapInfo.Difficulty.Clone()) / 2;
+            double modifiedHalfCatcherWidth = Catcher.CalculateCatchWidth(beatmap.Difficulty) / 2;
 
             var catchBeatmap = (CatchBeatmap)beatmap;
 
             // Todo: This is wrong. osu!stable calculated hyperdashes using the full catcher size, excluding the margins.
             // This should theoretically cause impossible scenarios, but practically, likely due to the size of the playfield, it doesn't seem possible.
             // For now, to bring gameplay (and diffcalc!) completely in-line with stable, this code also uses the full catcher size.
-            halfCatcherWidth /= Catcher.ALLOWED_CATCH_RANGE;
+            originalHalfCatcherWidth /= Catcher.ALLOWED_CATCH_RANGE;
+            modifiedHalfCatcherWidth /= Catcher.ALLOWED_CATCH_RANGE;
 
             int lastDirection = 0;
-            double lastExcess = halfCatcherWidth;
-            double otherLastExcess = halfCatcherWidth;
+            double originalLastExcess = originalHalfCatcherWidth;
+            double modifiedLastExcess = modifiedHalfCatcherWidth;
 
             for (int i = 0; i < palpableObjects.Length - 1; i++)
             {
@@ -305,12 +311,12 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 catchBeatmap.LimitedCatchPlayfield?.UnconvertObjects(currentObject, nextObject);
 
                 if (catchBeatmap.RegularHyperDashGeneration.Value)
-                    lastExcess = processHyperDash(currentObject, nextObject, halfCatcherWidth, lastExcess, lastDirection, thisDirection, Catcher.BASE_DASH_SPEED, true);
+                    originalLastExcess = processHyperDash(currentObject, nextObject, originalHalfCatcherWidth, originalLastExcess, lastDirection, thisDirection, Catcher.BASE_DASH_SPEED, true);
 
                 catchBeatmap.LimitedCatchPlayfield?.ConvertObjects(currentObject, nextObject);
 
-                if (catchBeatmap.NewHyperDashGeneration.Value)
-                    otherLastExcess = processHyperDash(currentObject, nextObject, halfCatcherWidth, otherLastExcess, lastDirection, thisDirection, ((CatchBeatmap)beatmap).CatcherCustomSpeedMultiplier.Value * Catcher.BASE_DASH_SPEED, false);
+                if (catchBeatmap.ModifiedHyperDashGeneration.Value)
+                    modifiedLastExcess = processHyperDash(currentObject, nextObject, modifiedHalfCatcherWidth, modifiedLastExcess, lastDirection, thisDirection, ((CatchBeatmap)beatmap).CatcherCustomSpeedMultiplier.Value * Catcher.BASE_DASH_SPEED, false);
 
                 lastDirection = thisDirection;
             }

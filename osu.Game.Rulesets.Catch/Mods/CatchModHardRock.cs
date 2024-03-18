@@ -4,10 +4,11 @@
 using System;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Beatmaps;
+using osu.Game.Rulesets.Catch.Beatmaps;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
-    public class CatchModHardRock : ModHardRock
+    public class CatchModHardRock : ModHardRock, IApplicableToBeatmapProcessor
     {
         public override double ScoreMultiplier => UsesDefaultConfiguration ? 1.10 : 1;
 
@@ -17,6 +18,11 @@ namespace osu.Game.Rulesets.Catch.Mods
 
             difficulty.CircleSize = Math.Min(difficulty.CircleSize * 1.3f, 10.0f); // CS uses a custom 1.3 ratio.
             difficulty.ApproachRate = Math.Min(difficulty.ApproachRate * ADJUST_RATIO, 10.0f);
+        }
+        public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
+        {
+            var catchBeatmapProcessor = (CatchBeatmapProcessor)beatmapProcessor;
+            catchBeatmapProcessor.HardRockOffsets = true;
         }
     }
 }

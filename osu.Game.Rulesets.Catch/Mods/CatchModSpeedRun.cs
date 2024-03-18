@@ -1,6 +1,7 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
@@ -26,6 +27,8 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override IconUsage? Icon => FontAwesome.Solid.Running;
 
         public override ModType Type => ModType.Fun;
+
+        public override Type[] IncompatibleMods => new[] { typeof(CatchModSlowWalk) };
 
         [SettingSource("Catcher speed increase", "The actual increase to apply", SettingControlType = typeof(MultiplierSettingsSlider))]
         public BindableDouble MovementSpeedIncrease { get; } = new BindableDouble(1.5)

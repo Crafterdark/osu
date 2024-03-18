@@ -1,6 +1,7 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
@@ -44,6 +45,8 @@ namespace osu.Game.Rulesets.Catch.Mods
 
         public override ModType Type => ModType.Fun;
 
+        public override Type[] IncompatibleMods => new[] { typeof(CatchModSpeedRun) };
+
         [SettingSource("Catcher speed decrease", "The actual decrease to apply", SettingControlType = typeof(MultiplierSettingsSlider))]
         public BindableDouble MovementSpeedDecrease { get; } = new BindableDouble(0.75)
         {
@@ -52,16 +55,11 @@ namespace osu.Game.Rulesets.Catch.Mods
             MaxValue = 0.99,
         };
 
-        [SettingSource("Remove regular hyperdashes", "Removes hyperdashes from the original beatmap")]
-        public BindableBool RemoveRegularHyperDashes { get; } = new BindableBool();
-
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
         {
             var catchBeatmap = (CatchBeatmap)beatmapProcessor.Beatmap;
 
             catchBeatmap.CatcherCustomSpeedMultiplier.Value *= MovementSpeedDecrease.Value;
-            catchBeatmap.RegularHyperDashGeneration.Value = !RemoveRegularHyperDashes.Value;
-            catchBeatmap.NewHyperDashGeneration.Value = true;
             catchBeatmap.UsesLimitedCatchPlayfield.Value = true;
         }
 

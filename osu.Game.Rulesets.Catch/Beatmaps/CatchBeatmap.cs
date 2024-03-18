@@ -19,9 +19,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         public BindableBool RegularHyperDashGeneration = new BindableBool(true);
 
         /// <summary>
-        /// Whether the beatmap uses new hyperdashes generation.
+        /// Whether the beatmap uses modified hyperdashes generation.
         /// </summary>
-        public BindableBool NewHyperDashGeneration = new BindableBool();
+        public BindableBool ModifiedHyperDashGeneration = new BindableBool(true);
 
         /// <summary>
         /// Whether the beatmap uses a limited catch playfield.
