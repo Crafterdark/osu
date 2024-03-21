@@ -6,6 +6,7 @@ using System.Linq;
 using osu.Framework.Bindables;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Catch.Objects;
+using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Objects;
 using static osu.Game.Rulesets.Catch.Beatmaps.CatchBeatmapProcessor;
 
@@ -29,9 +30,19 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         public BindableBool UsesLimitedCatchPlayfield = new BindableBool();
 
         /// <summary>
-        /// The custom speed multiplier of the catcher that is applied by mods of this beatmap.
+        /// The custom speed multiplier of the catcher that is applied by mods to this beatmap.
         /// </summary>
         public BindableDouble CatcherCustomSpeedMultiplier { get; set; } = new BindableDouble(1);
+
+        /// <summary>
+        /// The custom rate that is applied by mods to this beatmap.
+        /// </summary>
+        public BindableDouble CatcherCustomRate { get; set; } = new BindableDouble(1);
+
+        /// <summary>
+        /// The max allowed dash speed of the catcher without hyperdash status.
+        /// </summary>
+        public double CatcherMaxDashSpeed => Catcher.BASE_DASH_SPEED * (CatcherCustomSpeedMultiplier.Value / CatcherCustomRate.Value);
 
         public LimitedCatchPlayfield LimitedCatchPlayfield { get; set; } = null!;
 

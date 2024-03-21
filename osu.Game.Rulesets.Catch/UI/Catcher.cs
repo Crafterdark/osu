@@ -88,12 +88,22 @@ namespace osu.Game.Rulesets.Catch.UI
         /// <summary>
         /// The current speed of the catcher with the hyper-dash modifier applied.
         /// </summary>
-        public double Speed => (Dashing ? BASE_DASH_SPEED : BASE_WALK_SPEED) * CustomSpeedMultiplier.Value * hyperDashModifier;
+        public double Speed => (Dashing ? BASE_DASH_SPEED : BASE_WALK_SPEED) * (CustomSpeedMultiplier.Value / CustomRate.Value) * hyperDashModifier;
+
+        /// <summary>
+        /// The max allowed dash speed of the catcher without hyperdash status.
+        /// </summary>
+        public double MaxDashSpeed => BASE_DASH_SPEED * (CustomSpeedMultiplier.Value / CustomRate.Value);
 
         /// <summary>
         /// The custom speed multiplier of the catcher that is applied by mods.
         /// </summary>
         public BindableDouble CustomSpeedMultiplier { get; set; } = new BindableDouble(1);
+
+        /// <summary>
+        /// The custom rate of the catcher that is applied by mods.
+        /// </summary>
+        public BindableDouble CustomRate { get; set; } = new BindableDouble(1);
 
         /// <summary>
         /// The minimum position allowed for the catcher position.
@@ -281,10 +291,10 @@ namespace osu.Game.Rulesets.Catch.UI
                     double positionDifference = target.EffectiveX - X;
                     double velocity = positionDifference / Math.Max(1.0, timeDifference - 1000.0 / 60.0);
 
-                    SetHyperDashState(Math.Abs(velocity) / (CustomSpeedMultiplier.Value * BASE_DASH_SPEED), target.EffectiveX);
+                    SetHyperDashState(Math.Abs(velocity) / MaxDashSpeed, target.EffectiveX);
                 }
                 else
-                    SetHyperDashState(CustomSpeedMultiplier.Value * BASE_DASH_SPEED);
+                    SetHyperDashState(MaxDashSpeed);
             }
 
             if (result.IsHit)
@@ -310,9 +320,9 @@ namespace osu.Game.Rulesets.Catch.UI
             if (HyperDashing != catchResult.CatcherHyperDash)
             {
                 if (catchResult.CatcherHyperDash)
-                    SetHyperDashState(2 * CustomSpeedMultiplier.Value * BASE_DASH_SPEED);
+                    SetHyperDashState(2 * MaxDashSpeed);
                 else
-                    SetHyperDashState(CustomSpeedMultiplier.Value * BASE_DASH_SPEED);
+                    SetHyperDashState(MaxDashSpeed);
             }
 
             caughtObjectContainer.RemoveAll(d => d.HitObject == result.HitObject, false);
@@ -328,7 +338,7 @@ namespace osu.Game.Rulesets.Catch.UI
         {
             bool wasHyperDashing = HyperDashing;
 
-            if (modifier <= CustomSpeedMultiplier.Value * BASE_DASH_SPEED || X == targetPosition)
+            if (modifier <= MaxDashSpeed || X == targetPosition)
             {
                 hyperDashModifier = 1;
                 hyperDashDirection = 0;
@@ -392,7 +402,7 @@ namespace osu.Game.Rulesets.Catch.UI
                 (hyperDashDirection < 0 && hyperDashTargetPosition > X))
             {
                 X = hyperDashTargetPosition;
-                SetHyperDashState(CustomSpeedMultiplier.Value * BASE_DASH_SPEED);
+                SetHyperDashState(MaxDashSpeed);
             }
         }
 

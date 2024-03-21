@@ -1,6 +1,7 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
 using osu.Game.Rulesets.Catch.Objects;
@@ -18,6 +19,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override double ScoreMultiplier => 1;
         public override IconUsage? Icon => FontAwesome.Solid.Wind;
         public override ModType Type => ModType.Fun;
+        public override Type[] IncompatibleMods => new[] { typeof(CatchModRelax) };
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {

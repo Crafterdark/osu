@@ -5,8 +5,10 @@ using System;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
+using osu.Game.Beatmaps;
 using osu.Game.Configuration;
 using osu.Game.Overlays.Settings;
+using osu.Game.Rulesets.Catch.Beatmaps;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Mods;
@@ -14,7 +16,7 @@ using osu.Game.Rulesets.UI;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
-    public class CatchModSpeedRun : Mod, IApplicableToDrawableRuleset<CatchHitObject>
+    public class CatchModSpeedRun : Mod, IApplicableToDrawableRuleset<CatchHitObject>, IApplicableToBeatmapProcessor
     {
         public override string Name => "Speed Run";
 
@@ -28,7 +30,7 @@ namespace osu.Game.Rulesets.Catch.Mods
 
         public override ModType Type => ModType.Fun;
 
-        public override Type[] IncompatibleMods => new[] { typeof(CatchModSlowWalk) };
+        public override Type[] IncompatibleMods => new[] { typeof(CatchModSlowWalk), typeof(CatchModRelax) };
 
         [SettingSource("Catcher speed increase", "The actual increase to apply", SettingControlType = typeof(MultiplierSettingsSlider))]
         public BindableDouble MovementSpeedIncrease { get; } = new BindableDouble(1.5)
@@ -37,6 +39,13 @@ namespace osu.Game.Rulesets.Catch.Mods
             MinValue = 1.01,
             MaxValue = 2,
         };
+
+        public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
+        {
+            var catchBeatmap = (CatchBeatmap)beatmapProcessor.Beatmap;
+
+            catchBeatmap.CatcherCustomSpeedMultiplier.Value *= MovementSpeedIncrease.Value;
+        }
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {

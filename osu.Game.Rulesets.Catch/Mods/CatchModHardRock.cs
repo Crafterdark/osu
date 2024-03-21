@@ -10,7 +10,7 @@ namespace osu.Game.Rulesets.Catch.Mods
 {
     public class CatchModHardRock : ModHardRock, IApplicableToBeatmapProcessor
     {
-        public override double ScoreMultiplier => UsesDefaultConfiguration ? 1.10 : 1;
+        public override double ScoreMultiplier => UsesDefaultConfiguration ? 1.12 : 1;
 
         public override void ApplyToDifficulty(BeatmapDifficulty difficulty)
         {

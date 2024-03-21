@@ -316,7 +316,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 catchBeatmap.LimitedCatchPlayfield?.ConvertObjects(currentObject, nextObject);
 
                 if (catchBeatmap.ModifiedHyperDashGeneration.Value)
-                    modifiedLastExcess = processHyperDash(currentObject, nextObject, modifiedHalfCatcherWidth, modifiedLastExcess, lastDirection, thisDirection, ((CatchBeatmap)beatmap).CatcherCustomSpeedMultiplier.Value * Catcher.BASE_DASH_SPEED, false);
+                    modifiedLastExcess = processHyperDash(currentObject, nextObject, modifiedHalfCatcherWidth, modifiedLastExcess, lastDirection, thisDirection, ((CatchBeatmap)beatmap).CatcherMaxDashSpeed, false);
 
                 lastDirection = thisDirection;
             }
