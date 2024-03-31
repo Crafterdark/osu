@@ -59,7 +59,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         {
             var catchBeatmap = (CatchBeatmap)beatmapProcessor.Beatmap;
 
-            catchBeatmap.CatcherCustomSpeedMultiplier.Value *= MovementSpeedDecrease.Value;
+            catchBeatmap.CatcherAdjustedDashSpeed.Value *= MovementSpeedDecrease.Value;
             catchBeatmap.UsesLimitedCatchPlayfield.Value = true;
         }
 

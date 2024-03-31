@@ -107,6 +107,7 @@ namespace osu.Game.Rulesets.Catch.Objects
                             if (OnlyLargeDroplets)
                                 AddNested(new Droplet
                                 {
+                                    HasRandomOffset = true,
                                     StartTime = t + lastEvent.Value.Time,
                                     X = EffectiveX + Path.PositionAt(lastEvent.Value.PathProgress + (t / sinceLastTick) * (e.PathProgress - lastEvent.Value.PathProgress)).X,
                                 });

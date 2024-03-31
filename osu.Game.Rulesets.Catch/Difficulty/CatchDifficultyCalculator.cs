@@ -68,7 +68,7 @@ namespace osu.Game.Rulesets.Catch.Difficulty
                 float localHalfCatcherWidth = halfCatcherWidth;
 
                 if (isLowPrecision)
-                    localHalfCatcherWidth += (float)CatchModLowPrecision.CalculateHalfExtendedCollisionDistanceForHitObject(hitObject);
+                    localHalfCatcherWidth += (float)CatchModLowPrecision.CalculateVariableWidth(hitObject);
 
                 if (lastObject != null)
                     objects.Add(new CatchDifficultyHitObject(hitObject, lastObject, clockRate, localHalfCatcherWidth, objects, objects.Count));

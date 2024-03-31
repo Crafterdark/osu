@@ -1,6 +1,7 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
 using osu.Game.Beatmaps;
@@ -21,6 +22,8 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override LocalisableString Description => "Fruits can be caught in their entirety!";
 
         public override ModType Type => ModType.DifficultyReduction;
+
+        public override Type[] IncompatibleMods => new[] { typeof(CatchModClassic) };
 
         public override IconUsage? Icon => FontAwesome.Solid.AngleDoubleDown;
 
@@ -44,10 +47,11 @@ namespace osu.Game.Rulesets.Catch.Mods
             var drawableCatchRuleset = (DrawableCatchRuleset)drawableRuleset;
             var catchPlayfield = (CatchPlayfield)drawableCatchRuleset.Playfield;
 
-            catchPlayfield.Catcher.LowPrecisionJudgementOnPlate = true;
+            catchPlayfield.Catcher.CatchFruitsHavingVariableWidth = true;
+            catchPlayfield.Catcher.CatchFruitsWithinPlateEdges = true;
         }
 
-        public static double CalculateHalfExtendedCollisionDistanceForHitObject(HitObject hitObject)
+        public static double CalculateVariableWidth(HitObject hitObject)
         {
             double rescaleFactor = 0;
 

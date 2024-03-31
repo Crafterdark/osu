@@ -44,7 +44,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         {
             var catchBeatmap = (CatchBeatmap)beatmapProcessor.Beatmap;
 
-            catchBeatmap.CatcherCustomSpeedMultiplier.Value *= MovementSpeedIncrease.Value;
+            catchBeatmap.CatcherAdjustedDashSpeed.Value *= MovementSpeedIncrease.Value;
         }
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)

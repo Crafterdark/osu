@@ -21,7 +21,7 @@ namespace osu.Game.Rulesets.Catch.Mods
 
         public override IconUsage? Icon => FontAwesome.Solid.FireAlt;
 
-        public override ModType Type => ModType.DifficultyIncrease;
+        public override ModType Type => ModType.Conversion;
 
         public override Type[] IncompatibleMods => base.IncompatibleMods.Append(typeof(CatchModClassic)).ToArray();
 
