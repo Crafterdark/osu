@@ -64,7 +64,6 @@ namespace osu.Game.Rulesets.Catch.Objects
         public double SpanDuration => Duration / this.SpanCount();
 
         /// <summary>
-
         /// Whether to allow juice streams with missing segments to generate new tiny droplets.
         /// </summary>
         public bool AddTinyToNewSegment { get; set; }
@@ -97,8 +96,9 @@ namespace osu.Game.Rulesets.Catch.Objects
         /// <summary>
         /// Whether the newly generated tiny droplet should use the new random generator.
         /// </summary>
-        public bool TinyUsesNewRandom { get; set; }
+        public bool UsingNewRandomForNested { get; set; }
 
+        /// <summary>
         /// This <see cref="JuiceStream"/> replaces <see cref="TinyDroplet"/> with <see cref="Droplet"/>.
         /// </summary>
         public bool OnlyLargeDroplets { get; set; }
@@ -201,31 +201,29 @@ namespace osu.Game.Rulesets.Catch.Objects
                         {
                             cancellationToken.ThrowIfCancellationRequested();
 
-
                             //The new random generator is only applied to the new osu!lazer tiny droplets, due to the linear nature of the RNG used for offset randomization.
                             if (LegacyLastTickCausedMissingAllTiny || (LegacyLastTickCausedMissingExtraTiny && LegacyLastTickTinyCounter-- < 1))
-                                TinyUsesNewRandom = true;
-
-                            AddNested(new TinyDroplet
-                            {
-                                StartTime = t + lastEvent.Value.Time,
-                                X = EffectiveX + Path.PositionAt(lastEvent.Value.PathProgress + (t / sinceLastTick) * (e.PathProgress - lastEvent.Value.PathProgress)).X,
-                                IsUsingOldRandom = !TinyUsesNewRandom
-                            });
+                                UsingNewRandomForNested = true;
 
                             if (OnlyLargeDroplets)
+                            {
                                 AddNested(new Droplet
                                 {
                                     HasRandomOffset = true,
                                     StartTime = t + lastEvent.Value.Time,
                                     X = EffectiveX + Path.PositionAt(lastEvent.Value.PathProgress + (t / sinceLastTick) * (e.PathProgress - lastEvent.Value.PathProgress)).X,
+                                    IsUsingOldRandom = !UsingNewRandomForNested
                                 });
+                            }
                             else
+                            {
                                 AddNested(new TinyDroplet
                                 {
                                     StartTime = t + lastEvent.Value.Time,
                                     X = EffectiveX + Path.PositionAt(lastEvent.Value.PathProgress + (t / sinceLastTick) * (e.PathProgress - lastEvent.Value.PathProgress)).X,
+                                    IsUsingOldRandom = !UsingNewRandomForNested
                                 });
+                            }
                         }
                     }
                 }

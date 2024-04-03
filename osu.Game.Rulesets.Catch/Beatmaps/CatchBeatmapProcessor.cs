@@ -149,7 +149,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                             var catchObject = (CatchHitObject)nested;
                             catchObject.XOffset = 0;
 
-                            if (catchObject is TinyDroplet tiny || (catchObject is Droplet droplet && droplet.HasRandomOffset))
+                            if (catchObject is TinyDroplet || (catchObject is Droplet droplet && droplet.HasRandomOffset))
                                 catchObject.XOffset = Math.Clamp(catchObject.IsUsingOldRandom ? rng.Next(-20, 20) : rngNew != null ? rngNew.Next(-20, 20) : 0, -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
                             else if (catchObject is Droplet)
                                 rng.Next(); // osu!stable retrieved a random droplet rotation

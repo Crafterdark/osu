@@ -35,7 +35,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public void ApplyToBeatmapConverter(IBeatmapConverter beatmapConverter)
         {
             var catchBeatmapConverter = (CatchBeatmapConverter)beatmapConverter;
-            
+
             catchBeatmapConverter.NewSegmentOnJuiceStream.Value = !MissingSegmentOnJuiceStream.Value;
             catchBeatmapConverter.CompleteSegmentOnJuiceStream.Value = !IncompleteSegmentOnJuiceStream.Value;
             catchBeatmapConverter.TimedTinyDroplets.Value = !MistimedTinyDroplets.Value;
@@ -45,7 +45,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         {
             var catchBeatmapProcessor = (CatchBeatmapProcessor)beatmapProcessor;
             var catchBeatmap = (CatchBeatmap)beatmapProcessor.Beatmap;
-            
+
             catchBeatmapProcessor.NewTinyGeneration = !MissingSegmentOnJuiceStream.Value || !IncompleteSegmentOnJuiceStream.Value;
             catchBeatmap.RegularHyperDashGeneration.Value = !RemoveRegularHyperDashes.Value;
             catchBeatmapProcessor.ClassicSpicyPatterns = ClassicSpicyPatterns.Value;

@@ -59,7 +59,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         AddTinyToNewSegment = NewSegmentOnJuiceStream.Value,
                         AddTinyToIncompleteSegment = CompleteSegmentOnJuiceStream.Value,
                         TimedTinyDroplets = TimedTinyDroplets.Value,
-                        OnlyLargeDroplets = OnlyLargeDroplets,
+                        OnlyLargeDroplets = OnlyLargeDroplets
                     }.Yield();
 
                 case IHasDuration endTime:

@@ -87,6 +87,11 @@ namespace osu.Game.Rulesets.Catch.Objects
             }
         }
 
+        /// <summary>
+        /// Must be always true for osu!stable beatmaps. Might be false for osu!lazer beatmaps.
+        /// </summary>
+        public bool IsUsingOldRandom { get; set; } = true;
+
         public double TimePreempt { get; set; } = 1000;
 
         private HitObjectProperty<int> indexInBeatmap;
