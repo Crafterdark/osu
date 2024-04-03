@@ -11,19 +11,27 @@ namespace osu.Game.Rulesets.Catch.Mods
 {
     public class CatchModClassic : ModClassic, IApplicableToBeatmapConverter, IApplicableToBeatmapProcessor
     {
-        [SettingSource("Old tiny droplet generation", "Old beatmaps mistimed or prevented tiny droplet generation under particular conditions.")]
-        public Bindable<bool> OldTinyGeneration { get; } = new BindableBool(true);
+        [SettingSource("Missing segment on juice streams", "The last segment of various juice streams didn't start the tiny droplet generation.")]
+        public Bindable<bool> MissingSegmentOnJuiceStream { get; } = new BindableBool(true);
+
+        [SettingSource("Incomplete segment on juice streams", "The last segment of various juice streams didn't generate all the tiny droplets.")]
+        public Bindable<bool> IncompleteSegmentOnJuiceStream { get; } = new BindableBool(true);
+
+        [SettingSource("Mistimed tiny droplets", "Several juice streams didn't generate the tiny droplets on beat.")]
+        public Bindable<bool> MistimedTinyDroplets { get; } = new BindableBool(true);
 
         public void ApplyToBeatmapConverter(IBeatmapConverter beatmapConverter)
         {
             var catchBeatmapConverter = (CatchBeatmapConverter)beatmapConverter;
-            catchBeatmapConverter.GenerationWithLegacyLastTick = OldTinyGeneration.Value;
+            catchBeatmapConverter.NewSegmentOnJuiceStream.Value = !MissingSegmentOnJuiceStream.Value;
+            catchBeatmapConverter.CompleteSegmentOnJuiceStream.Value = !IncompleteSegmentOnJuiceStream.Value;
+            catchBeatmapConverter.TimedTinyDroplets.Value = !MistimedTinyDroplets.Value;
         }
 
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
         {
             var catchBeatmapProcessor = (CatchBeatmapProcessor)beatmapProcessor;
-            catchBeatmapProcessor.IsOldTinyGeneration = OldTinyGeneration.Value;
+            catchBeatmapProcessor.NewTinyGeneration = !MissingSegmentOnJuiceStream.Value || !IncompleteSegmentOnJuiceStream.Value;
         }
     }
 }

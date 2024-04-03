@@ -10,6 +10,7 @@ using osu.Game.Rulesets.Objects.Types;
 using osu.Game.Rulesets.Objects;
 using osu.Framework.Extensions.IEnumerableExtensions;
 using osu.Game.Beatmaps.Legacy;
+using osu.Framework.Bindables;
 
 namespace osu.Game.Rulesets.Catch.Beatmaps
 {
@@ -20,10 +21,11 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         {
         }
 
-        /// <summary>
-        /// Every beatmap from osu!stable had osu!standard tail leniency applied to tiny droplet generation. 
-        /// </summary>
-        public bool GenerationWithLegacyLastTick { get; set; }
+        public BindableBool NewSegmentOnJuiceStream { get; set; } = new BindableBool(true);
+
+        public BindableBool CompleteSegmentOnJuiceStream { get; set; } = new BindableBool(true);
+
+        public BindableBool TimedTinyDroplets { get; set; } = new BindableBool(true);
 
         public override bool CanConvert() => Beatmap.HitObjects.All(h => h is IHasXPosition);
 
@@ -52,7 +54,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         // this results in more (or less) ticks being generated in <v8 maps for the same time duration.
                         TickDistanceMultiplier = beatmap.BeatmapInfo.BeatmapVersion < 8 ? 1 : ((LegacyControlPointInfo)beatmap.ControlPointInfo).DifficultyPointAt(obj.StartTime).SliderVelocity,
                         SliderVelocityMultiplier = sliderVelocityData?.SliderVelocityMultiplier ?? 1,
-                        GenerationUsesLegacyLastTick = GenerationWithLegacyLastTick
+                        AddTinyToNewSegment = NewSegmentOnJuiceStream.Value,
+                        AddTinyToIncompleteSegment = CompleteSegmentOnJuiceStream.Value,
+                        TimedTinyDroplets = TimedTinyDroplets.Value,
                     }.Yield();
 
                 case IHasDuration endTime:

@@ -17,7 +17,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         public bool HardRockOffsets { get; set; }
 
-        public bool IsOldTinyGeneration { get; set; }
+        public bool NewTinyGeneration { get; set; } = true;
 
         public CatchBeatmapProcessor(IBeatmap beatmap)
             : base(beatmap)
@@ -66,7 +66,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             var rng = new LegacyRandom(RNG_SEED);
 
             //Independent RNG for new tiny droplet
-            var rngNew = !IsOldTinyGeneration ? new Random(RNG_SEED) : null;
+            var rngNew = NewTinyGeneration ? new Random(RNG_SEED) : null;
 
             float? lastPosition = null;
             double lastStartTime = 0;
