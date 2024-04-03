@@ -111,7 +111,8 @@ namespace osu.Game.Rulesets.Catch
                     {
                         new CatchModEasy(),
                         new CatchModNoFail(),
-                        new MultiMod(new CatchModHalfTime(), new CatchModDaycore())
+                        new MultiMod(new CatchModHalfTime(), new CatchModDaycore()),
+                        new CatchModLowPrecision(),
                     };
 
                 case ModType.DifficultyIncrease:
@@ -131,6 +132,8 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModDifficultyAdjust(),
                         new CatchModClassic(),
                         new CatchModMirror(),
+                        new CatchModSpicyPatterns(),
+                        new CatchModGrowingDroplets(),
                     };
 
                 case ModType.Automation:
@@ -147,6 +150,9 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModFloatingFruits(),
                         new CatchModMuted(),
                         new CatchModNoScope(),
+                        new MultiMod(new CatchModSpeedRun(), new CatchModSlowWalk()),
+                        new CatchModPermadash(),
+                        new CatchModInvisibleHyperdash(),
                     };
 
                 case ModType.System:

@@ -29,6 +29,8 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         public override bool CanConvert() => Beatmap.HitObjects.All(h => h is IHasXPosition);
 
+        public bool OnlyLargeDroplets { get; set; }
+
         protected override IEnumerable<CatchHitObject> ConvertHitObject(HitObject obj, IBeatmap beatmap, CancellationToken cancellationToken)
         {
             var xPositionData = obj as IHasXPosition;
@@ -57,6 +59,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         AddTinyToNewSegment = NewSegmentOnJuiceStream.Value,
                         AddTinyToIncompleteSegment = CompleteSegmentOnJuiceStream.Value,
                         TimedTinyDroplets = TimedTinyDroplets.Value,
+                        OnlyLargeDroplets = OnlyLargeDroplets,
                     }.Yield();
 
                 case IHasDuration endTime:

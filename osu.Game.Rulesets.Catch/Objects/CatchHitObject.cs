@@ -71,6 +71,22 @@ namespace osu.Game.Rulesets.Catch.Objects
         /// </remarks>
         public float EffectiveX => Math.Clamp(OriginalX + XOffset, 0, CatchPlayfield.WIDTH);
 
+        public void SetConversionFactorLimitation(bool convert, float conversionFactor, float minWidth)
+        {
+            if (convert)
+            {
+                OriginalX *= conversionFactor;
+                XOffset *= conversionFactor;
+                OriginalX += minWidth;
+            }
+            else
+            {
+                OriginalX -= minWidth;
+                OriginalX /= conversionFactor;
+                XOffset /= conversionFactor;
+            }
+        }
+
         public double TimePreempt { get; set; } = 1000;
 
         private HitObjectProperty<int> indexInBeatmap;
