@@ -8,6 +8,8 @@ namespace osu.Game.Rulesets.Catch.Objects
 {
     public class Droplet : PalpableCatchHitObject
     {
+        public bool HasRandomOffset { get; set; }
+
         public override Judgement CreateJudgement() => new CatchDropletJudgement();
     }
 }

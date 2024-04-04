@@ -21,6 +21,7 @@ using osu.Game.Rulesets;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Replays;
 using osu.Game.Rulesets.Scoring;
+using osu.Game.Rulesets.UI;
 using SharpCompress.Compressors.LZMA;
 
 namespace osu.Game.Scoring.Legacy
@@ -51,6 +52,8 @@ namespace osu.Game.Scoring.Legacy
                 int version = sr.ReadInt32();
 
                 scoreInfo.IsLegacyScore = version < LegacyScoreEncoder.FIRST_LAZER_VERSION;
+
+                score.Replay.IsLegacy = scoreInfo.IsLegacyScore;
 
                 // TotalScoreVersion gets initialised to LATEST_VERSION.
                 // In the case where the incoming score has either an osu!stable or old lazer version, we need
@@ -88,7 +91,7 @@ namespace osu.Game.Scoring.Legacy
 
                 // lazer replays get a really high version number.
                 if (version < LegacyScoreEncoder.FIRST_LAZER_VERSION)
-                    scoreInfo.Mods = scoreInfo.Mods.Append(currentRuleset.CreateMod<ModClassic>()).ToArray();
+                    scoreInfo.Mods = scoreInfo.Mods.Append(currentRuleset.CreateMod<ModClassicLegacy>()).ToArray();
 
                 currentBeatmap = workingBeatmap.GetPlayableBeatmap(currentRuleset.RulesetInfo, scoreInfo.Mods);
                 scoreInfo.BeatmapInfo = currentBeatmap.BeatmapInfo;
@@ -237,6 +240,34 @@ namespace osu.Game.Scoring.Legacy
 #pragma warning restore CS0618
         }
 
+        private bool isFrameValidForPlayback(int i, float diff, float mouseX, float mouseY)
+        {
+            if (i < 2 && mouseX == 256 && mouseY == -500)
+                // at the start of the replay, stable places two replay frames, at time 0 and SkipBoundary - 1, respectively.
+                // both frames use a position of (256, -500).
+                // ignore these frames as they serve no real purpose (and can even mislead ruleset-specific handlers - see mania)
+                return false;
+
+            // Todo: At some point we probably want to rewind and play back the negative-time frames
+            // but for now we'll achieve equal playback to stable by skipping negative frames
+            else if (diff < 0)
+                return false;
+
+            return true;
+        }
+
+        private bool isFrameValid(string[] split)
+        {
+            if (split.Length < 4)
+                return false;
+
+            else if (split[0] == "-12345")
+                // Todo: The seed is provided in split[3], which we'll need to use at some point
+                return false;
+
+            return true;
+        }
+
         private void readLegacyReplay(Replay replay, StreamReader reader)
         {
             float lastTime = beatmapOffset;
@@ -244,40 +275,80 @@ namespace osu.Game.Scoring.Legacy
 
             string[] frames = reader.ReadToEnd().Split(',');
 
+            float futureDiff;
+            float futureMouseX;
+            float futureMouseY;
+            ReplayButtonState futureButtonState;
+
+            int currentDirection = 0;
+            int lastDirection = 0;
+            int recordHandler = -1;
+
             for (int i = 0; i < frames.Length; i++)
             {
                 string[] split = frames[i].Split('|');
 
-                if (split.Length < 4)
+                if (!isFrameValid(split))
                     continue;
-
-                if (split[0] == "-12345")
-                {
-                    // Todo: The seed is provided in split[3], which we'll need to use at some point
-                    continue;
-                }
 
                 float diff = Parsing.ParseFloat(split[0]);
                 float mouseX = Parsing.ParseFloat(split[1], Parsing.MAX_COORDINATE_VALUE);
                 float mouseY = Parsing.ParseFloat(split[2], Parsing.MAX_COORDINATE_VALUE);
+                ReplayButtonState buttonState = (ReplayButtonState)Parsing.ParseInt(split[3]);
 
                 lastTime += diff;
 
-                if (i < 2 && mouseX == 256 && mouseY == -500)
-                    // at the start of the replay, stable places two replay frames, at time 0 and SkipBoundary - 1, respectively.
-                    // both frames use a position of (256, -500).
-                    // ignore these frames as they serve no real purpose (and can even mislead ruleset-specific handlers - see mania)
+                if (!isFrameValidForPlayback(i, diff, mouseX, mouseY))
                     continue;
 
-                // Todo: At some point we probably want to rewind and play back the negative-time frames
-                // but for now we'll achieve equal playback to stable by skipping negative frames
-                if (diff < 0)
-                    continue;
+                //Lazer frames retrieved with their expected data.
+                if (!replay.IsLegacy)
+                {
+                    currentDirection = Parsing.ParseInt(split[4]);
+                    recordHandler = Parsing.ParseInt(split[5]);
+                }
+
+                //Legacy frames converted into their respective types.
+                else
+                {
+                    string[] lookAheadSplit = frames[i + 1]?.Split('|');
+
+                    //Ensure we can actually look ahead
+                    if (lookAheadSplit != null)
+                    {
+                        if (isFrameValid(lookAheadSplit))
+                        {
+                            futureDiff = Parsing.ParseFloat(lookAheadSplit[0]);
+                            futureMouseX = Parsing.ParseFloat(lookAheadSplit[1], Parsing.MAX_COORDINATE_VALUE);
+                            futureMouseY = Parsing.ParseFloat(lookAheadSplit[2], Parsing.MAX_COORDINATE_VALUE);
+                            futureButtonState = (ReplayButtonState)Parsing.ParseInt(lookAheadSplit[3]);
+
+                            if (isFrameValidForPlayback(i + 1, futureDiff, futureMouseX, futureMouseY))
+                            {
+                                currentDirection = (futureMouseX > mouseX) ? 1 : (futureMouseX < mouseX) ? -1 : 0;
+
+                                if (currentDirection != lastDirection || buttonState != futureButtonState)
+                                    recordHandler = (int)FrameRecordHandler.LegacyInputJudgement;
+                                else
+                                    recordHandler = (int)FrameRecordHandler.LegacyUpdateJudgement;
+
+                                lastDirection = currentDirection;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        //Unsure about this very last frame for record handler, must be tested properly
+                        recordHandler = (int)FrameRecordHandler.LegacyUpdateJudgement;
+                    }
+                }
 
                 currentFrame = convertFrame(new LegacyReplayFrame(lastTime,
-                    mouseX,
-                    mouseY,
-                    (ReplayButtonState)Parsing.ParseInt(split[3])), currentFrame);
+                mouseX,
+                mouseY,
+                buttonState,
+                currentDirection,
+                recordHandler), currentFrame);
 
                 replay.Frames.Add(currentFrame);
             }
