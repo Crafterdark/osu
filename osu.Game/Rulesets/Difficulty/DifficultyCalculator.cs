@@ -137,11 +137,11 @@ namespace osu.Game.Rulesets.Difficulty
 
             foreach (var combination in CreateDifficultyAdjustmentModCombinations())
             {
-                Mod classicMod = rulesetInstance.CreateMod<ModClassic>();
+                Mod classicLegacyMod = rulesetInstance.CreateMod<ModClassicLegacy>();
 
                 var finalCombination = ModUtils.FlattenMod(combination);
-                if (classicMod != null)
-                    finalCombination = finalCombination.Append(classicMod);
+                if (classicLegacyMod != null)
+                    finalCombination = finalCombination.Append(classicLegacyMod);
 
                 yield return Calculate(finalCombination.ToArray(), cancellationToken);
             }

@@ -221,6 +221,7 @@ namespace osu.Game.Rulesets.Osu
                     {
                         new OsuModTouchDevice(),
                         new ModScoreV2(),
+                        new ModClassicLegacy(),
                     };
 
                 default:

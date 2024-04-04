@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System.Collections.Generic;
+using System.Linq;
 using osu.Game.Rulesets.Catch.Replays;
 using osu.Game.Rulesets.Replays;
 using osu.Game.Rulesets.UI;
@@ -15,15 +16,29 @@ namespace osu.Game.Rulesets.Catch.UI
         private readonly CatchPlayfield playfield;
 
         public CatchReplayRecorder(Score target, CatchPlayfield playfield)
-            : base(target)
+            : base(target, playfield)
         {
             this.playfield = playfield;
         }
 
-        protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<CatchAction> actions, ReplayFrame previousFrame)
-            => new CatchReplayFrame(Time.Current, playfield.Catcher.X, actions.Contains(CatchAction.Dash), previousFrame as CatchReplayFrame);
+        private int getCatcherDirection(List<CatchAction> actions)
+        {
+            int finalDirection = 0;
+
+            if (actions.Contains(CatchAction.MoveLeft))
+                finalDirection--;
+
+            if (actions.Contains(CatchAction.MoveRight))
+                finalDirection++;
+
+            return finalDirection;
+        }
+
+        protected override ReplayFrame? GetLastFrameRecordHandler(FrameRecordHandler recordHandler, List<ReplayFrame> replayFrames) => replayFrames.Where(x => ((CatchReplayFrame)x).RecordHandler == recordHandler).LastOrDefault();
+
+        protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<CatchAction> actions, ReplayFrame previousFrame, FrameRecordHandler recordHandler)
+            => new CatchReplayFrame(Time.Current, playfield.Catcher.X, actions.Contains(CatchAction.Dash), getCatcherDirection(actions), (int)recordHandler, previousFrame as CatchReplayFrame);
 
         protected override bool IsValidAction(CatchAction action) => !playfield.CatcherArea.InvalidCatchActionList.Contains(action);
-
     }
 }

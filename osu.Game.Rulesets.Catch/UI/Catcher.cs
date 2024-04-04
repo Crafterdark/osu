@@ -174,6 +174,8 @@ namespace osu.Game.Rulesets.Catch.UI
         private readonly DrawablePool<CaughtBanana> caughtBananaPool;
         private readonly DrawablePool<CaughtDroplet> caughtDropletPool;
 
+        public bool IsLegacy;
+
         public Catcher(DroppedObjectContainer droppedObjectTarget, IBeatmapDifficultyInfo? difficulty = null)
         {
             this.droppedObjectTarget = droppedObjectTarget;
@@ -233,9 +235,14 @@ namespace osu.Game.Rulesets.Catch.UI
         public static float CalculateCatchWidth(IBeatmapDifficultyInfo difficulty) => CalculateCatchWidth(calculateScale(difficulty));
 
         /// <summary>
+        /// Set the catcher legacy status.
+        /// </summary>
+        public void SetCatcherLegacy(bool legacyStatus = false) => IsLegacy = legacyStatus;
+
+        /// <summary>
         /// Determine if this catcher can catch a <see cref="CatchHitObject"/> in the current position.
         /// </summary>
-        public bool CanCatch(CatchHitObject hitObject)
+        public bool CanCatch(CatchHitObject hitObject, float catcherX)
         {
             if (!(hitObject is PalpableCatchHitObject fruit))
                 return false;
@@ -248,9 +255,11 @@ namespace osu.Game.Rulesets.Catch.UI
                 halfCatcherWidth += variableWidth;
             }
 
-            return fruit.EffectiveX >= X - halfCatcherWidth &&
-                   fruit.EffectiveX <= X + halfCatcherWidth;
+            return fruit.EffectiveX >= catcherX - halfCatcherWidth &&
+                   fruit.EffectiveX <= catcherX + halfCatcherWidth;
         }
+
+        public bool CanCatch(CatchHitObject hitObject) => CanCatch(hitObject, X);
 
         public void OnNewResult(DrawableCatchHitObject drawableObject, JudgementResult result)
         {

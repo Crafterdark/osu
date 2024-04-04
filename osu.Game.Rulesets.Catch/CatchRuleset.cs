@@ -159,6 +159,7 @@ namespace osu.Game.Rulesets.Catch
                     return new Mod[]
                     {
                         new ModScoreV2(),
+                        new CatchModClassicLegacy(),
                     };
 
                 default:
