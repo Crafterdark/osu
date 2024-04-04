@@ -14,7 +14,6 @@ namespace osu.Game.Rulesets.Catch.Mods
     {
         public override Type[] IncompatibleMods => new[] {
             typeof(CatchModSpicyPatterns),
-            typeof(CatchModLowPrecision),
         };
 
         [SettingSource("Hard Rock spicy patterns", "Include spicy patterns when using Hard Rock.")]
