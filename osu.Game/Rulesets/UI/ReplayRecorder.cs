@@ -70,6 +70,9 @@ namespace osu.Game.Rulesets.UI
 
         public bool OnPressed(KeyBindingPressEvent<T> e)
         {
+            if (!IsValidAction(e.Action))
+                return false;
+
             pressedActions.Add(e.Action);
             recordFrame(true, FrameRecordHandler.Input);
             return false;
@@ -77,6 +80,9 @@ namespace osu.Game.Rulesets.UI
 
         public void OnReleased(KeyBindingReleaseEvent<T> e)
         {
+            if (!IsValidAction(e.Action))
+                return;
+
             pressedActions.Remove(e.Action);
             recordFrame(true, FrameRecordHandler.Input);
         }
@@ -101,7 +107,10 @@ namespace osu.Game.Rulesets.UI
         }
 
         protected virtual ReplayFrame GetLastFrameRecordHandler(FrameRecordHandler recordHandler, List<ReplayFrame> replayFrames) => replayFrames.LastOrDefault();
+
         protected abstract ReplayFrame HandleFrame(Vector2 mousePosition, List<T> actions, ReplayFrame previousFrame, FrameRecordHandler recordHandler);
+
+        protected virtual bool IsValidAction(T action) => true;
     }
 
     public abstract partial class ReplayRecorder : Component

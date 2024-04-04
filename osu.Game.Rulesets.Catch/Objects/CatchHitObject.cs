@@ -71,6 +71,27 @@ namespace osu.Game.Rulesets.Catch.Objects
         /// </remarks>
         public float EffectiveX => Math.Clamp(OriginalX + XOffset, 0, CatchPlayfield.WIDTH);
 
+        public void SetConversionFactorLimitation(bool convert, float conversionFactor, float minWidth)
+        {
+            if (convert)
+            {
+                OriginalX *= conversionFactor;
+                XOffset *= conversionFactor;
+                OriginalX += minWidth;
+            }
+            else
+            {
+                OriginalX -= minWidth;
+                OriginalX /= conversionFactor;
+                XOffset /= conversionFactor;
+            }
+        }
+
+        /// <summary>
+        /// Must be always true for osu!stable beatmaps. Might be false for osu!lazer beatmaps.
+        /// </summary>
+        public bool IsUsingOldRandom { get; set; } = true;
+
         public double TimePreempt { get; set; } = 1000;
 
         private HitObjectProperty<int> indexInBeatmap;
