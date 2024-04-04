@@ -70,6 +70,7 @@ namespace osu.Game.Rulesets.Catch.UI
         /// </summary>
         public bool CatchFruitOnPlate { get; set; } = true;
 
+        /// <summary>
         /// Whether <see cref="DrawablePalpableCatchHitObject"/> fruit should stay within the edges of the plate.
         /// </summary>
         public bool CatchFruitsWithinPlateEdges { get; set; }
