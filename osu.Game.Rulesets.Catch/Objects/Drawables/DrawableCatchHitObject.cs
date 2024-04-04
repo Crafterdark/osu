@@ -73,6 +73,10 @@ namespace osu.Game.Rulesets.Catch.Objects.Drawables
 
         protected override void UpdateHitStateTransforms(ArmedState state)
         {
+            StateOverride?.Invoke(state);
+
+            state = NewState != null ? (ArmedState)NewState : state;
+
             switch (state)
             {
                 case ArmedState.Miss:
@@ -84,5 +88,9 @@ namespace osu.Game.Rulesets.Catch.Objects.Drawables
                     break;
             }
         }
+
+        public Action<ArmedState> StateOverride;
+
+        public ArmedState? NewState;
     }
 }

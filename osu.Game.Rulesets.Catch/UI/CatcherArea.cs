@@ -100,6 +100,9 @@ namespace osu.Game.Rulesets.Catch.UI
 
             comboDisplay.X = Catcher.X;
 
+            if (Catcher.IsGhost)
+                comboDisplay.Alpha = Catcher.Alpha;
+
             if ((Clock as IGameplayClock)?.IsRewinding == true)
             {
                 // This is probably a wrong value, but currently the true value is not recorded.
@@ -108,14 +111,14 @@ namespace osu.Game.Rulesets.Catch.UI
                 return;
             }
 
-            if (!lastHyperDashState && Catcher.HyperDashing && Catcher.ShowHyperDashTrail)
+            if (!lastHyperDashState && Catcher.HyperDashing && Catcher.ShowHyperDashTrail && !Catcher.IsGhost)
                 displayCatcherTrail(CatcherTrailAnimation.HyperDashAfterImage);
 
             if (Catcher.Dashing || Catcher.HyperDashing)
             {
                 double generationInterval = Catcher.HyperDashing ? 25 : 50;
 
-                if (Time.Current - catcherTrails.LastDashTrailTime >= generationInterval)
+                if (Time.Current - catcherTrails.LastDashTrailTime >= generationInterval && !Catcher.IsGhost)
                     displayCatcherTrail(Catcher.HyperDashing && Catcher.ShowHyperDashTrail ? CatcherTrailAnimation.HyperDashing : CatcherTrailAnimation.Dashing);
             }
 

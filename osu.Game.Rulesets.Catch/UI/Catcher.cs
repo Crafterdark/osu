@@ -61,11 +61,15 @@ namespace osu.Game.Rulesets.Catch.UI
         public bool HyperDashing => hyperDashModifier != 1;
 
         /// <summary>
+        /// Whether the catcher is a ghost.
+        /// </summary>
+        public bool IsGhost { get; set; }
+
+        /// <summary>
         /// Whether <see cref="DrawablePalpableCatchHitObject"/> fruit should appear on the plate.
         /// </summary>
         public bool CatchFruitOnPlate { get; set; } = true;
 
-        /// <summary>
         /// Whether <see cref="DrawablePalpableCatchHitObject"/> fruit should stay within the edges of the plate.
         /// </summary>
         public bool CatchFruitsWithinPlateEdges { get; set; }
@@ -217,6 +221,8 @@ namespace osu.Game.Rulesets.Catch.UI
             hitLighting = config.GetBindable<bool>(OsuSetting.HitLighting);
         }
 
+        public void DisableHitLighting() => hitLighting.Value = false;
+
         /// <summary>
         /// Creates proxied content to be displayed beneath hitobjects.
         /// </summary>
@@ -317,9 +323,17 @@ namespace osu.Game.Rulesets.Catch.UI
             if (palpableObject.HitObject.LastInCombo)
             {
                 if (result.Judgement is CatchJudgement catchJudgement && catchJudgement.ShouldExplodeFor(result))
-                    Explode();
+                {
+                    if (!IsGhost)
+                        Explode();
+                    else
+                        Drop();
+                }
                 else
-                    Drop();
+                {
+                    if (!IsGhost)
+                        Drop();
+                }
             }
         }
 
@@ -385,7 +399,8 @@ namespace osu.Game.Rulesets.Catch.UI
 
         private void runHyperDashStateTransition(bool hyperDashing)
         {
-            this.FadeColour(hyperDashing && ShowHyperDashTrail ? hyperDashColour : Color4.White, HYPER_DASH_TRANSITION_DURATION, Easing.OutQuint);
+            if (!IsGhost)
+                this.FadeColour(hyperDashing && ShowHyperDashTrail ? hyperDashColour : Color4.White, HYPER_DASH_TRANSITION_DURATION, Easing.OutQuint);
         }
 
         protected override void SkinChanged(ISkinSource skin)
@@ -513,6 +528,9 @@ namespace osu.Game.Rulesets.Catch.UI
 
         private void applyDropAnimation(Drawable d, DroppedObjectAnimation animation)
         {
+            if (IsGhost)
+                d.Alpha = Alpha;
+
             switch (animation)
             {
                 case DroppedObjectAnimation.Drop:
