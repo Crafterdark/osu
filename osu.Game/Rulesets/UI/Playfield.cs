@@ -113,7 +113,6 @@ namespace osu.Game.Rulesets.UI
 
         private readonly Stack<HitObjectLifetimeEntry> judgedEntries;
 
-
         /// <summary>
         /// Creates a new <see cref="Playfield"/>.
         /// </summary>
@@ -483,6 +482,7 @@ namespace osu.Game.Rulesets.UI
         {
             Debug.Assert(result != null && drawable.Entry?.Result == result && result.RawTime != null);
             judgedEntries.Push(drawable.Entry.AsNonNull());
+
             NewResult?.Invoke(drawable, result);
         }
 
