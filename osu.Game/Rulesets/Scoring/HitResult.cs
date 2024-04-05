@@ -203,6 +203,63 @@ namespace osu.Game.Rulesets.Scoring
         }
 
         /// <summary>
+        /// The minimum hit window result of this <see cref="HitResult"/>.
+        /// </summary>
+        public static HitResult GetMinResultHitWindow(HitResult hitResult)
+        {
+            switch (hitResult)
+            {
+                case HitResult.Meh:
+                case HitResult.Ok:
+                case HitResult.Good:
+                case HitResult.Great:
+                case HitResult.Perfect:
+                    return HitResult.Miss;
+
+                default:
+                    return HitResult.None;
+            }
+        }
+
+        /// <summary>
+        /// The minimum fixed result of this <see cref="HitResult"/>.
+        /// </summary>
+        public static HitResult GetMinResultFixed(HitResult hitResult)
+        {
+            switch (hitResult)
+            {
+                case HitResult.SmallTickHit:
+                    return HitResult.SmallTickMiss;
+
+                case HitResult.LargeTickHit:
+                    return HitResult.LargeTickMiss;
+
+                case HitResult.SliderTailHit:
+                    return HitResult.IgnoreMiss;
+
+                default:
+                    return HitResult.None;
+            }
+        }
+
+        /// <summary>
+        /// The minimum special result of this <see cref="HitResult"/>.
+        /// </summary>
+        public static HitResult GetMinResultSpecial(HitResult hitResult)
+        {
+            switch (hitResult)
+            {
+                case HitResult.SmallBonus:
+                case HitResult.LargeBonus:
+                case HitResult.IgnoreHit:
+                    return HitResult.IgnoreMiss;
+
+                default:
+                    return HitResult.None;
+            }
+        }
+
+        /// <summary>
         /// Whether a <see cref="HitResult"/> affects the accuracy portion of the score.
         /// </summary>
         public static bool AffectsAccuracy(this HitResult result)

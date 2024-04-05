@@ -15,7 +15,6 @@ using osu.Game.Online.API.Requests.Responses;
 using osu.Game.Rulesets;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Scoring;
-using osu.Game.Rulesets.Judgements;
 using osu.Game.Scoring.Legacy;
 using osu.Game.Users;
 using osu.Game.Utils;
@@ -384,10 +383,14 @@ namespace osu.Game.Scoring
         public override string ToString() => this.GetDisplayTitle();
 
         // Recalculate accuracy based off of the current state of Statistics
-        public void CalculateAccuracy()
+        public void RecalculateAccuracy(ScoreProcessor scoreProcessor)
         {
-            double scoreSum = Statistics.Where(x => x.Key.AffectsAccuracy()).Sum(x => Judgement.ToNumericResult(x.Key) * x.Value);
-            Accuracy = scoreSum / (MaximumStatistics.Where(x => x.Key.AffectsAccuracy()).Sum(x => Judgement.ToNumericResult(x.Key) * x.Value));
+            int baseScore = Statistics.Where(kvp => kvp.Key.AffectsAccuracy())
+                                     .Sum(kvp => kvp.Value * scoreProcessor.GetBaseScoreForResult(kvp.Key));
+            int maxBaseScore = MaximumStatistics.Where(kvp => kvp.Key.AffectsAccuracy())
+                                        .Sum(kvp => kvp.Value * scoreProcessor.GetBaseScoreForResult(kvp.Key));
+
+            Accuracy = maxBaseScore == 0 ? 1 : baseScore / (double)maxBaseScore;
         }
     }
 }

@@ -13,7 +13,6 @@ using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Objects;
 using osu.Game.Rulesets.Scoring;
-using osu.Game.Rulesets.Judgements;
 using osu.Game.Scoring;
 
 namespace osu.Game.Rulesets.Difficulty
@@ -22,13 +21,11 @@ namespace osu.Game.Rulesets.Difficulty
     {
         private readonly IBeatmap playableBeatmap;
         private readonly BeatmapDifficultyCache difficultyCache;
-        private readonly ScorePerformanceCache performanceCache;
 
-        public PerformanceBreakdownCalculator(IBeatmap playableBeatmap, BeatmapDifficultyCache difficultyCache, ScorePerformanceCache performanceCache)
+        public PerformanceBreakdownCalculator(IBeatmap playableBeatmap, BeatmapDifficultyCache difficultyCache)
         {
             this.playableBeatmap = playableBeatmap;
             this.difficultyCache = difficultyCache;
-            this.performanceCache = performanceCache;
         }
 
         [ItemCanBeNull]
@@ -47,7 +44,6 @@ namespace osu.Game.Rulesets.Difficulty
             PerformanceAttributes[] performanceArray = await Task.WhenAll(
                 // compute actual performance
                 performanceCalculator.CalculateAsync(score, attributes.Value.Attributes, cancellationToken),
-                performanceCache.CalculatePerformanceAsync(score, cancellationToken),
                 // compute performance for a full combo
                 getFCPerformance(score, cancellationToken),
                 // compute performance for perfect play
@@ -68,21 +64,52 @@ namespace osu.Game.Rulesets.Difficulty
                 // Update the play to be a full combo
                 fcPlay.MaxCombo = calculateMaxCombo(playableBeatmap);
 
+                //Create score processor
+                ScoreProcessor scoreProcessor = ruleset.CreateScoreProcessor();
+
                 // Only recalculate accuracy if it's different
-                if (fcPlay.Statistics[HitResult.Miss] > 0)
+                foreach (var missResultPair in fcPlay.Statistics)
                 {
-                    HitResult bestResult = HitResult.Miss;
+                    HitResult missResult = missResultPair.Key;
 
-                    foreach (var hitResult in ruleset.GetHitResults())
+                    if (HitResultExtensions.BreaksCombo(missResult) && fcPlay.Statistics[missResult] > 0)
                     {
-                        if (Judgement.ToNumericResult(hitResult.result) > Judgement.ToNumericResult(bestResult))
-                            bestResult = hitResult.result;
-                    }
+                        //Defaults to the miss result
+                        HitResult minimalResult = missResult;
 
-                    fcPlay.Statistics[bestResult] += fcPlay.Statistics[HitResult.Miss];
-                    fcPlay.Statistics[HitResult.Miss] = 0;
-                    // Recalculate Accuracy with converted misses
-                    fcPlay.CalculateAccuracy();
+                        foreach (var HitResultToPair in ruleset.GetHitResults())
+                        {
+                            HitResult currentResult = HitResultToPair.result;
+
+                            if (HitResultExtensions.IsMiss(currentResult))
+                                continue;
+
+                            //Skips the current hit result if it is of type special
+                            if (HitResultExtensions.GetMinResultSpecial(currentResult) != HitResult.None)
+                                continue;
+
+                            //Break: the minimal hit result is of type fixed
+                            if (HitResultExtensions.GetMinResultFixed(currentResult) != HitResult.None && HitResultExtensions.GetMinResultFixed(currentResult) == missResult)
+                            {
+                                minimalResult = currentResult;
+                                break;
+                            }
+
+                            //Update: the minimal hit result if it is of type hit window
+                            if (HitResultExtensions.GetMinResultHitWindow(currentResult) != HitResult.None && HitResultExtensions.GetMinResultHitWindow(currentResult) == missResult)
+                            {
+                                //If the current result is worse than the minimal result, keep the current result
+                                if (HitResultExtensions.IsMiss(minimalResult) || HitResultExtensions.GetIndexForOrderedDisplay(currentResult) > HitResultExtensions.GetIndexForOrderedDisplay(minimalResult))
+                                    minimalResult = currentResult;
+                            }
+                        }
+
+                        fcPlay.Statistics[minimalResult] += fcPlay.Statistics[missResult];
+                        fcPlay.Statistics[missResult] = 0;
+
+                        // Recalculate Accuracy with converted misses into minimal accuracy
+                        fcPlay.RecalculateAccuracy(scoreProcessor);
+                    }
                 }
 
                 var difficulty = await difficultyCache.GetDifficultyAsync(
