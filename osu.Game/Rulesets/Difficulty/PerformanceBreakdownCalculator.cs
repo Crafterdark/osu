@@ -44,11 +44,83 @@ namespace osu.Game.Rulesets.Difficulty
             PerformanceAttributes[] performanceArray = await Task.WhenAll(
                 // compute actual performance
                 performanceCalculator.CalculateAsync(score, attributes.Value.Attributes, cancellationToken),
+                // compute performance for a full combo
+                getFCPerformance(score, cancellationToken),
                 // compute performance for perfect play
                 getPerfectPerformance(score, cancellationToken)
             ).ConfigureAwait(false);
 
-            return new PerformanceBreakdown(performanceArray[0] ?? new PerformanceAttributes(), performanceArray[1] ?? new PerformanceAttributes());
+            return new PerformanceBreakdown(performanceArray[0] ?? new PerformanceAttributes(), performanceArray[1] ?? new PerformanceAttributes(), performanceArray[2] ?? new PerformanceAttributes());
+        }
+
+        [ItemCanBeNull]
+        private Task<PerformanceAttributes> getFCPerformance(ScoreInfo score, CancellationToken cancellationToken = default)
+        {
+            return Task.Run(async () =>
+            {
+                Ruleset ruleset = score.Ruleset.CreateInstance();
+                ScoreInfo fcPlay = score.DeepClone();
+                fcPlay.Passed = true;
+                // Update the play to be a full combo
+                fcPlay.MaxCombo = calculateMaxCombo(playableBeatmap);
+
+                //Create score processor
+                ScoreProcessor scoreProcessor = ruleset.CreateScoreProcessor();
+
+                // Only recalculate accuracy if it's different
+                foreach (var missResultPair in fcPlay.Statistics)
+                {
+                    HitResult missResult = missResultPair.Key;
+
+                    if (HitResultExtensions.BreaksCombo(missResult) && fcPlay.Statistics[missResult] > 0)
+                    {
+                        //Defaults to the miss result
+                        HitResult minimalResult = missResult;
+
+                        foreach (var HitResultToPair in ruleset.GetHitResults())
+                        {
+                            HitResult currentResult = HitResultToPair.result;
+
+                            if (HitResultExtensions.IsMiss(currentResult))
+                                continue;
+
+                            //Skips the current hit result if it is of type special
+                            if (HitResultExtensions.GetMinResultSpecial(currentResult) != HitResult.None)
+                                continue;
+
+                            //Break: the minimal hit result is of type fixed
+                            if (HitResultExtensions.GetMinResultFixed(currentResult) != HitResult.None && HitResultExtensions.GetMinResultFixed(currentResult) == missResult)
+                            {
+                                minimalResult = currentResult;
+                                break;
+                            }
+
+                            //Update: the minimal hit result if it is of type hit window
+                            if (HitResultExtensions.GetMinResultHitWindow(currentResult) != HitResult.None && HitResultExtensions.GetMinResultHitWindow(currentResult) == missResult)
+                            {
+                                //If the current result is worse than the minimal result, keep the current result
+                                if (HitResultExtensions.IsMiss(minimalResult) || HitResultExtensions.GetIndexForOrderedDisplay(currentResult) > HitResultExtensions.GetIndexForOrderedDisplay(minimalResult))
+                                    minimalResult = currentResult;
+                            }
+                        }
+
+                        fcPlay.Statistics[minimalResult] += fcPlay.Statistics[missResult];
+                        fcPlay.Statistics[missResult] = 0;
+
+                        // Recalculate Accuracy with converted misses into minimal accuracy
+                        fcPlay.RecalculateAccuracy(scoreProcessor);
+                    }
+                }
+
+                var difficulty = await difficultyCache.GetDifficultyAsync(
+                    playableBeatmap.BeatmapInfo,
+                    score.Ruleset,
+                    score.Mods,
+                    cancellationToken
+                ).ConfigureAwait(false);
+
+                return difficulty == null ? null : ruleset.CreatePerformanceCalculator()?.Calculate(fcPlay, difficulty.Value.Attributes.AsNonNull());
+            }, cancellationToken);
         }
 
         [ItemCanBeNull]
