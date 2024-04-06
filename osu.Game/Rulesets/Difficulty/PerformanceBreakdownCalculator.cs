@@ -67,50 +67,35 @@ namespace osu.Game.Rulesets.Difficulty
                 //Create score processor
                 ScoreProcessor scoreProcessor = ruleset.CreateScoreProcessor();
 
-                // Only recalculate accuracy if it's different
-                foreach (var missResultPair in fcPlay.Statistics)
+                //Get max result for ruleset
+                HitResult maxResult = HitResult.None;
+
+                foreach (var hitResultObj in ruleset.GetHitResults())
                 {
-                    HitResult missResult = missResultPair.Key;
+                    var hitResult = hitResultObj.result;
 
-                    if (HitResultExtensions.BreaksCombo(missResult) && fcPlay.Statistics[missResult] > 0)
-                    {
-                        //Defaults to the miss result
-                        HitResult minimalResult = missResult;
-
-                        foreach (var HitResultToPair in ruleset.GetHitResults())
-                        {
-                            HitResult currentResult = HitResultToPair.result;
-
-                            if (HitResultExtensions.IsMiss(currentResult))
-                                continue;
-
-                            //Skips the current hit result if it is of type special
-                            if (HitResultExtensions.GetMinResultSpecial(currentResult) != HitResult.None)
-                                continue;
-
-                            //Break: the minimal hit result is of type fixed
-                            if (HitResultExtensions.GetMinResultFixed(currentResult) != HitResult.None && HitResultExtensions.GetMinResultFixed(currentResult) == missResult)
-                            {
-                                minimalResult = currentResult;
-                                break;
-                            }
-
-                            //Update: the minimal hit result if it is of type hit window
-                            if (HitResultExtensions.GetMinResultHitWindow(currentResult) != HitResult.None && HitResultExtensions.GetMinResultHitWindow(currentResult) == missResult)
-                            {
-                                //If the current result is worse than the minimal result, keep the current result
-                                if (HitResultExtensions.IsMiss(minimalResult) || HitResultExtensions.GetIndexForOrderedDisplay(currentResult) > HitResultExtensions.GetIndexForOrderedDisplay(minimalResult))
-                                    minimalResult = currentResult;
-                            }
-                        }
-
-                        fcPlay.Statistics[minimalResult] += fcPlay.Statistics[missResult];
-                        fcPlay.Statistics[missResult] = 0;
-
-                        // Recalculate Accuracy with converted misses into minimal accuracy
-                        fcPlay.RecalculateAccuracy(scoreProcessor);
-                    }
+                    if (HitResultExtensions.AffectsCombo(hitResult) && HitResultExtensions.GetIndexForOrderedDisplay(maxResult) > HitResultExtensions.GetIndexForOrderedDisplay(hitResult))
+                        maxResult = hitResult;
                 }
+
+                //Get all combo miss results from play
+                List<HitResult> comboMissResults = new List<HitResult>();
+
+                foreach (var HitResultObj in fcPlay.Statistics.Keys)
+                    if (HitResultExtensions.BreaksCombo(HitResultObj))
+                        comboMissResults.Add(HitResultObj);
+
+                foreach (var comboMissResult in comboMissResults)
+                {
+                    HitResult maxResultForComboMiss = HitResultExtensions.GetMaxResultForCombo(comboMissResult);
+                    if (maxResultForComboMiss == HitResult.Great && maxResult == HitResult.Perfect)
+                        maxResultForComboMiss = HitResult.Perfect;
+
+                    fcPlay.Statistics[maxResultForComboMiss] += fcPlay.Statistics[comboMissResult];
+                    fcPlay.Statistics[comboMissResult] = 0;
+                }
+
+                fcPlay.RecalculateAccuracy(scoreProcessor);
 
                 var difficulty = await difficultyCache.GetDifficultyAsync(
                     playableBeatmap.BeatmapInfo,

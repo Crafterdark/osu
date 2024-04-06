@@ -203,56 +203,24 @@ namespace osu.Game.Rulesets.Scoring
         }
 
         /// <summary>
-        /// The minimum hit window result of this <see cref="HitResult"/>.
+        /// Get the maximum <see cref="HitResult"/> from a starting miss value that affects combo.
         /// </summary>
-        public static HitResult GetMinResultHitWindow(HitResult hitResult)
+        public static HitResult GetMaxResultForCombo(this HitResult result)
         {
-            switch (hitResult)
+            switch (result)
             {
-                case HitResult.Meh:
-                case HitResult.Ok:
-                case HitResult.Good:
-                case HitResult.Great:
-                case HitResult.Perfect:
-                    return HitResult.Miss;
+                //This must be override at a later point for Perfect
+                case HitResult.Miss:
+                    return HitResult.Great;
 
-                default:
-                    return HitResult.None;
-            }
-        }
+                case HitResult.LargeTickMiss:
+                    return HitResult.LargeTickHit;
 
-        /// <summary>
-        /// The minimum fixed result of this <see cref="HitResult"/>.
-        /// </summary>
-        public static HitResult GetMinResultFixed(HitResult hitResult)
-        {
-            switch (hitResult)
-            {
-                case HitResult.SmallTickHit:
-                    return HitResult.SmallTickMiss;
+                case HitResult.SmallTickMiss:
+                    return HitResult.SmallTickHit;
 
-                case HitResult.LargeTickHit:
-                    return HitResult.LargeTickMiss;
-
-                case HitResult.SliderTailHit:
-                    return HitResult.IgnoreMiss;
-
-                default:
-                    return HitResult.None;
-            }
-        }
-
-        /// <summary>
-        /// The minimum special result of this <see cref="HitResult"/>.
-        /// </summary>
-        public static HitResult GetMinResultSpecial(HitResult hitResult)
-        {
-            switch (hitResult)
-            {
-                case HitResult.SmallBonus:
-                case HitResult.LargeBonus:
-                case HitResult.IgnoreHit:
-                    return HitResult.IgnoreMiss;
+                case HitResult.IgnoreMiss:
+                    return HitResult.IgnoreHit;
 
                 default:
                     return HitResult.None;
