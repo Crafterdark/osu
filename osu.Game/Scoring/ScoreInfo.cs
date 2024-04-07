@@ -381,5 +381,16 @@ namespace osu.Game.Scoring
         public bool Equals(ScoreInfo? other) => other?.ID == ID;
 
         public override string ToString() => this.GetDisplayTitle();
+
+        // Recalculate accuracy based off of the current state of Statistics
+        public void RecalculateAccuracy(ScoreProcessor scoreProcessor)
+        {
+            int baseScore = Statistics.Where(kvp => kvp.Key.AffectsAccuracy())
+                                     .Sum(kvp => kvp.Value * scoreProcessor.GetBaseScoreForResult(kvp.Key));
+            int maxBaseScore = MaximumStatistics.Where(kvp => kvp.Key.AffectsAccuracy())
+                                        .Sum(kvp => kvp.Value * scoreProcessor.GetBaseScoreForResult(kvp.Key));
+
+            Accuracy = maxBaseScore == 0 ? 1 : baseScore / (double)maxBaseScore;
+        }
     }
 }

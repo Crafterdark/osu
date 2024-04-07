@@ -203,6 +203,31 @@ namespace osu.Game.Rulesets.Scoring
         }
 
         /// <summary>
+        /// Get the maximum <see cref="HitResult"/> from a starting miss value that affects combo.
+        /// </summary>
+        public static HitResult GetMaxResultForCombo(this HitResult result)
+        {
+            switch (result)
+            {
+                //This must be override at a later point for Perfect
+                case HitResult.Miss:
+                    return HitResult.Great;
+
+                case HitResult.LargeTickMiss:
+                    return HitResult.LargeTickHit;
+
+                case HitResult.SmallTickMiss:
+                    return HitResult.SmallTickHit;
+
+                case HitResult.IgnoreMiss:
+                    return HitResult.IgnoreHit;
+
+                default:
+                    return HitResult.None;
+            }
+        }
+
+        /// <summary>
         /// Whether a <see cref="HitResult"/> affects the accuracy portion of the score.
         /// </summary>
         public static bool AffectsAccuracy(this HitResult result)

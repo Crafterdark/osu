@@ -12,12 +12,12 @@ namespace osu.Game.Rulesets.Mania.UI
 {
     public partial class ManiaReplayRecorder : ReplayRecorder<ManiaAction>
     {
-        public ManiaReplayRecorder(Score score)
-            : base(score)
+        public ManiaReplayRecorder(Score score, ManiaPlayfield playfield)
+            : base(score, playfield)
         {
         }
 
-        protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<ManiaAction> actions, ReplayFrame previousFrame)
+        protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<ManiaAction> actions, ReplayFrame previousFrame, FrameRecordHandler recordHandler)
             => new ManiaReplayFrame(Time.Current, actions.ToArray());
     }
 }

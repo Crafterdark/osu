@@ -35,22 +35,94 @@ namespace osu.Game.Screens.Ranking.Statistics
         private Drawable content;
         private GridContainer chart;
         private OsuSpriteText achievedPerformance;
+        private OsuSpriteText fcPerformance;
         private OsuSpriteText maximumPerformance;
+
+        private readonly Color4 achieveColour = Color4Extensions.FromHex("#66FFCC");
+
+        private readonly Color4 fcColour = Color4Extensions.FromHex("#609882");
 
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
         [Resolved]
         private BeatmapDifficultyCache difficultyCache { get; set; }
 
-        public PerformanceBreakdownChart(ScoreInfo score, IBeatmap playableBeatmap)
+        private readonly bool showFCPerformance;
+
+        public PerformanceBreakdownChart(ScoreInfo score, IBeatmap playableBeatmap, bool showFCPerformance = true)
         {
             this.score = score;
             this.playableBeatmap = playableBeatmap;
+            this.showFCPerformance = showFCPerformance;
         }
 
         [BackgroundDependencyLoader]
         private void load()
         {
+            var texts = new List<Drawable[]>
+            {
+                new Drawable[]
+                {
+                    new OsuSpriteText
+                    {
+                        Origin = Anchor.CentreLeft,
+                        Anchor = Anchor.CentreLeft,
+                        Font = OsuFont.GetFont(weight: FontWeight.Regular, size: StatisticItem.FONT_SIZE),
+                        Text = "Achieved PP",
+                        Colour = achieveColour
+                    },
+                    achievedPerformance = new OsuSpriteText
+                    {
+                        Origin = Anchor.CentreRight,
+                        Anchor = Anchor.CentreRight,
+                        Font = OsuFont.GetFont(weight: FontWeight.SemiBold, size: StatisticItem.FONT_SIZE),
+                        Colour = achieveColour
+                    }
+                },
+            };
+
+            if (showFCPerformance)
+            {
+                texts.Add(
+                    new Drawable[]
+                    {
+                        new OsuSpriteText
+                        {
+                            Origin = Anchor.CentreLeft,
+                            Anchor = Anchor.CentreLeft,
+                            Font = OsuFont.GetFont(weight: FontWeight.Regular, size: StatisticItem.FONT_SIZE),
+                            Text = "Achievable PP on Full Combo",
+                            Colour = fcColour
+                        },
+                        fcPerformance = new OsuSpriteText
+                        {
+                            Origin = Anchor.CentreRight,
+                            Anchor = Anchor.CentreRight,
+                            Font = OsuFont.GetFont(weight: FontWeight.SemiBold, size: StatisticItem.FONT_SIZE),
+                            Colour = fcColour
+                        }
+                    });
+            }
+
+            texts.Add(
+                new Drawable[]
+                {
+                    new OsuSpriteText
+                    {
+                        Origin = Anchor.CentreLeft,
+                        Anchor = Anchor.CentreLeft,
+                        Font = OsuFont.GetFont(weight: FontWeight.Regular, size: StatisticItem.FONT_SIZE),
+                        Text = "Achievable PP on Perfect Play",
+                        Colour = OsuColour.Gray(0.7f)
+                    },
+                    maximumPerformance = new OsuSpriteText
+                    {
+                        Origin = Anchor.CentreLeft,
+                        Anchor = Anchor.CentreLeft,
+                        Font = OsuFont.GetFont(weight: FontWeight.Regular, size: StatisticItem.FONT_SIZE),
+                        Colour = OsuColour.Gray(0.7f)
+                    }
+                });
             Children = new[]
             {
                 spinner = new LoadingSpinner(true)
@@ -84,47 +156,10 @@ namespace osu.Game.Screens.Ranking.Statistics
                             RowDimensions = new[]
                             {
                                 new Dimension(GridSizeMode.AutoSize),
+                                new Dimension(GridSizeMode.AutoSize),
                                 new Dimension(GridSizeMode.AutoSize)
                             },
-                            Content = new[]
-                            {
-                                new Drawable[]
-                                {
-                                    new OsuSpriteText
-                                    {
-                                        Origin = Anchor.CentreLeft,
-                                        Anchor = Anchor.CentreLeft,
-                                        Font = OsuFont.GetFont(weight: FontWeight.Regular, size: StatisticItem.FONT_SIZE),
-                                        Text = "Achieved PP",
-                                        Colour = Color4Extensions.FromHex("#66FFCC")
-                                    },
-                                    achievedPerformance = new OsuSpriteText
-                                    {
-                                        Origin = Anchor.CentreRight,
-                                        Anchor = Anchor.CentreRight,
-                                        Font = OsuFont.GetFont(weight: FontWeight.SemiBold, size: StatisticItem.FONT_SIZE),
-                                        Colour = Color4Extensions.FromHex("#66FFCC")
-                                    }
-                                },
-                                new Drawable[]
-                                {
-                                    new OsuSpriteText
-                                    {
-                                        Origin = Anchor.CentreLeft,
-                                        Anchor = Anchor.CentreLeft,
-                                        Font = OsuFont.GetFont(weight: FontWeight.Regular, size: StatisticItem.FONT_SIZE),
-                                        Text = "Maximum",
-                                        Colour = OsuColour.Gray(0.7f)
-                                    },
-                                    maximumPerformance = new OsuSpriteText
-                                    {
-                                        Origin = Anchor.CentreLeft,
-                                        Anchor = Anchor.CentreLeft,
-                                        Font = OsuFont.GetFont(weight: FontWeight.Regular, size: StatisticItem.FONT_SIZE),
-                                        Colour = OsuColour.Gray(0.7f)
-                                    }
-                                }
-                            }
+                            Content = texts.ToArray(),
                         },
                         chart = new GridContainer
                         {
@@ -156,10 +191,12 @@ namespace osu.Game.Screens.Ranking.Statistics
             content.FadeIn(200);
 
             var displayAttributes = breakdown.Performance.GetAttributesForDisplay();
+            var fcAttribute = breakdown.FCPerformance.GetAttributesForDisplay();
             var perfectDisplayAttributes = breakdown.PerfectPerformance.GetAttributesForDisplay();
 
             setTotalValues(
                 displayAttributes.First(a => a.PropertyName == nameof(PerformanceAttributes.Total)),
+                fcAttribute.First(a => a.PropertyName == nameof(PerformanceAttributes.Total)),
                 perfectDisplayAttributes.First(a => a.PropertyName == nameof(PerformanceAttributes.Total))
             );
 
@@ -170,7 +207,7 @@ namespace osu.Game.Screens.Ranking.Statistics
             {
                 if (attr.PropertyName == nameof(PerformanceAttributes.Total)) continue;
 
-                var row = createAttributeRow(attr, perfectDisplayAttributes.First(a => a.PropertyName == attr.PropertyName));
+                var row = createAttributeRow(attr, fcAttribute.First(a => a.PropertyName == attr.PropertyName), perfectDisplayAttributes.First(a => a.PropertyName == attr.PropertyName));
 
                 if (row != null)
                 {
@@ -183,14 +220,16 @@ namespace osu.Game.Screens.Ranking.Statistics
             chart.Content = rows.ToArray();
         }
 
-        private void setTotalValues(PerformanceDisplayAttribute attribute, PerformanceDisplayAttribute perfectAttribute)
+        private void setTotalValues(PerformanceDisplayAttribute attribute, PerformanceDisplayAttribute fcAttribute, PerformanceDisplayAttribute perfectAttribute)
         {
             achievedPerformance.Text = Math.Round(attribute.Value, MidpointRounding.AwayFromZero).ToLocalisableString();
+            if (showFCPerformance)
+                fcPerformance.Text = Math.Round(fcAttribute.Value, MidpointRounding.AwayFromZero).ToLocalisableString();
             maximumPerformance.Text = Math.Round(perfectAttribute.Value, MidpointRounding.AwayFromZero).ToLocalisableString();
         }
 
         [CanBeNull]
-        private Drawable[] createAttributeRow(PerformanceDisplayAttribute attribute, PerformanceDisplayAttribute perfectAttribute)
+        private Drawable[] createAttributeRow(PerformanceDisplayAttribute attribute, PerformanceDisplayAttribute fcAttribute, PerformanceDisplayAttribute perfectAttribute)
         {
             // Don't display the attribute if its maximum is 0
             // For example, flashlight bonus would be zero if flashlight mod isn't on
@@ -198,6 +237,21 @@ namespace osu.Game.Screens.Ranking.Statistics
                 return null;
 
             float percentage = (float)(attribute.Value / perfectAttribute.Value);
+            float fcPercentage = showFCPerformance ? (float)(fcAttribute.Value / perfectAttribute.Value) : 0;
+
+            float[] lengths = { fcPercentage, percentage };
+            Color4[] colours = { fcColour, achieveColour };
+
+            MultiValueBar bar = new MultiValueBar(2, lengths, colours)
+            {
+                RelativeSizeAxes = Axes.X,
+                Origin = Anchor.Centre,
+                Anchor = Anchor.Centre,
+                CornerRadius = 2.5f,
+                Masking = true,
+                Height = 5,
+                BackgroundColour = Color4.White.Opacity(0.5f),
+            };
 
             return new Drawable[]
             {
@@ -213,18 +267,7 @@ namespace osu.Game.Screens.Ranking.Statistics
                 {
                     RelativeSizeAxes = Axes.Both,
                     Padding = new MarginPadding { Left = 10, Right = 10 },
-                    Child = new Bar
-                    {
-                        RelativeSizeAxes = Axes.X,
-                        Origin = Anchor.Centre,
-                        Anchor = Anchor.Centre,
-                        CornerRadius = 2.5f,
-                        Masking = true,
-                        Height = 5,
-                        BackgroundColour = Color4.White.Opacity(0.5f),
-                        AccentColour = Color4Extensions.FromHex("#66FFCC"),
-                        Length = percentage
-                    }
+                    Child = bar
                 },
                 new OsuSpriteText
                 {

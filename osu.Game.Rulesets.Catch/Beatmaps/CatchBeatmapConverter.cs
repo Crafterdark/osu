@@ -10,6 +10,7 @@ using osu.Game.Rulesets.Objects.Types;
 using osu.Game.Rulesets.Objects;
 using osu.Framework.Extensions.IEnumerableExtensions;
 using osu.Game.Beatmaps.Legacy;
+using osu.Framework.Bindables;
 
 namespace osu.Game.Rulesets.Catch.Beatmaps
 {
@@ -20,7 +21,15 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         {
         }
 
+        public BindableBool NewSegmentOnJuiceStream { get; set; } = new BindableBool(true);
+
+        public BindableBool CompleteSegmentOnJuiceStream { get; set; } = new BindableBool(true);
+
+        public BindableBool TimedTinyDroplets { get; set; } = new BindableBool(true);
+
         public override bool CanConvert() => Beatmap.HitObjects.All(h => h is IHasXPosition);
+
+        public bool OnlyLargeDroplets { get; set; }
 
         protected override IEnumerable<CatchHitObject> ConvertHitObject(HitObject obj, IBeatmap beatmap, CancellationToken cancellationToken)
         {
@@ -46,7 +55,11 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         // prior to v8, speed multipliers don't adjust for how many ticks are generated over the same distance.
                         // this results in more (or less) ticks being generated in <v8 maps for the same time duration.
                         TickDistanceMultiplier = beatmap.BeatmapInfo.BeatmapVersion < 8 ? 1 : ((LegacyControlPointInfo)beatmap.ControlPointInfo).DifficultyPointAt(obj.StartTime).SliderVelocity,
-                        SliderVelocityMultiplier = sliderVelocityData?.SliderVelocityMultiplier ?? 1
+                        SliderVelocityMultiplier = sliderVelocityData?.SliderVelocityMultiplier ?? 1,
+                        AddTinyToNewSegment = NewSegmentOnJuiceStream.Value,
+                        AddTinyToIncompleteSegment = CompleteSegmentOnJuiceStream.Value,
+                        TimedTinyDroplets = TimedTinyDroplets.Value,
+                        OnlyLargeDroplets = OnlyLargeDroplets
                     }.Yield();
 
                 case IHasDuration endTime:

@@ -53,17 +53,27 @@ namespace osu.Game.Replays.Legacy
         [Key(3)]
         public ReplayButtonState ButtonState;
 
-        public LegacyReplayFrame(double time, float? mouseX, float? mouseY, ReplayButtonState buttonState)
+        [JsonIgnore]
+        [IgnoreMember]
+        public int RecordHandler;
+
+        [JsonIgnore]
+        [IgnoreMember]
+        public int Direction;
+
+        public LegacyReplayFrame(double time, float? mouseX, float? mouseY, ReplayButtonState buttonState, int direction = 0, int recordHandler = 0)
             : base(time)
         {
             MouseX = mouseX;
             MouseY = mouseY;
             ButtonState = buttonState;
+            Direction = direction;
+            RecordHandler = recordHandler;
         }
 
         public override string ToString()
         {
-            return $"{Time}\t({MouseX},{MouseY})\t{MouseLeft}\t{MouseRight}\t{MouseLeft1}\t{MouseRight1}\t{MouseLeft2}\t{MouseRight2}\t{ButtonState}";
+            return $"{Time}\t({MouseX},{MouseY})\t{MouseLeft}\t{MouseRight}\t{MouseLeft1}\t{MouseRight1}\t{MouseLeft2}\t{MouseRight2}\t{ButtonState}\t{Direction}\t{RecordHandler}";
         }
     }
 }

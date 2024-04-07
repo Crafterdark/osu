@@ -44,11 +44,68 @@ namespace osu.Game.Rulesets.Difficulty
             PerformanceAttributes[] performanceArray = await Task.WhenAll(
                 // compute actual performance
                 performanceCalculator.CalculateAsync(score, attributes.Value.Attributes, cancellationToken),
+                // compute performance for a full combo
+                getFCPerformance(score, cancellationToken),
                 // compute performance for perfect play
                 getPerfectPerformance(score, cancellationToken)
             ).ConfigureAwait(false);
 
-            return new PerformanceBreakdown(performanceArray[0] ?? new PerformanceAttributes(), performanceArray[1] ?? new PerformanceAttributes());
+            return new PerformanceBreakdown(performanceArray[0] ?? new PerformanceAttributes(), performanceArray[1] ?? new PerformanceAttributes(), performanceArray[2] ?? new PerformanceAttributes());
+        }
+
+        [ItemCanBeNull]
+        private Task<PerformanceAttributes> getFCPerformance(ScoreInfo score, CancellationToken cancellationToken = default)
+        {
+            return Task.Run(async () =>
+            {
+                Ruleset ruleset = score.Ruleset.CreateInstance();
+                ScoreInfo fcPlay = score.DeepClone();
+                fcPlay.Passed = true;
+                // Update the play to be a full combo
+                fcPlay.MaxCombo = calculateMaxCombo(playableBeatmap);
+
+                //Create score processor
+                ScoreProcessor scoreProcessor = ruleset.CreateScoreProcessor();
+
+                //Get max result for ruleset
+                HitResult maxResult = HitResult.None;
+
+                foreach (var hitResultObj in ruleset.GetHitResults())
+                {
+                    var hitResult = hitResultObj.result;
+
+                    if (HitResultExtensions.AffectsCombo(hitResult) && HitResultExtensions.GetIndexForOrderedDisplay(maxResult) > HitResultExtensions.GetIndexForOrderedDisplay(hitResult))
+                        maxResult = hitResult;
+                }
+
+                //Get all combo miss results from play
+                List<HitResult> comboMissResults = new List<HitResult>();
+
+                foreach (var HitResultObj in fcPlay.Statistics.Keys)
+                    if (HitResultExtensions.BreaksCombo(HitResultObj))
+                        comboMissResults.Add(HitResultObj);
+
+                foreach (var comboMissResult in comboMissResults)
+                {
+                    HitResult maxResultForComboMiss = HitResultExtensions.GetMaxResultForCombo(comboMissResult);
+                    if (maxResultForComboMiss == HitResult.Great && maxResult == HitResult.Perfect)
+                        maxResultForComboMiss = HitResult.Perfect;
+
+                    fcPlay.Statistics[maxResultForComboMiss] += fcPlay.Statistics[comboMissResult];
+                    fcPlay.Statistics[comboMissResult] = 0;
+                }
+
+                fcPlay.RecalculateAccuracy(scoreProcessor);
+
+                var difficulty = await difficultyCache.GetDifficultyAsync(
+                    playableBeatmap.BeatmapInfo,
+                    score.Ruleset,
+                    score.Mods,
+                    cancellationToken
+                ).ConfigureAwait(false);
+
+                return difficulty == null ? null : ruleset.CreatePerformanceCalculator()?.Calculate(fcPlay, difficulty.Value.Attributes.AsNonNull());
+            }, cancellationToken);
         }
 
         [ItemCanBeNull]

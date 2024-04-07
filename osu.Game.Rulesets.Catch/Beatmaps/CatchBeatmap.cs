@@ -3,9 +3,12 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using osu.Framework.Bindables;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Catch.Objects;
+using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Objects;
+using static osu.Game.Rulesets.Catch.Beatmaps.CatchBeatmapProcessor;
 
 namespace osu.Game.Rulesets.Catch.Beatmaps
 {
@@ -14,7 +17,29 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         ///<summary>
         /// Whether the hyperdash generation during map processing is fully symmetrical.
         ///</summary>
-        public bool IsProcessingSymmetricalHyperDash { get; set; } = true;
+        public BindableBool IsProcessingSymmetricalHyperDash = new BindableBool(true);
+
+        /// <summary>
+        /// Whether the beatmap uses regular hyperdash generation.
+        /// </summary>
+        public BindableBool RegularHyperDashGeneration = new BindableBool(true);
+
+        /// <summary>
+        /// Whether the beatmap uses modified hyperdashes generation.
+        /// </summary>
+        public BindableBool ModifiedHyperDashGeneration = new BindableBool(true);
+
+        /// <summary>
+        /// Whether the beatmap uses a limited catch playfield.
+        /// </summary>
+        public BindableBool UsesLimitedCatchPlayfield = new BindableBool();
+
+        /// <summary>
+        /// The adjusted base dash speed of the catcher without hyperdash status.
+        /// </summary>
+        public BindableDouble CatcherAdjustedDashSpeed = new BindableDouble(Catcher.BASE_DASH_SPEED);
+
+        public LimitedCatchPlayfield LimitedCatchPlayfield { get; set; } = null!;
 
         public override IEnumerable<BeatmapStatistic> GetStatistics()
         {
