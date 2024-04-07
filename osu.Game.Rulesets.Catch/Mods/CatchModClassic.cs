@@ -51,7 +51,7 @@ namespace osu.Game.Rulesets.Catch.Mods
             catchBeatmapProcessor.ClassicSpicyPatterns = ClassicSpicyPatterns.Value;
             catchBeatmapProcessor.NewTinyGeneration = !MissingSegmentOnJuiceStream.Value || !IncompleteSegmentOnJuiceStream.Value;
             catchBeatmap.RegularHyperDashGeneration.Value = !RemoveRegularHyperDashes.Value;
-            catchBeatmap.IsProcessingSymmetricalHyperDash = !AsymmetricalHyperDashGeneration.Value;
+            catchBeatmap.IsProcessingSymmetricalHyperDash.Value = !AsymmetricalHyperDashGeneration.Value;
         }
     }
 }

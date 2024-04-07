@@ -296,14 +296,14 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 currentObject.HyperDashTarget = null;
                 currentObject.DistanceToHyperDash = 0;
 
-                int thisOriginalDirection = calculateDirection(currentObject, nextObject, lastDirection, catchBeatmap.IsProcessingSymmetricalHyperDash);
+                int thisOriginalDirection = calculateDirection(currentObject, nextObject, originalLastDirection, catchBeatmap.IsProcessingSymmetricalHyperDash.Value);
 
                 if (catchBeatmap.RegularHyperDashGeneration.Value)
                     originalLastExcess = processHyperDash(catchBeatmap, currentObject, nextObject, originalHalfCatcherWidth, originalLastExcess, originalLastDirection, thisOriginalDirection, true);
 
                 catchBeatmap.LimitedCatchPlayfield?.ConvertObjects(currentObject, nextObject);
 
-                int thisModifiedDirection = calculateDirection(currentObject, nextObject, lastDirection, catchBeatmap.IsProcessingSymmetricalHyperDash);
+                int thisModifiedDirection = calculateDirection(currentObject, nextObject, modifiedLastDirection, catchBeatmap.IsProcessingSymmetricalHyperDash.Value);
 
                 if (catchBeatmap.ModifiedHyperDashGeneration.Value)
                     modifiedLastExcess = processHyperDash(catchBeatmap, currentObject, nextObject, modifiedHalfCatcherWidth, modifiedLastExcess, modifiedLastDirection, thisModifiedDirection, false);
