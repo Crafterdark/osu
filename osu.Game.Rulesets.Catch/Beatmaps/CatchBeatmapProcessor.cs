@@ -17,11 +17,6 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         public bool HardRockOffsets { get; set; }
 
-        ///<summary>
-        /// Hyperdash on the current direction is symmetrical.
-        ///</summary>
-        public bool IsHyperDashSymmetrical { get; set; } = true;
-
         public CatchBeatmapProcessor(IBeatmap beatmap)
             : base(beatmap)
         {
@@ -115,7 +110,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 }
             }
 
-            initialiseHyperDash(beatmap, IsHyperDashSymmetrical);
+            initialiseHyperDash(beatmap);
         }
 
         private static void applyHardRockOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime, LegacyRandom rng)
@@ -214,7 +209,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             }
         }
 
-        private static void initialiseHyperDash(IBeatmap beatmap, bool isHyperDashSymmetrical)
+        private static int calculateDirection(PalpableCatchHitObject current, PalpableCatchHitObject next, int lastDirection, bool isSymmetrical) => isSymmetrical && (next.EffectiveX == current.EffectiveX) ? lastDirection : (next.EffectiveX > current.EffectiveX ? 1 : -1);
+
+        private static void initialiseHyperDash(IBeatmap beatmap)
         {
             var palpableObjects = CatchBeatmap.GetPalpableObjects(beatmap.HitObjects)
                                               .Where(h => h is Fruit || (h is Droplet && h is not TinyDroplet))
@@ -239,15 +236,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 currentObject.HyperDashTarget = null;
                 currentObject.DistanceToHyperDash = 0;
 
-                int thisDirection;
-
-                if (isHyperDashSymmetrical)
-                {
-                    bool hasDirection = nextObject.EffectiveX != currentObject.EffectiveX;
-                    thisDirection = hasDirection ? (nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1) : lastDirection;
-                }
-                else
-                    thisDirection = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
+                int thisDirection = calculateDirection(currentObject, nextObject, lastDirection, ((CatchBeatmap)beatmap).IsProcessingSymmetricalHyperDash);
 
                 // Int truncation added to match osu!stable.
                 double timeToNext = (int)nextObject.StartTime - (int)currentObject.StartTime - 1000f / 60f / 4; // 1/4th of a frame of grace time, taken from osu-stable

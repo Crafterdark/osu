@@ -11,13 +11,13 @@ namespace osu.Game.Rulesets.Catch.Mods
 {
     public class CatchModClassic : ModClassic, IApplicableToBeatmapProcessor
     {
-        [SettingSource("Asymmetrical hyperdash generation", "Stable used asymmetrical hyperdash generation.")]
-        public Bindable<bool> IsHyperDashAsymmetrical { get; } = new BindableBool(true);
+        [SettingSource("Asymmetrical hyperdash generation", "Stable generated asymmetrical hyperdashes during beatmap processing.")]
+        public Bindable<bool> AsymmetricalHyperDashGeneration { get; } = new BindableBool(true);
 
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
         {
             var catchBeatmapProcessor = (CatchBeatmapProcessor)beatmapProcessor;
-            catchBeatmapProcessor.IsHyperDashSymmetrical = !IsHyperDashAsymmetrical.Value;
+            ((CatchBeatmap)catchBeatmapProcessor.Beatmap).IsProcessingSymmetricalHyperDash = !AsymmetricalHyperDashGeneration.Value;
         }
     }
 }
