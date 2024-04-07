@@ -260,6 +260,8 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             }
         }
 
+        private static int calculateDirection(PalpableCatchHitObject current, PalpableCatchHitObject next, int lastDirection, bool isSymmetrical) => isSymmetrical && (next.EffectiveX == current.EffectiveX) ? lastDirection : (next.EffectiveX > current.EffectiveX ? 1 : -1);
+
         private static void initialiseHyperDash(IBeatmap beatmap)
         {
             var palpableObjects = CatchBeatmap.GetPalpableObjects(beatmap.HitObjects)
@@ -294,14 +296,14 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 currentObject.HyperDashTarget = null;
                 currentObject.DistanceToHyperDash = 0;
 
-                int thisOriginalDirection = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
+                int thisOriginalDirection = calculateDirection(currentObject, nextObject, lastDirection, catchBeatmap.IsProcessingSymmetricalHyperDash);
 
                 if (catchBeatmap.RegularHyperDashGeneration.Value)
                     originalLastExcess = processHyperDash(catchBeatmap, currentObject, nextObject, originalHalfCatcherWidth, originalLastExcess, originalLastDirection, thisOriginalDirection, true);
 
                 catchBeatmap.LimitedCatchPlayfield?.ConvertObjects(currentObject, nextObject);
 
-                int thisModifiedDirection = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
+                int thisModifiedDirection = calculateDirection(currentObject, nextObject, lastDirection, catchBeatmap.IsProcessingSymmetricalHyperDash);
 
                 if (catchBeatmap.ModifiedHyperDashGeneration.Value)
                     modifiedLastExcess = processHyperDash(catchBeatmap, currentObject, nextObject, modifiedHalfCatcherWidth, modifiedLastExcess, modifiedLastDirection, thisModifiedDirection, false);

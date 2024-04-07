@@ -14,6 +14,11 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 {
     public class CatchBeatmap : Beatmap<CatchHitObject>
     {
+        ///<summary>
+        /// Whether the hyperdash generation during map processing is fully symmetrical.
+        ///</summary>
+        public BindableBool IsProcessingSymmetricalHyperDash = new BindableBool(true);
+
         /// <summary>
         /// Whether the beatmap uses regular hyperdash generation.
         /// </summary>
