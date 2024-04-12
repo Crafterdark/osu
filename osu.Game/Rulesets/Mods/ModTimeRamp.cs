@@ -19,7 +19,7 @@ namespace osu.Game.Rulesets.Mods
         /// </summary>
         public const double FINAL_RATE_PROGRESS = 0.75f;
 
-        public override double ScoreMultiplier => 0.5;
+        public override double ScoreMultiplier => 0.75d * (initRateHelper.ScoreMultiplier + finalRateHelper.ScoreMultiplier) / 2 + 0.25d * finalRateHelper.ScoreMultiplier;
 
         [SettingSource("Initial rate", "The starting speed of the track", SettingControlType = typeof(MultiplierSettingsSlider))]
         public abstract BindableNumber<double> InitialRate { get; }
@@ -46,10 +46,17 @@ namespace osu.Game.Rulesets.Mods
 
         private readonly RateAdjustModHelper rateAdjustHelper;
 
+        private readonly RateAdjustModHelper initRateHelper;
+
+        private readonly RateAdjustModHelper finalRateHelper;
+
         protected ModTimeRamp()
         {
             rateAdjustHelper = new RateAdjustModHelper(SpeedChange);
             rateAdjustHelper.HandleAudioAdjustments(AdjustPitch);
+
+            initRateHelper = new RateAdjustModHelper(InitialRate);
+            finalRateHelper = new RateAdjustModHelper(FinalRate);
 
             // for preview purpose at song select. eventually we'll want to be able to update every frame.
             FinalRate.BindValueChanged(_ => applyRateAdjustment(double.PositiveInfinity), true);

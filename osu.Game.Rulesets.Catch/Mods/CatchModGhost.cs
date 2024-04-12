@@ -1,7 +1,6 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
-using System.Linq;
 using System;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics.Sprites;
@@ -48,11 +47,15 @@ namespace osu.Game.Rulesets.Catch.Mods
         {
             var drawableCatchHitObject = (DrawableCatchHitObject)drawable;
 
-            drawableCatchHitObject.StateOverride = (s) =>
+            Func<ArmedState, ArmedState> ghostOverride = (s) =>
             {
-                if (s != ArmedState.Idle)
-                    drawableCatchHitObject.NewState = ArmedState.Miss;
+                if (s == ArmedState.Miss || s == ArmedState.Hit)
+                    return ArmedState.ForceMiss;
+
+                return s;
             };
+
+            drawableCatchHitObject.ArmedStateOverrides.Add(ghostOverride);
         }
     }
 }

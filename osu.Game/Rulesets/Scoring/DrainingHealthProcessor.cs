@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using osu.Framework.Bindables;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Judgements;
 using osu.Game.Rulesets.Objects;
@@ -45,6 +46,8 @@ namespace osu.Game.Rulesets.Scoring
         /// The drain rate as a proportion of the total health drained per millisecond.
         /// </summary>
         public double DrainRate { get; private set; }
+
+        public BindableBool DisableDrainRate = new BindableBool();
 
         /// <summary>
         /// The beatmap.
@@ -86,7 +89,7 @@ namespace osu.Game.Rulesets.Scoring
         {
             base.Update();
 
-            if (noDrainPeriodTracker?.IsInAny(Time.Current) == true)
+            if (noDrainPeriodTracker?.IsInAny(Time.Current) == true || DisableDrainRate.Value)
                 return;
 
             // When jumping in and out of gameplay time within a single frame, health should only be drained for the period within the gameplay time
@@ -156,6 +159,9 @@ namespace osu.Game.Rulesets.Scoring
 
             if (storeResults)
                 DrainRate = ComputeDrainRate();
+
+            //Always reset the drain rate variable
+            DisableDrainRate.Value = false;
 
             healthIncreases.Clear();
         }

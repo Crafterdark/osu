@@ -6,7 +6,9 @@ namespace osu.Game.Rulesets.Objects.Drawables
     public enum ArmedState
     {
         Idle,
+        ForceHit,
         Hit,
+        ForceMiss,
         Miss
     }
 }

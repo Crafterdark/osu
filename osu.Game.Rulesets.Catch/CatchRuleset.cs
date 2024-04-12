@@ -151,6 +151,7 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModMuted(),
                         new CatchModNoScope(),
                         new CatchModGhost(),
+                        new CatchModDodge(),
                         new MultiMod(new CatchModSpeedRun(), new CatchModSlowWalk()),
                         new CatchModPermadash(),
                         new CatchModInvisibleHyperdash(),

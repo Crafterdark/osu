@@ -4,6 +4,7 @@
 #nullable disable
 
 using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics;
@@ -73,24 +74,26 @@ namespace osu.Game.Rulesets.Catch.Objects.Drawables
 
         protected override void UpdateHitStateTransforms(ArmedState state)
         {
-            StateOverride?.Invoke(state);
-
-            state = NewState != null ? (ArmedState)NewState : state;
+            foreach (var armedStateOverride in ArmedStateOverrides)
+            {
+                var result = armedStateOverride.Invoke(state);
+                state = result;
+            }
 
             switch (state)
             {
+                case ArmedState.ForceMiss:
                 case ArmedState.Miss:
                     this.FadeOut(250).RotateTo(Rotation * 2, 250, Easing.Out);
                     break;
 
+                case ArmedState.ForceHit:
                 case ArmedState.Hit:
                     this.FadeOut();
                     break;
             }
         }
 
-        public Action<ArmedState> StateOverride;
-
-        public ArmedState? NewState;
+        public List<Func<ArmedState, ArmedState>> ArmedStateOverrides = new List<Func<ArmedState, ArmedState>>();
     }
 }

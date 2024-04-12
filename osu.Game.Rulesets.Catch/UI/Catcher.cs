@@ -61,9 +61,19 @@ namespace osu.Game.Rulesets.Catch.UI
         public bool HyperDashing => hyperDashModifier != 1;
 
         /// <summary>
+        /// Whether we can hyperdash or not.
+        /// </summary>
+        public bool CanHyperDash { get; set; } = true;
+
+        /// <summary>
         /// Whether the catcher is a ghost.
         /// </summary>
         public bool IsGhost { get; set; }
+
+        /// <summary>
+        /// Whether the catcher is dodging fruits.
+        /// </summary>
+        public bool IsDodge { get; set; }
 
         /// <summary>
         /// Whether <see cref="DrawablePalpableCatchHitObject"/> fruit should appear on the plate.
@@ -124,6 +134,16 @@ namespace osu.Game.Rulesets.Catch.UI
         /// The maximum position allowed for the catcher position.
         /// </summary>
         public float MaxX { get; set; } = CatchPlayfield.WIDTH;
+
+        /// <summary>
+        /// The offset position for the minimum catcher position.
+        /// </summary>
+        public float MinOffsetX { get; set; } = 0;
+
+        /// <summary>
+        /// The offset position for the maximum catcher position.
+        /// </summary>
+        public float MaxOffsetX { get; set; } = 0;
 
         /// <summary>
         /// The amount by which caught fruit should be scaled down to fit on the plate.
@@ -222,7 +242,9 @@ namespace osu.Game.Rulesets.Catch.UI
             hitLighting = config.GetBindable<bool>(OsuSetting.HitLighting);
         }
 
-        public void DisableHitLighting() => hitLighting.Value = false;
+        public BindableBool AllowHitLightingEffect = new BindableBool(true);
+
+        public void DisableHitLighting() => AllowHitLightingEffect.Value = false;
 
         /// <summary>
         /// Creates proxied content to be displayed beneath hitobjects.
@@ -262,8 +284,13 @@ namespace osu.Game.Rulesets.Catch.UI
                 halfCatcherWidth += variableWidth;
             }
 
-            return fruit.EffectiveX >= catcherX - halfCatcherWidth &&
-                   fruit.EffectiveX <= catcherX + halfCatcherWidth;
+            bool catchResult = fruit.EffectiveX >= catcherX - halfCatcherWidth &&
+                               fruit.EffectiveX <= catcherX + halfCatcherWidth;
+
+            if (IsDodge)
+                return !catchResult;
+
+            return catchResult;
         }
 
         public bool CanCatch(CatchHitObject hitObject) => CanCatch(hitObject, X);
@@ -279,7 +306,7 @@ namespace osu.Game.Rulesets.Catch.UI
 
             var hitObject = palpableObject.HitObject;
 
-            if (result.IsHit)
+            if ((result.IsHit && !IsDodge) || (!result.IsHit && IsDodge))
             {
                 float directionalDistanceFromTarget = palpableObject.X - X;
 
@@ -291,7 +318,7 @@ namespace osu.Game.Rulesets.Catch.UI
                 if (CatchFruitOnPlate)
                     placeCaughtObject(palpableObject, positionInStack);
 
-                if (hitLighting.Value)
+                if (AllowHitLightingEffect.Value && hitLighting.Value)
                     addLighting(result, drawableObject.AccentColour.Value, positionInStack.X);
             }
 
@@ -318,7 +345,7 @@ namespace osu.Game.Rulesets.Catch.UI
 
             if (result.IsHit)
                 CurrentState = hitObject.Kiai ? CatcherAnimationState.Kiai : CatcherAnimationState.Idle;
-            else if (!(hitObject is Banana))
+            else if (!(hitObject is Banana) || (IsDodge && hitObject is Banana))
                 CurrentState = CatcherAnimationState.Fail;
 
             if (palpableObject.HitObject.LastInCombo)
@@ -331,10 +358,7 @@ namespace osu.Game.Rulesets.Catch.UI
                         Drop();
                 }
                 else
-                {
-                    if (!IsGhost)
-                        Drop();
-                }
+                    Drop();
             }
         }
 
@@ -363,6 +387,9 @@ namespace osu.Game.Rulesets.Catch.UI
         /// <param name="targetPosition">When this catcher crosses this position, this catcher ends hyper-dashing.</param>
         public void SetHyperDashState(double modifier = 1, float targetPosition = -1)
         {
+            if (!CanHyperDash)
+                return;
+
             bool wasHyperDashing = HyperDashing;
 
             if (modifier <= BASE_DASH_SPEED || X == targetPosition)

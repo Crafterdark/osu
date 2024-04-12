@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using osu.Framework.Bindables;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Judgements;
@@ -17,6 +18,8 @@ namespace osu.Game.Rulesets.Catch.Scoring
             : base(drainStartTime)
         {
         }
+
+        public BindableBool InvertHealth = new BindableBool();
 
         protected override IEnumerable<HitObject> EnumerateTopLevelHitObjects() => EnumerateHitObjects(Beatmap).Where(h => h is Fruit || h is Droplet || h is Banana);
 
@@ -39,7 +42,7 @@ namespace osu.Game.Rulesets.Catch.Scoring
             return base.CheckDefaultFailCondition(result);
         }
 
-        protected override double GetHealthIncreaseFor(HitObject hitObject, HitResult result)
+        public double HealthIncreaseFor(HitObject hitObject, HitResult result)
         {
             double increase = 0;
 
@@ -70,6 +73,43 @@ namespace osu.Game.Rulesets.Catch.Scoring
             }
 
             return HpMultiplierNormal * increase;
+        }
+
+        public double HealthDecreaseFor(HitObject hitObject, HitResult result)
+        {
+            double decrease = 0;
+
+            switch (result)
+            {
+                case HitResult.SmallTickMiss:
+                    decrease = -0.0015;
+                    break;
+                case HitResult.LargeTickMiss:
+                    decrease = -0.015;
+                    break;
+                case HitResult.Miss:
+                    decrease = -0.03;
+                    break;
+
+                case HitResult.SmallTickHit:
+                    return 0;
+
+                case HitResult.LargeTickHit:
+                    return 0;
+
+                case HitResult.Great:
+                    return 0;
+
+                case HitResult.LargeBonus:
+                    return 0;
+            }
+
+            return decrease;
+        }
+
+        protected override double GetHealthIncreaseFor(HitObject hitObject, HitResult result)
+        {
+            return !InvertHealth.Value ? HealthIncreaseFor(hitObject, result) : HealthDecreaseFor(hitObject, result);
         }
     }
 }

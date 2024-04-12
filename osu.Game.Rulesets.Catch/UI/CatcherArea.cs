@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using osu.Framework.Bindables;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Input.Bindings;
@@ -30,6 +31,8 @@ namespace osu.Game.Rulesets.Catch.UI
         }
 
         public List<CatchAction> InvalidCatchActionList = new List<CatchAction>();
+
+        public BindableBool HideComboDisplay { get; set; } = new BindableBool();
 
         private readonly Container<Catcher> catcherContainer;
 
@@ -100,7 +103,9 @@ namespace osu.Game.Rulesets.Catch.UI
 
             comboDisplay.X = Catcher.X;
 
-            if (Catcher.IsGhost)
+            if (HideComboDisplay.Value)
+                comboDisplay.Alpha = 0;
+            else if (Catcher.IsGhost)
                 comboDisplay.Alpha = Catcher.Alpha;
 
             if ((Clock as IGameplayClock)?.IsRewinding == true)
@@ -128,7 +133,7 @@ namespace osu.Game.Rulesets.Catch.UI
         public void SetCatcherPosition(float x)
         {
             float lastPosition = Catcher.X;
-            float newPosition = Math.Clamp(x, Catcher.MinX, Catcher.MaxX);
+            float newPosition = Math.Clamp(x, Catcher.MinX + Catcher.MinOffsetX, Catcher.MaxX + Catcher.MaxOffsetX);
 
             Catcher.X = newPosition;
 
