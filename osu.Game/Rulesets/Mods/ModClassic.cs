@@ -1,6 +1,8 @@
 // Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System;
+using System.Collections.Generic;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
 
@@ -30,5 +32,7 @@ namespace osu.Game.Rulesets.Mods
         ///  - Sliders always gives combo for slider end, even on miss (https://github.com/ppy/osu/issues/11769).
         /// </summary>
         public sealed override bool Ranked => false;
+
+        public List<Func<IReadOnlyList<Mod>, double, double>> ScoreMultiplierAdjustments = new List<Func<IReadOnlyList<Mod>, double, double>>();
     }
 }

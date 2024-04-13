@@ -197,6 +197,12 @@ namespace osu.Game.Rulesets.Scoring
                 foreach (var m in mods.NewValue)
                     scoreMultiplier *= m.ScoreMultiplier;
 
+                var classicMod = mods.NewValue.OfType<ModClassic>().SingleOrDefault();
+
+                if (classicMod != null)
+                    foreach (var scoreMultiplierAdjustment in classicMod.ScoreMultiplierAdjustments)
+                        scoreMultiplier = scoreMultiplierAdjustment.Invoke(mods.NewValue, scoreMultiplier);
+
                 updateScore();
                 updateRank();
             };

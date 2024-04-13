@@ -2,21 +2,32 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using osu.Framework.Bindables;
+using osu.Framework.Extensions.ObjectExtensions;
 using osu.Game.Beatmaps;
 using osu.Game.Configuration;
 using osu.Game.Rulesets.Catch.Beatmaps;
+using osu.Game.Rulesets.Catch.Objects;
+using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Mods;
+using osu.Game.Rulesets.Scoring;
+using osu.Game.Rulesets.UI;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
-    public class CatchModClassic : ModClassic, IApplicableToBeatmapConverter, IApplicableToBeatmapProcessor
+    public class CatchModClassic : ModClassic, IApplicableToBeatmapConverter, IApplicableToBeatmapProcessor, IApplicableFailOverride, IApplicableToHealthProcessor, IApplicableToDrawableRuleset<CatchHitObject>
     {
         public override Type[] IncompatibleMods => new[] {
             typeof(CatchModSpicyPatterns),
+            typeof(CatchModExtraLives),
         };
 
-        [SettingSource("Hard Rock spicy patterns", "Include spicy patterns when using Hard Rock.")]
+        [SettingSource("Classic Easy", "Include two extra lives when using Easy.")]
+        public BindableBool ClassicExtraLives { get; } = new BindableBool(true);
+
+        [SettingSource("Classic Hard Rock", "Include spicy patterns when using Hard Rock.")]
         public BindableBool ClassicSpicyPatterns { get; } = new BindableBool(true);
 
         [SettingSource("Asymmetrical hyperdash generation", "Stable generated asymmetrical hyperdashes during beatmap processing.")]
@@ -33,6 +44,55 @@ namespace osu.Game.Rulesets.Catch.Mods
 
         [SettingSource("Mistimed tiny droplets", "Several juice streams didn't generate the tiny droplets on beat.")]
         public Bindable<bool> MistimedTinyDroplets { get; } = new BindableBool(true);
+
+        private int retries;
+
+        private const int total_classic_extra_lives = 2;
+
+        private readonly BindableNumber<double> health = new BindableDouble();
+
+        private DrawableCatchRuleset drawableCatchRuleset = null!;
+
+        public CatchModClassic()
+        {
+            Func<IReadOnlyList<Mod>, double, double> classicEasyDetection = (modList, currMultiplier) =>
+            {
+                if (modList.OfType<CatchModEasy>().SingleOrDefault().IsNotNull() && ClassicExtraLives.Value)
+                    return currMultiplier * Math.Sqrt(0.5);
+
+                return currMultiplier;
+            };
+
+
+            ScoreMultiplierAdjustments.Add(classicEasyDetection);
+        }
+
+        public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
+        {
+            drawableCatchRuleset = (DrawableCatchRuleset)drawableRuleset;
+            var catchModEasy = drawableCatchRuleset.Mods.OfType<CatchModEasy>().SingleOrDefault();
+
+            bool usingExtraLives = ClassicExtraLives.Value;
+
+            retries = usingExtraLives && catchModEasy.IsNotNull() ? total_classic_extra_lives : 0;
+        }
+
+        public bool PerformFail()
+        {
+            if (retries == 0) return true;
+
+            health.Value = health.MaxValue;
+            retries--;
+
+            return false;
+        }
+
+        public bool RestartOnFail => false;
+
+        public void ApplyToHealthProcessor(HealthProcessor healthProcessor)
+        {
+            health.BindTo(healthProcessor.Health);
+        }
 
         public void ApplyToBeatmapConverter(IBeatmapConverter beatmapConverter)
         {

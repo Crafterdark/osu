@@ -110,6 +110,7 @@ namespace osu.Game.Rulesets.Catch
                     return new Mod[]
                     {
                         new CatchModEasy(),
+                        new CatchModExtraLives(),
                         new CatchModNoFail(),
                         new MultiMod(new CatchModHalfTime(), new CatchModDaycore()),
                         new CatchModLowPrecision(),

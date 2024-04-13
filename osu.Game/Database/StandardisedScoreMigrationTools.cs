@@ -192,6 +192,12 @@ namespace osu.Game.Database
             foreach (var mod in score.Mods)
                 modMultiplier *= mod.ScoreMultiplier;
 
+            var classicMod = score.Mods.OfType<ModClassic>().SingleOrDefault();
+
+            if (classicMod != null)
+                foreach (var scoreMultiplierAdjustment in classicMod.ScoreMultiplierAdjustments)
+                    modMultiplier = scoreMultiplierAdjustment.Invoke(score.Mods, modMultiplier);
+
             return (long)Math.Round((1000000 * (accuracyPortion * accuracyScore + (1 - accuracyPortion) * comboScore) + bonusScore) * modMultiplier);
 
             static int numericScoreFor(HitResult result)
@@ -351,6 +357,12 @@ namespace osu.Game.Database
             double bonusProportion = Math.Max(0, ((long)score.LegacyTotalScore - maximumLegacyBaseScore) * maximumLegacyBonusRatio);
 
             double modMultiplier = score.Mods.Select(m => m.ScoreMultiplier).Aggregate(1.0, (c, n) => c * n);
+
+            var classicMod = score.Mods.OfType<ModClassic>().SingleOrDefault();
+
+            if (classicMod != null)
+                foreach (var scoreMultiplierAdjustment in classicMod.ScoreMultiplierAdjustments)
+                    modMultiplier = scoreMultiplierAdjustment.Invoke(score.Mods, modMultiplier);
 
             long convertedTotalScore;
 

@@ -9,6 +9,7 @@ using osu.Framework.Allocation;
 using osu.Framework.Audio;
 using osu.Framework.Audio.Sample;
 using osu.Framework.Bindables;
+using osu.Framework.Extensions.ObjectExtensions;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Graphics.Cursor;
@@ -482,6 +483,12 @@ namespace osu.Game.Overlays.Mods
 
                 foreach (var mod in ActiveMods.Value)
                     multiplier *= mod.ScoreMultiplier;
+
+                var classicMod = ActiveMods.Value.OfType<ModClassic>().SingleOrDefault();
+
+                if (classicMod.IsNotNull())
+                    foreach (var scoreMultiplierAdjustment in classicMod.ScoreMultiplierAdjustments)
+                        multiplier = scoreMultiplierAdjustment.Invoke(ActiveMods.Value, multiplier);
 
                 rankingInformationDisplay.ModMultiplier.Value = multiplier;
                 rankingInformationDisplay.Ranked.Value = ActiveMods.Value.All(m => m.Ranked);

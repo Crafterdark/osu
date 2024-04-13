@@ -122,6 +122,13 @@ namespace osu.Game.Screens.Select
         private void updateMultiplierText() => Schedule(() =>
         {
             double multiplier = Current.Value?.Aggregate(1.0, (current, mod) => current * mod.ScoreMultiplier) ?? 1;
+
+            var classicMod = Current.Value?.OfType<ModClassic>().SingleOrDefault();
+
+            if (Current.Value != null && classicMod != null)
+                foreach (var scoreMultiplierAdjustment in classicMod.ScoreMultiplierAdjustments)
+                    multiplier = scoreMultiplierAdjustment.Invoke(Current.Value, multiplier);
+
             MultiplierText.Text = multiplier == 1 ? string.Empty : ModUtils.FormatScoreMultiplier(multiplier);
 
             if (multiplier > 1)
