@@ -49,6 +49,14 @@ namespace osu.Game.Rulesets.Catch.UI
         /// </summary>
         private int currentDirection;
 
+        public BindableInt CustomDirection = new BindableInt();
+
+        public bool ForceCustomCurrentDirection;
+
+        private bool leftPressed;
+
+        private bool rightPressed;
+
         // TODO: support replay rewind
         private bool lastHyperDashState;
 
@@ -92,9 +100,30 @@ namespace osu.Game.Rulesets.Catch.UI
 
             var replayState = (GetContainingInputManager().CurrentState as RulesetInputManagerInputState<CatchAction>)?.LastReplayState as CatchFramedReplayInputHandler.CatchReplayState;
 
+            int localCurrentDirection = currentDirection;
+
+            if (ForceCustomCurrentDirection)
+            {
+                bool stop = false;
+
+                if (localCurrentDirection == 0)
+                {
+                    if (leftPressed && rightPressed)
+                        stop = true;
+                    else if (Catcher.X == Catcher.MinX + Catcher.MinOffsetX)
+                        CustomDirection.Value = 1;
+                    else if (Catcher.X == Catcher.MaxX + Catcher.MaxOffsetX)
+                        CustomDirection.Value = -1;
+
+                    localCurrentDirection = stop ? 0 : CustomDirection.Value;
+                }
+                else
+                    CustomDirection.Value = localCurrentDirection;
+            }
+
             SetCatcherPosition(
                 replayState?.CatcherX ??
-                (float)(Catcher.X + Catcher.Speed * currentDirection * Clock.ElapsedFrameTime));
+                (float)(Catcher.X + Catcher.Speed * localCurrentDirection * Clock.ElapsedFrameTime));
         }
 
         protected override void UpdateAfterChildren()
@@ -152,10 +181,12 @@ namespace osu.Game.Rulesets.Catch.UI
             {
                 case CatchAction.MoveLeft:
                     currentDirection--;
+                    leftPressed = true;
                     return true;
 
                 case CatchAction.MoveRight:
                     currentDirection++;
+                    rightPressed = true;
                     return true;
 
                 case CatchAction.Dash:
@@ -175,10 +206,12 @@ namespace osu.Game.Rulesets.Catch.UI
             {
                 case CatchAction.MoveLeft:
                     currentDirection++;
+                    leftPressed = false;
                     break;
 
                 case CatchAction.MoveRight:
                     currentDirection--;
+                    rightPressed = false;
                     break;
 
                 case CatchAction.Dash:
