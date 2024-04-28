@@ -21,6 +21,12 @@ namespace osu.Game.Rulesets.Catch.Objects
 
         private HitObjectProperty<float> originalX;
 
+        /// <summary>
+        /// The next target fruit. (if necessary)
+        /// </summary>
+        [JsonIgnore]
+        public CatchHitObject? NextTarget { get; set; }
+
         public Bindable<float> OriginalXBindable => originalX.Bindable;
 
         /// <summary>

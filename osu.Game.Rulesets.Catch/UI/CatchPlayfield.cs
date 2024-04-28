@@ -49,6 +49,8 @@ namespace osu.Game.Rulesets.Catch.UI
 
         public event Action<CatchHitObject>? NewCatchReplayJudgement;
 
+        public event Action<CatchHitObject>? NewCatchGameplayJudgement;
+
         public float CatcherPosition { get; set; }
 
         public CatchPlayfield(IBeatmapDifficultyInfo difficulty)
@@ -114,6 +116,7 @@ namespace osu.Game.Rulesets.Catch.UI
         {
             CatcherPosition = Catcher.X;
             NewCatchReplayJudgement?.Invoke(obj);
+            NewCatchGameplayJudgement?.Invoke(obj);
             return Catcher.CanCatch(obj, CatcherPosition);
         }
 

@@ -69,8 +69,8 @@ namespace osu.Game.Rulesets.Catch.Mods
             var catchPlayfield = (CatchPlayfield)catchDrawableRuleset.Playfield;
 
             catchPlayfield.Catcher.CustomSpeedMultiplier.Value *= MovementSpeedDecrease.Value;
-            catchPlayfield.Catcher.MinX = ((CatchBeatmap)catchDrawableRuleset.Beatmap).LimitedCatchPlayfield.MinWidth;
-            catchPlayfield.Catcher.MaxX = ((CatchBeatmap)catchDrawableRuleset.Beatmap).LimitedCatchPlayfield.MaxWidth;
+            catchPlayfield.Catcher.MinX = ((CatchBeatmap)catchDrawableRuleset.Beatmap).LimitedCatchPlayfieldContainer.MinWidth;
+            catchPlayfield.Catcher.MaxX = ((CatchBeatmap)catchDrawableRuleset.Beatmap).LimitedCatchPlayfieldContainer.MaxWidth;
         }
     }
 }

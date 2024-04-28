@@ -19,7 +19,7 @@ namespace osu.Game.Rulesets.Mods
     {
         public override string Name => "No Scope";
         public override string Acronym => "NS";
-        public override ModType Type => ModType.Fun;
+        public override ModType Type => ModType.DifficultyIncrease;
         public override IconUsage? Icon => FontAwesome.Solid.EyeSlash;
         public override double ScoreMultiplier => 1;
         public override bool Ranked => true;

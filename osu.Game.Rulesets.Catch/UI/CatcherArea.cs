@@ -51,7 +51,13 @@ namespace osu.Game.Rulesets.Catch.UI
 
         public BindableInt CustomDirection = new BindableInt();
 
+        public BindableDouble CustomSpeed = new BindableDouble();
+
         public bool ForceCustomCurrentDirection;
+
+        public bool ForceCustomSpeed;
+
+        public bool IncomingBonusCustomSpeed;
 
         private bool leftPressed;
 
@@ -82,6 +88,8 @@ namespace osu.Game.Rulesets.Catch.UI
             };
         }
 
+        public int GetDirection() => currentDirection;
+
         public void OnNewResult(DrawableCatchHitObject hitObject, JudgementResult result)
         {
             Catcher.OnNewResult(hitObject, result);
@@ -102,6 +110,8 @@ namespace osu.Game.Rulesets.Catch.UI
 
             int localCurrentDirection = currentDirection;
 
+            double localCurrentSpeed = Catcher.Speed;
+
             if (ForceCustomCurrentDirection)
             {
                 bool stop = false;
@@ -121,9 +131,23 @@ namespace osu.Game.Rulesets.Catch.UI
                     CustomDirection.Value = localCurrentDirection;
             }
 
+            if (ForceCustomSpeed)
+            {
+                if (IncomingBonusCustomSpeed)
+                {
+                    localCurrentSpeed = Catcher.AdjustedDashSpeed;
+                    Catcher.Dashing = true;
+                }
+                else
+                {
+                    localCurrentSpeed = CustomSpeed.Value;
+                    Catcher.Dashing = localCurrentSpeed > Catcher.AdjustedWalkSpeed;
+                }
+            }
+
             SetCatcherPosition(
                 replayState?.CatcherX ??
-                (float)(Catcher.X + Catcher.Speed * localCurrentDirection * Clock.ElapsedFrameTime));
+                (float)(Catcher.X + localCurrentSpeed * localCurrentDirection * Clock.ElapsedFrameTime));
         }
 
         protected override void UpdateAfterChildren()

@@ -25,11 +25,15 @@ namespace osu.Game.Rulesets.Catch.UI
         {
             int finalDirection = 0;
 
-            if (actions.Contains(CatchAction.MoveLeft))
-                finalDirection--;
+            bool moveLeft = actions.Contains(CatchAction.MoveLeft);
+            bool moveRight = actions.Contains(CatchAction.MoveRight);
 
-            if (actions.Contains(CatchAction.MoveRight))
-                finalDirection++;
+            if (moveLeft && !moveRight)
+                finalDirection = -1;
+            else if (moveRight && !moveLeft)
+                finalDirection = 1;
+            else if (moveLeft && moveRight)
+                finalDirection = 2;
 
             return finalDirection;
         }

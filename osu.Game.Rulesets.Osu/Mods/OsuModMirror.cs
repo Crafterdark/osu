@@ -3,7 +3,6 @@
 
 using System;
 using osu.Framework.Bindables;
-using osu.Framework.Localisation;
 using osu.Game.Configuration;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Objects;
@@ -14,11 +13,10 @@ namespace osu.Game.Rulesets.Osu.Mods
 {
     public class OsuModMirror : ModMirror, IApplicableToHitObject
     {
-        public override LocalisableString Description => "Flip objects on the chosen axes.";
         public override Type[] IncompatibleMods => new[] { typeof(ModHardRock) };
 
         [SettingSource("Mirrored axes", "Choose which axes objects are mirrored over.")]
-        public Bindable<MirrorType> Reflection { get; } = new Bindable<MirrorType>();
+        public override Bindable<MirrorType> Reflection { get; } = new Bindable<MirrorType>();
 
         public void ApplyToHitObject(HitObject hitObject)
         {
@@ -39,13 +37,6 @@ namespace osu.Game.Rulesets.Osu.Mods
                     OsuHitObjectGenerationUtils.ReflectVerticallyAlongPlayfield(osuObject);
                     break;
             }
-        }
-
-        public enum MirrorType
-        {
-            Horizontal,
-            Vertical,
-            Both
         }
     }
 }

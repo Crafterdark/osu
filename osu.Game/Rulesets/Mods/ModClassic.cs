@@ -34,5 +34,7 @@ namespace osu.Game.Rulesets.Mods
         public sealed override bool Ranked => false;
 
         public List<Func<IReadOnlyList<Mod>, double, double>> ScoreMultiplierAdjustments = new List<Func<IReadOnlyList<Mod>, double, double>>();
+
+        public abstract void CheckModsForConditions(IReadOnlyList<Mod> mods);
     }
 }

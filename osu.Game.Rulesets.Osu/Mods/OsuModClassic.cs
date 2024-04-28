@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics;
@@ -38,6 +39,10 @@ namespace osu.Game.Rulesets.Osu.Mods
         public Bindable<bool> ClassicHealth { get; } = new Bindable<bool>(true);
 
         private bool usingHiddenFading;
+
+        public override void CheckModsForConditions(IReadOnlyList<Mod> mods)
+        {
+        }
 
         public void ApplyToHitObject(HitObject hitObject)
         {

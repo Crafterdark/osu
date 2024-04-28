@@ -265,6 +265,10 @@ namespace osu.Game.Beatmaps
             if (Beatmap.HitObjects.Count > 0 && !converter.CanConvert())
                 throw new BeatmapInvalidForRulesetException($"{nameof(Beatmaps.Beatmap)} can not be converted for the ruleset (ruleset: {ruleset.InstantiationInfo}, converter: {converter}).");
 
+            //Allow classic mod to adjust when other mods exist
+            var classicMod = mods.OfType<ModClassic>().FirstOrDefault();
+            classicMod?.CheckModsForConditions(mods);
+
             // Apply conversion mods
             foreach (var mod in mods.OfType<IApplicableToBeatmapConverter>())
             {

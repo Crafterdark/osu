@@ -1,6 +1,7 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System.Collections.Generic;
 using osu.Framework.Localisation;
 
 namespace osu.Game.Rulesets.Mods
@@ -18,5 +19,9 @@ namespace osu.Game.Rulesets.Mods
         public override bool ValidForMultiplayer => false;
 
         public override bool ValidForMultiplayerAsFreeMod => false;
+
+        public override void CheckModsForConditions(IReadOnlyList<Mod> mods)
+        {
+        }
     }
 }

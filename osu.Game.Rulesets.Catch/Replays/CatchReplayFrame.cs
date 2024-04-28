@@ -39,6 +39,11 @@ namespace osu.Game.Rulesets.Catch.Replays
                 Actions.Add(CatchAction.MoveRight);
             else if (Direction == -1)
                 Actions.Add(CatchAction.MoveLeft);
+            else if (Direction == 2)
+            {
+                Actions.Add(CatchAction.MoveLeft);
+                Actions.Add(CatchAction.MoveRight);
+            }
         }
 
         public void FromLegacy(LegacyReplayFrame currentFrame, IBeatmap beatmap, ReplayFrame? lastFrame = null)
@@ -55,6 +60,11 @@ namespace osu.Game.Rulesets.Catch.Replays
                 Actions.Add(CatchAction.MoveRight);
             else if (Direction == -1)
                 Actions.Add(CatchAction.MoveLeft);
+            else if (Direction == 2)
+            {
+                Actions.Add(CatchAction.MoveLeft);
+                Actions.Add(CatchAction.MoveRight);
+            }
         }
 
         public LegacyReplayFrame ToLegacy(IBeatmap beatmap)

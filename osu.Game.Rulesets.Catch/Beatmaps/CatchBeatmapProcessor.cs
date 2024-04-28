@@ -6,6 +6,7 @@ using System.Linq;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.UI;
+using osu.Game.Rulesets.Catch.Utils;
 using osu.Game.Rulesets.Objects.Types;
 using osu.Game.Utils;
 
@@ -22,35 +23,6 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
         public bool ClassicSpicyPatterns { get; set; }
 
         public bool NewTinyGeneration { get; set; } = true;
-
-        public class LimitedCatchPlayfield(double value)
-        {
-            public float MinWidth = (float)(CatchPlayfield.WIDTH - value) / 2;
-            public float MaxWidth = (float)value + (float)(CatchPlayfield.WIDTH - value) / 2;
-            public float ConversionFactor = (float)value / CatchPlayfield.WIDTH;
-
-            public void ConvertObject(CatchHitObject catchHitObject)
-            {
-                catchHitObject.SetConversionFactorLimitation(true, ConversionFactor, MinWidth);
-            }
-
-            public void UnconvertObject(CatchHitObject catchHitObject)
-            {
-                catchHitObject.SetConversionFactorLimitation(false, ConversionFactor, MinWidth);
-            }
-
-            public void ConvertObjects(CatchHitObject currObject, CatchHitObject nextObject)
-            {
-                ConvertObject(currObject);
-                ConvertObject(nextObject);
-            }
-
-            public void UnconvertObjects(CatchHitObject currObject, CatchHitObject nextObject)
-            {
-                UnconvertObject(currObject);
-                UnconvertObject(nextObject);
-            }
-        }
 
         private CatchBeatmap catchBeatmap = null!;
 
@@ -110,8 +82,10 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             if (catchBeatmap.UsesLimitedCatchPlayfield.Value)
             {
                 double newCatchPlayfieldWidth = CatchPlayfield.WIDTH * catchBeatmap.CatcherAdjustedDashSpeed.Value;
-                catchBeatmap.LimitedCatchPlayfield = new LimitedCatchPlayfield(newCatchPlayfieldWidth);
+                catchBeatmap.LimitedCatchPlayfieldContainer = new LimitedCatchPlayfieldContainer(newCatchPlayfieldWidth);
             }
+
+            CatchHitObject prevObj = null!;
 
             foreach (var obj in beatmap.HitObjects.OfType<CatchHitObject>())
             {
@@ -122,7 +96,15 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                     case Fruit fruit:
                         if (SpicyPatterns || (HardRockOffsets && ClassicSpicyPatterns))
                             applySpicyPatternsOffset(fruit, ref lastPosition, ref lastStartTime, rng);
-                        catchBeatmap.LimitedCatchPlayfield?.ConvertObject(fruit);
+                        catchBeatmap.LimitedCatchPlayfieldContainer?.Convert(fruit);
+
+                        if (catchBeatmap.HitObjectWithNextTarget.Value)
+                        {
+                            if (prevObj != null)
+                                prevObj.NextTarget = fruit;
+                            prevObj = fruit;
+                        }
+
                         break;
 
                     case BananaShower bananaShower:
@@ -132,7 +114,14 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                             rng.Next(); // osu!stable retrieved a random banana type
                             rng.Next(); // osu!stable retrieved a random banana rotation
                             rng.Next(); // osu!stable retrieved a random banana colour
-                            catchBeatmap.LimitedCatchPlayfield?.ConvertObject(banana);
+                            catchBeatmap.LimitedCatchPlayfieldContainer?.Convert(banana);
+
+                            if (catchBeatmap.HitObjectWithNextTarget.Value)
+                            {
+                                if (prevObj != null)
+                                    prevObj.NextTarget = banana;
+                                prevObj = banana;
+                            }
                         }
 
                         break;
@@ -144,6 +133,13 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         // Todo: BUG!! Stable attempted to use the end time of the stream, but referenced it too early in execution and used the start time instead.
                         lastStartTime = juiceStream.StartTime;
 
+                        if (catchBeatmap.HitObjectWithNextTarget.Value)
+                        {
+                            if (prevObj != null)
+                                prevObj.NextTarget = juiceStream;
+                            prevObj = juiceStream;
+                        }
+
                         foreach (var nested in juiceStream.NestedHitObjects)
                         {
                             var catchObject = (CatchHitObject)nested;
@@ -154,7 +150,14 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                             else if (catchObject is Droplet)
                                 rng.Next(); // osu!stable retrieved a random droplet rotation
 
-                            catchBeatmap.LimitedCatchPlayfield?.ConvertObject(catchObject);
+                            catchBeatmap.LimitedCatchPlayfieldContainer?.Convert(catchObject);
+
+                            if (catchBeatmap.HitObjectWithNextTarget.Value)
+                            {
+                                if (prevObj != null)
+                                    prevObj.NextTarget = catchObject;
+                                prevObj = catchObject;
+                            }
                         }
 
                         break;
@@ -290,18 +293,18 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 var currentObject = palpableObjects[i];
                 var nextObject = palpableObjects[i + 1];
 
-                catchBeatmap.LimitedCatchPlayfield?.UnconvertObjects(currentObject, nextObject);
-
                 // Reset variables in-case values have changed (e.g. after applying HR)
                 currentObject.HyperDashTarget = null;
                 currentObject.DistanceToHyperDash = 0;
 
+                catchBeatmap.LimitedCatchPlayfieldContainer?.UnconvertPair(currentObject, nextObject);
+
                 int thisOriginalDirection = calculateDirection(currentObject, nextObject, originalLastDirection, catchBeatmap.IsProcessingSymmetricalHyperDash.Value);
 
-                if (catchBeatmap.RegularHyperDashGeneration.Value)
+                if (catchBeatmap.OriginalHyperDashGeneration.Value)
                     originalLastExcess = processHyperDash(catchBeatmap, currentObject, nextObject, originalHalfCatcherWidth, originalLastExcess, originalLastDirection, thisOriginalDirection, true);
 
-                catchBeatmap.LimitedCatchPlayfield?.ConvertObjects(currentObject, nextObject);
+                catchBeatmap.LimitedCatchPlayfieldContainer?.ConvertPair(currentObject, nextObject);
 
                 int thisModifiedDirection = calculateDirection(currentObject, nextObject, modifiedLastDirection, catchBeatmap.IsProcessingSymmetricalHyperDash.Value);
 

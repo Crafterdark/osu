@@ -11,7 +11,7 @@ using osu.Game.Rulesets.Mania.Beatmaps;
 
 namespace osu.Game.Rulesets.Mania.Mods
 {
-    public class ManiaModMirror : ModMirror, IApplicableToBeatmap
+    public class ManiaModMirror : ModHorizontalMirror, IApplicableToBeatmap
     {
         public override LocalisableString Description => "Notes are flipped horizontally.";
         public override bool Ranked => UsesDefaultConfiguration;

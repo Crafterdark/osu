@@ -8,9 +8,13 @@ using osu.Game.Rulesets.Catch.Beatmaps;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
-    public class CatchModHardRock : ModHardRock, IApplicableToBeatmapProcessor
+    public class CatchModHardRock : ModHardRock, IApplicableToBeatmapProcessor, IApplicableToBeatmap
     {
         public override double ScoreMultiplier => UsesDefaultConfiguration ? 1.12 : 1;
+
+        public bool MirrorFruitsOnGeneration { get; set; } = true;
+
+        private CatchModMirror internalModMirror = new CatchModMirror();
 
         public override void ApplyToDifficulty(BeatmapDifficulty difficulty)
         {
@@ -23,6 +27,12 @@ namespace osu.Game.Rulesets.Catch.Mods
         {
             var catchBeatmapProcessor = (CatchBeatmapProcessor)beatmapProcessor;
             catchBeatmapProcessor.HardRockOffsets = true;
+        }
+
+        public void ApplyToBeatmap(IBeatmap beatmap)
+        {
+            if (MirrorFruitsOnGeneration)
+                internalModMirror.ApplyToBeatmap(beatmap);
         }
     }
 }

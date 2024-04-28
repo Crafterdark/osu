@@ -10,13 +10,14 @@ using osuTK;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
-    public class CatchModFloatingFruits : Mod, IApplicableToDrawableRuleset<CatchHitObject>
+    public class CatchModFloatingFruits : ModVerticalMirror, IApplicableToDrawableRuleset<CatchHitObject>
     {
         public override string Name => "Floating Fruits";
         public override string Acronym => "FF";
         public override LocalisableString Description => "The fruits are... floating?";
         public override double ScoreMultiplier => 1;
         public override IconUsage? Icon => FontAwesome.Solid.Cloud;
+        public override ModType Type => ModType.Fun;
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {

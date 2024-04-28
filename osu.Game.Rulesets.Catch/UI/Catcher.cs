@@ -246,6 +246,8 @@ namespace osu.Game.Rulesets.Catch.UI
 
         public void DisableHitLighting() => AllowHitLightingEffect.Value = false;
 
+        public double GetHyperDashModifier() => hyperDashModifier;
+
         /// <summary>
         /// Creates proxied content to be displayed beneath hitobjects.
         /// </summary>

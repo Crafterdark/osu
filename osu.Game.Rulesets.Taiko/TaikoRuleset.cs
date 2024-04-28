@@ -148,6 +148,7 @@ namespace osu.Game.Rulesets.Taiko
                         new TaikoModRandom(),
                         new TaikoModDifficultyAdjust(),
                         new TaikoModClassic(),
+                        new TaikoModMirror(),
                         new TaikoModSwap(),
                         new TaikoModSingleTap(),
                     };

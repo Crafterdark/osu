@@ -171,6 +171,7 @@ namespace osu.Game.Rulesets.Osu
                         new MultiMod(new OsuModDoubleTime(), new OsuModNightcore()),
                         new OsuModHidden(),
                         new MultiMod(new OsuModFlashlight(), new OsuModBlinds()),
+                        new OsuModNoScope(),
                         new OsuModStrictTracking(),
                         new OsuModAccuracyChallenge(),
                     };
@@ -207,7 +208,6 @@ namespace osu.Game.Rulesets.Osu
                         new OsuModBarrelRoll(),
                         new OsuModApproachDifferent(),
                         new OsuModMuted(),
-                        new OsuModNoScope(),
                         new MultiMod(new OsuModMagnetised(), new OsuModRepel()),
                         new ModAdaptiveSpeed(),
                         new OsuModFreezeFrame(),
