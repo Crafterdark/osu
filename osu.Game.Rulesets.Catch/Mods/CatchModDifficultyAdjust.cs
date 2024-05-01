@@ -35,6 +35,9 @@ namespace osu.Game.Rulesets.Catch.Mods
         [SettingSource("Spicy Patterns", "Adjust the patterns as if Hard Rock is enabled.")]
         public BindableBool HardRockOffsets { get; } = new BindableBool();
 
+        [SettingSource("Original Hyperdashes", "Keep the original hyperdashes.")]
+        public BindableBool OriginalHyperDashes { get; } = new BindableBool();
+
         public override string SettingDescription
         {
             get
@@ -42,6 +45,7 @@ namespace osu.Game.Rulesets.Catch.Mods
                 string circleSize = CircleSize.IsDefault ? string.Empty : $"CS {CircleSize.Value:N1}";
                 string approachRate = ApproachRate.IsDefault ? string.Empty : $"AR {ApproachRate.Value:N1}";
                 string spicyPatterns = HardRockOffsets.IsDefault ? string.Empty : "Spicy patterns";
+                string originalHyperdashes = OriginalHyperDashes.IsDefault ? string.Empty : "Original hyperdashes";
 
                 return string.Join(", ", new[]
                 {
@@ -49,6 +53,7 @@ namespace osu.Game.Rulesets.Catch.Mods
                     base.SettingDescription,
                     approachRate,
                     spicyPatterns,
+                    originalHyperdashes,
                 }.Where(s => !string.IsNullOrEmpty(s)));
             }
         }
@@ -64,7 +69,9 @@ namespace osu.Game.Rulesets.Catch.Mods
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
         {
             var catchProcessor = (CatchBeatmapProcessor)beatmapProcessor;
+            var catchBeatmap = (CatchBeatmap)catchProcessor.Beatmap;
             catchProcessor.HardRockOffsets = HardRockOffsets.Value;
+            catchBeatmap.OriginalHyperDashGeneration = OriginalHyperDashes;
         }
     }
 }

@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using osu.Framework.Bindables;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Objects;
@@ -11,6 +12,16 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 {
     public class CatchBeatmap : Beatmap<CatchHitObject>
     {
+        /// <summary>
+        /// Whether the beatmap uses original hyperdash generation.
+        /// </summary>
+        public BindableBool OriginalHyperDashGeneration = new BindableBool();
+
+        /// <summary>
+        /// Whether the beatmap uses modified hyperdashes generation.
+        /// </summary>
+        public BindableBool ModifiedHyperDashGeneration = new BindableBool(true);
+
         public override IEnumerable<BeatmapStatistic> GetStatistics()
         {
             int fruits = HitObjects.Count(s => s is Fruit);
