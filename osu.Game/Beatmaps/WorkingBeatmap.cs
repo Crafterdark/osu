@@ -296,6 +296,10 @@ namespace osu.Game.Beatmaps
                 }
             }
 
+            //Allow approach locked mod to restore AR
+            var approachLockedMod = mods.OfType<ModApproachLocked>().FirstOrDefault();
+            approachLockedMod?.RestoreApproachRate(converted, converted.Difficulty, mods);
+
             var processor = rulesetInstance.CreateBeatmapProcessor(converted);
 
             if (processor != null)
