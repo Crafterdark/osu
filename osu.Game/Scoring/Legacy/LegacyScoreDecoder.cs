@@ -136,6 +136,11 @@ namespace osu.Game.Scoring.Legacy
                         decodedRank = readScore.Rank;
                         if (readScore.UserID > 1)
                             score.ScoreInfo.RealmUser.OnlineID = readScore.UserID;
+
+                        if (readScore.TotalScoreWithoutMods is long totalScoreWithoutMods)
+                            score.ScoreInfo.TotalScoreWithoutMods = totalScoreWithoutMods;
+                        else
+                            PopulateTotalScoreWithoutMods(score.ScoreInfo);
                     });
                 }
             }
@@ -245,6 +250,16 @@ namespace osu.Game.Scoring.Legacy
             if (attributes.MaxCombo > maxComboFromStatistics)
                 score.MaximumStatistics[HitResult.LegacyComboIncrease] = attributes.MaxCombo - maxComboFromStatistics;
 #pragma warning restore CS0618
+        }
+
+        public static void PopulateTotalScoreWithoutMods(ScoreInfo score)
+        {
+            double modMultiplier = 1;
+
+            foreach (var mod in score.Mods)
+                modMultiplier *= mod.ScoreMultiplier;
+
+            score.TotalScoreWithoutMods = (long)Math.Round(score.TotalScore / modMultiplier);
         }
 
         private bool isFrameValidForPlayback(int i, float diff, float mouseX, float mouseY)
