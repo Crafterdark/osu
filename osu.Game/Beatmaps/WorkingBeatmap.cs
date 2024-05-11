@@ -291,14 +291,23 @@ namespace osu.Game.Beatmaps
             {
                 foreach (var mod in mods.OfType<IApplicableToDifficulty>())
                 {
+                    if (mod is ModRateAdjust)
+                        continue;
+
+                    token.ThrowIfCancellationRequested();
+                    mod.ApplyToDifficulty(converted.Difficulty);
+                }
+
+                //Rate Adjust mods should be applied at last.
+                foreach (var mod in mods.OfType<IApplicableToDifficulty>())
+                {
+                    if (mod is not ModRateAdjust)
+                        continue;
+
                     token.ThrowIfCancellationRequested();
                     mod.ApplyToDifficulty(converted.Difficulty);
                 }
             }
-
-            //Allow approach locked mod to restore AR
-            var approachLockedMod = mods.OfType<ModApproachLocked>().FirstOrDefault();
-            approachLockedMod?.RestoreApproachRate(converted, converted.Difficulty, mods);
 
             var processor = rulesetInstance.CreateBeatmapProcessor(converted);
 

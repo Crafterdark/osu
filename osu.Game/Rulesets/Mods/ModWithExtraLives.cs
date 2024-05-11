@@ -20,7 +20,7 @@ namespace osu.Game.Rulesets.Mods
         public override ModType Type => ModType.DifficultyReduction;
         public override double ScoreMultiplier => Math.Sqrt(0.5);
         public override LocalisableString Description => @"More chances before you fail...";
-        public override Type[] IncompatibleMods => new[] { typeof(ModAccuracyChallenge), typeof(ModNoFail) };
+        public override Type[] IncompatibleMods => new[] { typeof(ModAccuracyChallenge), typeof(ModNoFail), typeof(ModClassic) };
 
         [SettingSource("Extra Lives", "Number of extra lives")]
         public Bindable<int> Retries { get; } = new BindableInt(2)

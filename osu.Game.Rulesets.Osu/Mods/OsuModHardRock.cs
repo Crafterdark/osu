@@ -3,7 +3,9 @@
 
 using System;
 using System.Linq;
+using osu.Framework.Bindables;
 using osu.Game.Beatmaps;
+using osu.Game.Configuration;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Objects;
 using osu.Game.Rulesets.Osu.Objects;
@@ -17,19 +19,22 @@ namespace osu.Game.Rulesets.Osu.Mods
 
         public override Type[] IncompatibleMods => base.IncompatibleMods.Append(typeof(ModMirror)).ToArray();
 
-        public void ApplyToHitObject(HitObject hitObject)
-        {
-            var osuObject = (OsuHitObject)hitObject;
-
-            OsuHitObjectGenerationUtils.ReflectVerticallyAlongPlayfield(osuObject);
-        }
+        [SettingSource("Affects approach rate")]
+        public BindableBool AffectsApproach { get; } = new BindableBool(true);
 
         public override void ApplyToDifficulty(BeatmapDifficulty difficulty)
         {
             base.ApplyToDifficulty(difficulty);
 
-            difficulty.CircleSize = Math.Min(difficulty.CircleSize * 1.3f, 10.0f); // CS uses a custom 1.3 ratio.
-            difficulty.ApproachRate = Math.Min(difficulty.ApproachRate * ADJUST_RATIO, 10.0f);
+            if (AffectsApproach.Value)
+                difficulty.ApproachRate = Math.Min(difficulty.ApproachRate * ADJUST_RATIO, 10.0f);
+        }
+
+        public void ApplyToHitObject(HitObject hitObject)
+        {
+            var osuObject = (OsuHitObject)hitObject;
+
+            OsuHitObjectGenerationUtils.ReflectVerticallyAlongPlayfield(osuObject);
         }
     }
 }

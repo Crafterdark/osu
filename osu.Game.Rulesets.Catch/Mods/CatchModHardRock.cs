@@ -5,6 +5,8 @@ using System;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Catch.Beatmaps;
+using osu.Framework.Bindables;
+using osu.Game.Configuration;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
@@ -16,13 +18,17 @@ namespace osu.Game.Rulesets.Catch.Mods
 
         private CatchModMirror internalModMirror = new CatchModMirror();
 
+        [SettingSource("Affects approach rate")]
+        public BindableBool AffectsApproach { get; } = new BindableBool(true);
+
         public override void ApplyToDifficulty(BeatmapDifficulty difficulty)
         {
             base.ApplyToDifficulty(difficulty);
 
-            difficulty.CircleSize = Math.Min(difficulty.CircleSize * 1.3f, 10.0f); // CS uses a custom 1.3 ratio.
-            difficulty.ApproachRate = Math.Min(difficulty.ApproachRate * ADJUST_RATIO, 10.0f);
+            if (AffectsApproach.Value)
+                difficulty.ApproachRate = Math.Min(difficulty.ApproachRate * ADJUST_RATIO, 10.0f);
         }
+
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
         {
             var catchBeatmapProcessor = (CatchBeatmapProcessor)beatmapProcessor;

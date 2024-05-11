@@ -3,17 +3,19 @@
 
 using System;
 using osu.Framework.Bindables;
+using osu.Game.Rulesets.Mania.Objects;
 using osu.Game.Rulesets.Mods;
-using osu.Game.Rulesets.Osu.Objects;
 using osu.Game.Rulesets.Scoring;
 using osu.Game.Rulesets.UI;
 using osu.Game.Scoring;
 
-namespace osu.Game.Rulesets.Osu.Mods
+namespace osu.Game.Rulesets.Mania.Mods
 {
-    public partial class OsuModBlinds : ModBlinds, IApplicableToDrawableRuleset<OsuHitObject>, IApplicableToHealthProcessor, IApplicableToScoreProcessor
+    public class ManiaModBlinds : ModBlinds, IApplicableToDrawableRuleset<ManiaHitObject>, IApplicableToHealthProcessor, IApplicableToScoreProcessor
     {
-        public void ApplyToDrawableRuleset(DrawableRuleset<OsuHitObject> drawableRuleset)
+        public override double ScoreMultiplier => 1;
+
+        public void ApplyToDrawableRuleset(DrawableRuleset<ManiaHitObject> drawableRuleset)
         {
             drawableRuleset.Overlays.Add(Blinds = new DrawableBlinds(drawableRuleset.Playfield, drawableRuleset.Beatmap));
         }

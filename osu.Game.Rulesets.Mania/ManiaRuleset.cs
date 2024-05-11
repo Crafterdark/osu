@@ -239,6 +239,7 @@ namespace osu.Game.Rulesets.Mania
                     return new Mod[]
                     {
                         new ManiaModEasy(),
+                        new ManiaModExtraLives(),
                         new ManiaModNoFail(),
                         new MultiMod(new ManiaModHalfTime(), new ManiaModDaycore()),
                     };
@@ -250,7 +251,7 @@ namespace osu.Game.Rulesets.Mania
                         new MultiMod(new ManiaModSuddenDeath(), new ManiaModPerfect()),
                         new MultiMod(new ManiaModDoubleTime(), new ManiaModNightcore()),
                         new MultiMod(new ManiaModFadeIn(), new ManiaModHidden(), new ManiaModCover()),
-                        new ManiaModFlashlight(),
+                        new MultiMod(new ManiaModFlashlight(), new ManiaModBlinds()),
                         new ModAccuracyChallenge(),
                     };
 

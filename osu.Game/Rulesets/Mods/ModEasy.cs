@@ -26,7 +26,6 @@ namespace osu.Game.Rulesets.Mods
         {
             const float ratio = 0.5f;
             difficulty.CircleSize *= ratio;
-            difficulty.ApproachRate *= ratio;
             difficulty.DrainRate *= ratio;
             difficulty.OverallDifficulty *= ratio;
         }

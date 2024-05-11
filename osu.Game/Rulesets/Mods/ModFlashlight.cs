@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using osu.Framework.Allocation;
 using osu.Framework.Bindables;
@@ -37,6 +38,7 @@ namespace osu.Game.Rulesets.Mods
         public override ModType Type => ModType.DifficultyIncrease;
         public override LocalisableString Description => "Restricted view area.";
         public override bool Ranked => UsesDefaultConfiguration;
+        public override Type[] IncompatibleMods => base.IncompatibleMods.Append(typeof(ModBlinds)).ToArray();
 
         [SettingSource("Flashlight size", "Multiplier applied to the default flashlight size.")]
         public abstract BindableFloat SizeMultiplier { get; }

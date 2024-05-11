@@ -4,10 +4,11 @@
 using System;
 using osu.Framework.Audio;
 using osu.Framework.Bindables;
+using osu.Game.Beatmaps;
 
 namespace osu.Game.Rulesets.Mods
 {
-    public abstract class ModRateAdjust : Mod, IApplicableToRate
+    public abstract class ModRateAdjust : Mod, IApplicableToRate, IApplicableToDifficulty
     {
         public sealed override bool ValidForMultiplayerAsFreeMod => false;
 
@@ -21,6 +22,10 @@ namespace osu.Game.Rulesets.Mods
         }
 
         public double ApplyToRate(double time, double rate) => rate * SpeedChange.Value;
+
+        public virtual void ApplyToDifficulty(BeatmapDifficulty difficulty)
+        {
+        }
 
         public override Type[] IncompatibleMods => new[] { typeof(ModTimeRamp), typeof(ModAdaptiveSpeed), typeof(ModRateAdjust) };
 

@@ -27,6 +27,7 @@ namespace osu.Game.Rulesets.Mods
 
         public virtual void ApplyToDifficulty(BeatmapDifficulty difficulty)
         {
+            difficulty.CircleSize = Math.Min(difficulty.CircleSize * 1.3f, 10.0f); // CS uses a custom 1.3 ratio.
             difficulty.DrainRate = Math.Min(difficulty.DrainRate * ADJUST_RATIO, 10.0f);
             difficulty.OverallDifficulty = Math.Min(difficulty.OverallDifficulty * ADJUST_RATIO, 10.0f);
         }

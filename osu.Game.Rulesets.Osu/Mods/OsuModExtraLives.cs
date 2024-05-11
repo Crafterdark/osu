@@ -3,9 +3,9 @@
 
 using osu.Game.Rulesets.Mods;
 
-namespace osu.Game.Rulesets.Catch.Mods
+namespace osu.Game.Rulesets.Osu.Mods
 {
-    public class CatchModExtraLives : ModWithExtraLives
+    public class OsuModExtraLives : ModWithExtraLives
     {
     }
 }

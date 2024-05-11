@@ -2,7 +2,6 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
-using System.Linq;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics;
 using osu.Framework.Input;
@@ -20,7 +19,6 @@ namespace osu.Game.Rulesets.Osu.Mods
     public partial class OsuModFlashlight : ModFlashlight<OsuHitObject>, IApplicableToDrawableHitObject
     {
         public override double ScoreMultiplier => UsesDefaultConfiguration ? 1.12 : 1;
-        public override Type[] IncompatibleMods => base.IncompatibleMods.Append(typeof(OsuModBlinds)).ToArray();
 
         private const double default_follow_delay = 120;
 

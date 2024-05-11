@@ -21,7 +21,7 @@ namespace osu.Game.Rulesets.Mods
         public override string Acronym => "NS";
         public override ModType Type => ModType.DifficultyIncrease;
         public override IconUsage? Icon => FontAwesome.Solid.EyeSlash;
-        public override double ScoreMultiplier => 1;
+        public override double ScoreMultiplier => UsesDefaultConfiguration || HiddenComboCount.Value == 0 ? 1.06 : 1;
         public override bool Ranked => true;
 
         /// <summary>

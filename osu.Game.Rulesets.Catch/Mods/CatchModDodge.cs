@@ -32,7 +32,7 @@ namespace osu.Game.Rulesets.Catch.Mods
 
         public override ModType Type => ModType.Fun;
 
-        public override Type[] IncompatibleMods => base.IncompatibleMods.Append(typeof(CatchModAutoplay)).ToArray();
+        public override Type[] IncompatibleMods => base.IncompatibleMods.Append(typeof(CatchModAutoplay)).Append(typeof(CatchModBlinds)).ToArray();
 
         public override LocalisableString Description => @"Dodge fruits to the beat!";
 

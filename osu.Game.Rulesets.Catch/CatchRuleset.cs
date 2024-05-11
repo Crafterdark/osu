@@ -123,7 +123,7 @@ namespace osu.Game.Rulesets.Catch
                         new MultiMod(new CatchModSuddenDeath(), new CatchModPerfect()),
                         new MultiMod(new CatchModDoubleTime(), new CatchModNightcore()),
                         new CatchModHidden(),
-                        new CatchModFlashlight(),
+                        new MultiMod(new CatchModFlashlight(), new CatchModBlinds()),
                         new CatchModNoScope(),
                         new ModAccuracyChallenge(),
                     };
@@ -149,9 +149,9 @@ namespace osu.Game.Rulesets.Catch
                     return new Mod[]
                     {
                         new MultiMod(new ModWindUp(), new ModWindDown()),
-                        new CatchModApproachLocked(),
                         new CatchModFloatingFruits(),
                         new CatchModMuted(),
+                        new CatchModSynesthesia(),
                         new CatchModGhost(),
                         new CatchModDodge(),
                         new MultiMod(new CatchModSpeedRun(), new CatchModSlowWalk()),

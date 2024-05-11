@@ -2,21 +2,24 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
+using System.Linq;
 using osu.Framework.Bindables;
+using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Mods;
-using osu.Game.Rulesets.Osu.Objects;
 using osu.Game.Rulesets.Scoring;
 using osu.Game.Rulesets.UI;
 using osu.Game.Scoring;
 
-namespace osu.Game.Rulesets.Osu.Mods
+namespace osu.Game.Rulesets.Catch.Mods
 {
-    public partial class OsuModBlinds : ModBlinds, IApplicableToDrawableRuleset<OsuHitObject>, IApplicableToHealthProcessor, IApplicableToScoreProcessor
+    public class CatchModBlinds : ModBlinds, IApplicableToDrawableRuleset<CatchHitObject>, IApplicableToHealthProcessor, IApplicableToScoreProcessor
     {
-        public void ApplyToDrawableRuleset(DrawableRuleset<OsuHitObject> drawableRuleset)
+        public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {
             drawableRuleset.Overlays.Add(Blinds = new DrawableBlinds(drawableRuleset.Playfield, drawableRuleset.Beatmap));
         }
+
+        public override Type[] IncompatibleMods => base.IncompatibleMods.Append(typeof(CatchModDodge)).ToArray();
 
         protected float ComboBasedAlpha;
 

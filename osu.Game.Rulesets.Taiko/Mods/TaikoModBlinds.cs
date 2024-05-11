@@ -4,16 +4,16 @@
 using System;
 using osu.Framework.Bindables;
 using osu.Game.Rulesets.Mods;
-using osu.Game.Rulesets.Osu.Objects;
 using osu.Game.Rulesets.Scoring;
+using osu.Game.Rulesets.Taiko.Objects;
 using osu.Game.Rulesets.UI;
 using osu.Game.Scoring;
 
-namespace osu.Game.Rulesets.Osu.Mods
+namespace osu.Game.Rulesets.Taiko.Mods
 {
-    public partial class OsuModBlinds : ModBlinds, IApplicableToDrawableRuleset<OsuHitObject>, IApplicableToHealthProcessor, IApplicableToScoreProcessor
+    public class TaikoModBlinds : ModBlinds, IApplicableToDrawableRuleset<TaikoHitObject>, IApplicableToHealthProcessor, IApplicableToScoreProcessor
     {
-        public void ApplyToDrawableRuleset(DrawableRuleset<OsuHitObject> drawableRuleset)
+        public void ApplyToDrawableRuleset(DrawableRuleset<TaikoHitObject> drawableRuleset)
         {
             drawableRuleset.Overlays.Add(Blinds = new DrawableBlinds(drawableRuleset.Playfield, drawableRuleset.Beatmap));
         }
@@ -43,7 +43,7 @@ namespace osu.Game.Rulesets.Osu.Mods
 
         public void ApplyToHealthProcessor(HealthProcessor healthProcessor)
         {
-            healthProcessor.Health.ValueChanged += health => { Blinds.AnimateClosedness((float)health.NewValue); };
+            healthProcessor.Health.ValueChanged += health => { Blinds.AnimateClosedness(0.6f + Math.Min(0.4f, (float)health.NewValue)); };
         }
     }
 }
