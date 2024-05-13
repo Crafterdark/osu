@@ -105,7 +105,9 @@ namespace osu.Game.Rulesets.Catch.UI
             ((DrawableCatchHitObject)d).CheckPosition = checkIfWeCanCatch;
         }
 
-        private bool checkIfWeCanCatch(CatchHitObject obj) => Catcher.CanCatch(obj);
+        private bool editorSkipCatch(CatchHitObject obj) => EditorLoaded && EditorClockTime > obj.StartTime;
+
+        private bool checkIfWeCanCatch(CatchHitObject obj) => Catcher.CanCatch(obj) && !editorSkipCatch(obj);
 
         private void onNewResult(DrawableHitObject judgedObject, JudgementResult result)
             => CatcherArea.OnNewResult((DrawableCatchHitObject)judgedObject, result);

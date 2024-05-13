@@ -26,6 +26,7 @@ namespace osu.Game.Rulesets.Catch.Edit
             double gamePlayTimeRange = GetTimeRange(Beatmap.Difficulty.ApproachRate);
             float playfieldStretch = Playfield.DrawHeight / CatchPlayfield.HEIGHT;
             TimeRange.Value = gamePlayTimeRange * TimeRangeMultiplier.Value * playfieldStretch;
+            Playfield.EditorClockTime = FrameStableClock.CurrentTime;
         }
 
         protected override Playfield CreatePlayfield() => new CatchEditorPlayfield(Beatmap.Difficulty);
