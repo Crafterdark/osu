@@ -32,13 +32,8 @@ namespace osu.Game.Screens.Ranking.Statistics
         private Drawable content = null!;
         private GridContainer chart = null!;
         private OsuSpriteText achievedPerformance = null!;
+        private OsuSpriteText fcPerformance = null!;
         private OsuSpriteText maximumPerformance = null!;
-        private Drawable spinner;
-        private Drawable content;
-        private GridContainer chart;
-        private OsuSpriteText achievedPerformance;
-        private OsuSpriteText fcPerformance;
-        private OsuSpriteText maximumPerformance;
 
         private readonly Color4 achieveColour = Color4Extensions.FromHex("#66FFCC");
 
@@ -230,9 +225,7 @@ namespace osu.Game.Screens.Ranking.Statistics
             maximumPerformance.Text = Math.Round(perfectAttribute.Value, MidpointRounding.AwayFromZero).ToLocalisableString();
         }
 
-        private Drawable[]? createAttributeRow(PerformanceDisplayAttribute attribute, PerformanceDisplayAttribute perfectAttribute)
-        [CanBeNull]
-        private Drawable[] createAttributeRow(PerformanceDisplayAttribute attribute, PerformanceDisplayAttribute fcAttribute, PerformanceDisplayAttribute perfectAttribute)
+        private Drawable[]? createAttributeRow(PerformanceDisplayAttribute attribute, PerformanceDisplayAttribute fcAttribute, PerformanceDisplayAttribute perfectAttribute)
         {
             // Don't display the attribute if its maximum is 0
             // For example, flashlight bonus would be zero if flashlight mod isn't on
