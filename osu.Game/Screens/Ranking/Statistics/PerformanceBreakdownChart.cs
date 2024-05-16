@@ -1,13 +1,10 @@
 // Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using JetBrains.Annotations;
 using osu.Framework.Allocation;
 using osu.Framework.Extensions;
 using osu.Framework.Extensions.Color4Extensions;
@@ -31,6 +28,11 @@ namespace osu.Game.Screens.Ranking.Statistics
         private readonly ScoreInfo score;
         private readonly IBeatmap playableBeatmap;
 
+        private Drawable spinner = null!;
+        private Drawable content = null!;
+        private GridContainer chart = null!;
+        private OsuSpriteText achievedPerformance = null!;
+        private OsuSpriteText maximumPerformance = null!;
         private Drawable spinner;
         private Drawable content;
         private GridContainer chart;
@@ -45,7 +47,7 @@ namespace osu.Game.Screens.Ranking.Statistics
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
         [Resolved]
-        private BeatmapDifficultyCache difficultyCache { get; set; }
+        private BeatmapDifficultyCache difficultyCache { get; set; } = null!;
 
         private readonly bool showFCPerformance;
 
@@ -182,7 +184,7 @@ namespace osu.Game.Screens.Ranking.Statistics
 
             new PerformanceBreakdownCalculator(playableBeatmap, difficultyCache)
                 .CalculateAsync(score, cancellationTokenSource.Token)
-                .ContinueWith(t => Schedule(() => setPerformanceValue(t.GetResultSafely())));
+                .ContinueWith(t => Schedule(() => setPerformanceValue(t.GetResultSafely()!)));
         }
 
         private void setPerformanceValue(PerformanceBreakdown breakdown)
@@ -228,6 +230,7 @@ namespace osu.Game.Screens.Ranking.Statistics
             maximumPerformance.Text = Math.Round(perfectAttribute.Value, MidpointRounding.AwayFromZero).ToLocalisableString();
         }
 
+        private Drawable[]? createAttributeRow(PerformanceDisplayAttribute attribute, PerformanceDisplayAttribute perfectAttribute)
         [CanBeNull]
         private Drawable[] createAttributeRow(PerformanceDisplayAttribute attribute, PerformanceDisplayAttribute fcAttribute, PerformanceDisplayAttribute perfectAttribute)
         {
@@ -282,7 +285,7 @@ namespace osu.Game.Screens.Ranking.Statistics
 
         protected override void Dispose(bool isDisposing)
         {
-            cancellationTokenSource?.Cancel();
+            cancellationTokenSource.Cancel();
             base.Dispose(isDisposing);
         }
     }
