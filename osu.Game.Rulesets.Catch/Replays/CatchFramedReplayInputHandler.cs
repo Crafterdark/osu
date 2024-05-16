@@ -17,7 +17,7 @@ namespace osu.Game.Rulesets.Catch.Replays
         public CatchFramedReplayInputHandler(Replay replay, CatchPlayfield playfield)
             : base(replay)
         {
-            playfield.NewCatchReplayJudgement += (obj) =>
+            playfield.OnReplayJudgement += (obj) =>
             {
                 CatchReplayFrame? syncFrame;
 
@@ -29,7 +29,7 @@ namespace osu.Game.Rulesets.Catch.Replays
                     syncFrame = (CatchReplayFrame?)Frames?.Find(x => x.Time >= (int)obj.StartTime && FrameRecordHandlerUtils.IsRecordHandlerValidForJudgement(((CatchReplayFrame)x).RecordHandler));
 
                 if (syncFrame != null)
-                    playfield.CatcherPosition = syncFrame.Position;
+                    playfield.TrackedCatcherPosition = syncFrame.Position;
             };
         }
 

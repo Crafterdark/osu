@@ -150,7 +150,7 @@ namespace osu.Game.Screens.Edit.Compose.Components.Timeline
                 }
             }
 
-            if (Children.Count > 512)
+            if (Children.Count > 2048)
             {
                 // There should always be a sanely small number of ticks rendered.
                 // If this assertion triggers, either the zoom logic is broken or a beatmap is

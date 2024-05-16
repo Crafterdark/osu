@@ -47,11 +47,11 @@ namespace osu.Game.Rulesets.Catch.UI
 
         private readonly IBeatmapDifficultyInfo difficulty;
 
-        public event Action<CatchHitObject>? NewCatchReplayJudgement;
+        public event Action<CatchHitObject>? OnReplayJudgement;
 
-        public event Action<CatchHitObject>? NewCatchGameplayJudgement;
+        public float TrackedCatcherPosition { get; set; }
 
-        public float CatcherPosition { get; set; }
+        public float SpawnPosition { get; set; } = CENTER_X;
 
         public CatchPlayfield(IBeatmapDifficultyInfo difficulty)
         {
@@ -67,7 +67,7 @@ namespace osu.Game.Rulesets.Catch.UI
 
             Catcher = new Catcher(droppedObjectContainer, difficulty)
             {
-                X = CENTER_X
+                X = SpawnPosition
             };
 
             AddRangeInternal(new[]
@@ -114,11 +114,24 @@ namespace osu.Game.Rulesets.Catch.UI
 
         private bool checkIfWeCanCatch(CatchHitObject obj)
         {
-            CatcherPosition = Catcher.X;
-            NewCatchReplayJudgement?.Invoke(obj);
-            NewCatchGameplayJudgement?.Invoke(obj);
-            return Catcher.CanCatch(obj, CatcherPosition);
+            if (editorSkipCatch(obj))
+                return false;
+
+            adjustCatcherPositionOnCondition(obj);
+
+            return Catcher.CanCatch(obj, TrackedCatcherPosition);
         }
+
+        private void adjustCatcherPositionOnCondition(CatchHitObject obj)
+        {
+            //Update tracked position to playfield position
+            TrackedCatcherPosition = Catcher.X;
+
+            //Adjust position to follow the judgements on replay
+            OnReplayJudgement?.Invoke(obj);
+        }
+
+        private bool editorSkipCatch(CatchHitObject obj) => EditorLoaded && EditorClockTime > obj.StartTime;
 
         private void onNewResult(DrawableHitObject judgedObject, JudgementResult result)
             => CatcherArea.OnNewResult((DrawableCatchHitObject)judgedObject, result);

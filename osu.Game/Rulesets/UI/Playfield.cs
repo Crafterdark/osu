@@ -43,6 +43,16 @@ namespace osu.Game.Rulesets.UI
         public event Action<JudgementResult> RevertResult;
 
         /// <summary>
+        /// Only true if this playfield is being used by the editor.
+        /// </summary>
+        public bool EditorLoaded;
+
+        /// <summary>
+        /// The current or target clock time of the editor.
+        /// </summary>
+        public double EditorClockTime;
+
+        /// <summary>
         /// The <see cref="DrawableHitObject"/> contained in this Playfield.
         /// </summary>
         public HitObjectContainer HitObjectContainer => hitObjectContainerLazy.Value;

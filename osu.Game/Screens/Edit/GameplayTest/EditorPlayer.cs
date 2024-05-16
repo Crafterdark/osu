@@ -32,6 +32,9 @@ namespace osu.Game.Screens.Edit.GameplayTest
         {
             var masterGameplayClockContainer = new MasterGameplayClockContainer(beatmap, gameplayStart);
 
+            DrawableRuleset.Playfield.EditorClockTime = editorState.Time;
+            DrawableRuleset.Playfield.EditorLoaded = true;
+
             // Only reset the time to the current point if the editor is later than the normal start time (and the first object).
             // This allows more sane test playing from the start of the beatmap (ie. correctly adding lead-in time).
             if (editorState.Time > gameplayStart && editorState.Time > DrawableRuleset.Objects.FirstOrDefault()?.StartTime)
