@@ -76,12 +76,14 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             }
         }
 
+        public LegacyRandom CreateNewRandom() => !ClassicLegacyRandom ? new LegacyRandomExtension(RNG_SEED) : new LegacyRandom(RNG_SEED);
+
         public void ApplyPositionOffsets(IBeatmap beatmap)
         {
-            var rng = !ClassicLegacyRandom ? new LegacyRandomExtension(RNG_SEED) : new LegacyRandom(RNG_SEED);
+            var rng = CreateNewRandom();
 
             //Independent random for missing tiny droplets in Stable
-            var rngNew = NewTinyGeneration ? new Random(RNG_SEED) : null;
+            var rngNew = NewTinyGeneration ? CreateNewRandom() : null;
 
             float? lastPosition = null;
             double lastStartTime = 0;

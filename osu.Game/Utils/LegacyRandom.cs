@@ -89,7 +89,7 @@ namespace osu.Game.Utils
         /// Generates a random double value within the range [0, 1).
         /// </summary>
         /// <returns>The random value.</returns>
-        public double NextDouble() => int_to_real * Next();
+        public virtual double NextDouble() => int_to_real * Next();
 
         private uint bitBuffer;
         private int bitIndex = 32;
