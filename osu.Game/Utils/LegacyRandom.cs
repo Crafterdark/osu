@@ -60,7 +60,7 @@ namespace osu.Game.Utils
         /// </summary>
         /// <param name="upperBound">The upper bound.</param>
         /// <returns>The random value.</returns>
-        public int Next(int upperBound) => (int)(NextDouble() * upperBound);
+        public virtual int Next(int upperBound) => (int)(NextDouble() * upperBound);
 
         /// <summary>
         /// Generates a random integer value within the range [<paramref name="lowerBound"/>, <paramref name="upperBound"/>).
@@ -68,7 +68,7 @@ namespace osu.Game.Utils
         /// <param name="lowerBound">The lower bound of the range.</param>
         /// <param name="upperBound">The upper bound of the range.</param>
         /// <returns>The random value.</returns>
-        public int Next(int lowerBound, int upperBound) => (int)(lowerBound + NextDouble() * (upperBound - lowerBound));
+        public virtual int Next(int lowerBound, int upperBound) => (int)(lowerBound + NextDouble() * (upperBound - lowerBound));
 
         /// <summary>
         /// Generates a random integer value within the range [<paramref name="lowerBound"/>, <paramref name="upperBound"/>).
@@ -76,7 +76,14 @@ namespace osu.Game.Utils
         /// <param name="lowerBound">The lower bound of the range.</param>
         /// <param name="upperBound">The upper bound of the range.</param>
         /// <returns>The random value.</returns>
-        public int Next(double lowerBound, double upperBound) => (int)(lowerBound + NextDouble() * (upperBound - lowerBound));
+        public virtual int Next(double lowerBound, double upperBound) => (int)(lowerBound + NextDouble() * (upperBound - lowerBound));
+
+        /// <summary>
+        /// Generates a random float value within the range [0, <paramref name="upperBound"/>).
+        /// </summary>
+        /// <param name="upperBound">The upper bound.</param>
+        /// <returns>The random value.</returns>
+        public virtual float NextFloat(float upperBound) => (float)(NextDouble() * upperBound);
 
         /// <summary>
         /// Generates a random double value within the range [0, 1).

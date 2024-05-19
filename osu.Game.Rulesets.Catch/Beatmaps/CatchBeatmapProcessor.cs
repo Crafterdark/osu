@@ -20,9 +20,16 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         public bool HardRockOffsets { get; set; }
 
+        public bool NewTinyGeneration { get; set; } = true;
+
+        public bool IsDropletStabilized { get; set; }
+
+        public int StabilizedOffset { get; set; }
+
         public bool ClassicSpicyPatterns { get; set; }
 
-        public bool NewTinyGeneration { get; set; } = true;
+        public bool ClassicLegacyRandom { get; set; }
+
 
         private CatchBeatmap catchBeatmap = null!;
 
@@ -71,9 +78,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         public void ApplyPositionOffsets(IBeatmap beatmap)
         {
-            var rng = new LegacyRandom(RNG_SEED);
+            var rng = !ClassicLegacyRandom ? new LegacyRandomExtension(RNG_SEED) : new LegacyRandom(RNG_SEED);
 
-            //Independent RNG for new tiny droplet
+            //Independent random for missing tiny droplets in Stable
             var rngNew = NewTinyGeneration ? new Random(RNG_SEED) : null;
 
             float? lastPosition = null;
@@ -110,7 +117,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                     case BananaShower bananaShower:
                         foreach (var banana in bananaShower.NestedHitObjects.OfType<Banana>())
                         {
-                            banana.XOffset = (float)(rng.NextDouble() * CatchPlayfield.WIDTH);
+                            banana.XOffset = rng.NextFloat(CatchPlayfield.WIDTH);
                             rng.Next(); // osu!stable retrieved a random banana type
                             rng.Next(); // osu!stable retrieved a random banana rotation
                             rng.Next(); // osu!stable retrieved a random banana colour
@@ -145,8 +152,10 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                             var catchObject = (CatchHitObject)nested;
                             catchObject.XOffset = 0;
 
+                            int rngOffset = IsDropletStabilized ? StabilizedOffset : 20;
+
                             if (catchObject is TinyDroplet || (catchObject is Droplet droplet && droplet.HasRandomOffset))
-                                catchObject.XOffset = Math.Clamp(catchObject.IsUsingOldRandom ? rng.Next(-20, 20) : rngNew != null ? rngNew.Next(-20, 20) : 0, -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
+                                catchObject.XOffset = Math.Clamp(catchObject.IsUsingOldRandom ? rng.Next(-rngOffset, rngOffset) : (rngNew != null ? rngNew.Next(-rngOffset, rngOffset) : 0), -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
                             else if (catchObject is Droplet)
                                 rng.Next(); // osu!stable retrieved a random droplet rotation
 

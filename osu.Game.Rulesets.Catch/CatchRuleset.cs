@@ -135,6 +135,7 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModClassic(),
                         new CatchModMirror(),
                         new CatchModSpicyPatterns(),
+                        new CatchModDropletStabilizer(),
                         new CatchModGrowingDroplets(),
                     };
 

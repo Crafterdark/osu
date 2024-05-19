@@ -39,6 +39,9 @@ namespace osu.Game.Rulesets.Catch.Mods
         [SettingSource("Classic Immediate Fail", "Ignore all extra lives when failing with Sudden Death or Perfect.")]
         public BindableBool UsesClassicImmediateFail { get; } = new BindableBool(true);
 
+        [SettingSource("Classic Legacy Random", "Legacy random couldn't generate upper bounds correctly.")]
+        public BindableBool UsesClassicLegacyRandom { get; } = new BindableBool(true);
+
         [SettingSource("Asymmetrical hyperdash generation", "Stable generated asymmetrical hyperdashes during beatmap processing.")]
         public BindableBool AsymmetricalHyperDashGeneration { get; } = new BindableBool(true);
 
@@ -125,6 +128,7 @@ namespace osu.Game.Rulesets.Catch.Mods
                 internalModSpicyPatterns.ApplyToBeatmapProcessor(beatmapProcessor);
 
             catchBeatmapProcessor.NewTinyGeneration = !MissingSegmentOnJuiceStream.Value || !IncompleteSegmentOnJuiceStream.Value;
+            catchBeatmapProcessor.ClassicLegacyRandom = UsesClassicLegacyRandom.Value;
             catchBeatmap.OriginalHyperDashGeneration.Value = usesModEasy.Value ? !UsesClassicEasy.Value : !RemoveOriginalHyperDashes.Value;
             catchBeatmap.IsProcessingSymmetricalHyperDash.Value = !AsymmetricalHyperDashGeneration.Value;
         }

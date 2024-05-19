@@ -326,8 +326,8 @@ namespace osu.Game.Scoring.Legacy
                 //Lazer frames retrieved with their expected data.
                 if (!replay.IsLegacy)
                 {
-                    currentDirection = Parsing.ParseInt(split[4]);
-                    recordHandler = Parsing.ParseInt(split[5]);
+                    currentDirection = split.Length > 4 ? Parsing.ParseInt(split[4]) : 0;
+                    recordHandler = split.Length > 5 ? Parsing.ParseInt(split[5]) : (int)FrameRecordHandler.Update;
                 }
 
                 //Legacy frames converted into their respective types.
