@@ -9,38 +9,22 @@ using osu.Game.Beatmaps;
 using osu.Game.Configuration;
 using osu.Game.Rulesets.Catch.Beatmaps;
 using osu.Game.Rulesets.Mods;
-using osu.Game.Rulesets.Scoring;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
-    public class CatchModClassic : ModClassic, IApplicableToBeatmapConverter, IApplicableToBeatmapProcessor, IApplicableFailOverride, IApplicableToHealthProcessor, IApplicableToDifficulty
+    public class CatchModClassic : ModClassic, IApplicableToBeatmapConverter, IApplicableToBeatmapProcessor
     {
-        public override Type[] IncompatibleMods => new[] {
-            typeof(CatchModExtraLives),
-            typeof(CatchModSpicyPatterns),
-        };
-
-        private CatchModExtraLives internalModExtraLives = new CatchModExtraLives();
-
-        private CatchModSpicyPatterns internalModSpicyPatterns = new CatchModSpicyPatterns();
-
-        private BindableBool usesModEasy = new BindableBool();
-
-        private BindableBool usesModHardRock = new BindableBool();
-
-        private BindableBool usesModSuddenDeathOrPerfect = new BindableBool(true);
-
-        [SettingSource("Classic Easy", "Always include two extra lives and remove original hyperdashes when using Easy.")]
+        [SettingSource("Classic Easy", "Always include two extra lives when using Easy.")]
         public BindableBool UsesClassicEasy { get; } = new BindableBool(true);
 
-        [SettingSource("Classic Hard Rock", "Always include spicy patterns and remove the horizontal flip on the fruits when using Hard Rock.")]
+        [SettingSource("Classic Hard Rock", "Always include spicy patterns and remove mirror on fruits when using Hard Rock.")]
         public BindableBool UsesClassicHardRock { get; } = new BindableBool(true);
 
         [SettingSource("Classic Immediate Fail", "Ignore all extra lives when failing with Sudden Death or Perfect.")]
         public BindableBool UsesClassicImmediateFail { get; } = new BindableBool(true);
 
-        [SettingSource("Classic Legacy Random", "Legacy random couldn't generate upper bounds correctly.")]
-        public BindableBool UsesClassicLegacyRandom { get; } = new BindableBool(true);
+        [SettingSource("Old Legacy Random", "Legacy random couldn't generate upper bounds correctly.")]
+        public BindableBool OldLegacyRandom { get; } = new BindableBool(true);
 
         [SettingSource("Asymmetrical hyperdash generation", "Stable generated asymmetrical hyperdashes during beatmap processing.")]
         public BindableBool AsymmetricalHyperDashGeneration { get; } = new BindableBool(true);
@@ -73,41 +57,31 @@ namespace osu.Game.Rulesets.Catch.Mods
 
         public override void CheckModsForConditions(IReadOnlyList<Mod> mods)
         {
-            var modEasy = mods.OfType<CatchModEasy>().SingleOrDefault();
-            var modHardRock = mods.OfType<CatchModHardRock>().SingleOrDefault();
-            var modSuddenDeath = mods.OfType<CatchModSuddenDeath>().SingleOrDefault();
-            var modPerfect = mods.OfType<CatchModPerfect>().SingleOrDefault();
-
-            usesModEasy.Value = modEasy != null;
-            usesModHardRock.Value = modHardRock != null;
-            usesModSuddenDeathOrPerfect.Value = modSuddenDeath != null || modPerfect != null;
-
-            if (modHardRock != null && UsesClassicHardRock.Value)
-                modHardRock.MirrorFruitsOnGeneration = false;
-        }
-
-        public void ApplyToDifficulty(BeatmapDifficulty difficulty)
-        {
-            if (usesModEasy.Value && UsesClassicEasy.Value)
-                internalModExtraLives.ApplyToDifficulty(difficulty);
-        }
-
-        public bool PerformFail()
-        {
-            if (usesModSuddenDeathOrPerfect.Value && UsesClassicImmediateFail.Value)
-                return true;
-            else if (usesModEasy.Value && UsesClassicEasy.Value)
-                return internalModExtraLives.PerformFail();
-
-            return true;
-        }
-
-        public bool RestartOnFail => false;
-
-        public void ApplyToHealthProcessor(HealthProcessor healthProcessor)
-        {
-            if (usesModEasy.Value && UsesClassicEasy.Value)
-                internalModExtraLives.ApplyToHealthProcessor(healthProcessor);
+            foreach (Mod mod in mods)
+            {
+                switch (mod)
+                {
+                    case CatchModEasy modEasy:
+                        if (UsesClassicEasy.Value)
+                            modEasy.ExtraLivesOnGameplay = true;
+                        break;
+                    case CatchModHardRock modHardRock:
+                        if (UsesClassicHardRock.Value)
+                        {
+                            modHardRock.MirrorFruitsOnGeneration = false;
+                            modHardRock.SpicyPatternsOnGeneration = true;
+                        }
+                        break;
+                    case CatchModSuddenDeath modSuddenDeath:
+                        if (UsesClassicImmediateFail.Value)
+                            modSuddenDeath.ImmediateFailOnCondition = true;
+                        break;
+                    case CatchModPerfect modPerfect:
+                        if (UsesClassicImmediateFail.Value)
+                            modPerfect.ImmediateFailOnCondition = true;
+                        break;
+                }
+            }
         }
 
         public void ApplyToBeatmapConverter(IBeatmapConverter beatmapConverter)
@@ -124,13 +98,10 @@ namespace osu.Game.Rulesets.Catch.Mods
             var catchBeatmapProcessor = (CatchBeatmapProcessor)beatmapProcessor;
             var catchBeatmap = (CatchBeatmap)beatmapProcessor.Beatmap;
 
-            if (usesModHardRock.Value && UsesClassicHardRock.Value)
-                internalModSpicyPatterns.ApplyToBeatmapProcessor(beatmapProcessor);
-
             catchBeatmapProcessor.NewTinyGeneration = !MissingSegmentOnJuiceStream.Value || !IncompleteSegmentOnJuiceStream.Value;
-            catchBeatmapProcessor.ClassicLegacyRandom = UsesClassicLegacyRandom.Value;
-            catchBeatmap.OriginalHyperDashGeneration.Value = usesModEasy.Value ? !UsesClassicEasy.Value : !RemoveOriginalHyperDashes.Value;
-            catchBeatmap.IsProcessingSymmetricalHyperDash.Value = !AsymmetricalHyperDashGeneration.Value;
+            catchBeatmapProcessor.UsesOldLegacyRandom = OldLegacyRandom.Value;
+            catchBeatmap.OriginalHyperDashGeneration.Value = !RemoveOriginalHyperDashes.Value;
+            catchBeatmap.IsHyperDashGenerationSymmetrical.Value = !AsymmetricalHyperDashGeneration.Value;
         }
     }
 }

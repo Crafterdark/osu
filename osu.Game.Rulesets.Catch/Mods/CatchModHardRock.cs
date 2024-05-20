@@ -14,9 +14,15 @@ namespace osu.Game.Rulesets.Catch.Mods
     {
         public override double ScoreMultiplier => UsesDefaultConfiguration ? 1.12 : 1;
 
+        //Internal Mirror enabled by default
         public bool MirrorFruitsOnGeneration { get; set; } = true;
 
+        //Internal Spicy patterns disabled by default
+        public bool SpicyPatternsOnGeneration { get; set; }
+
         private CatchModMirror internalModMirror = new CatchModMirror();
+
+        private CatchModSpicyPatterns internalModSpicyPatterns = new CatchModSpicyPatterns();
 
         [SettingSource("Affects approach rate")]
         public BindableBool AffectsApproach { get; } = new BindableBool(true);
@@ -33,6 +39,9 @@ namespace osu.Game.Rulesets.Catch.Mods
         {
             var catchBeatmapProcessor = (CatchBeatmapProcessor)beatmapProcessor;
             catchBeatmapProcessor.HardRockOffsets = true;
+
+            if (SpicyPatternsOnGeneration)
+                internalModSpicyPatterns.ApplyToBeatmapProcessor(beatmapProcessor);
         }
 
         public void ApplyToBeatmap(IBeatmap beatmap)

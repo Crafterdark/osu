@@ -12,7 +12,7 @@ using osu.Game.Rulesets.Scoring;
 
 namespace osu.Game.Rulesets.Mods
 {
-    public abstract class ModWithExtraLives : Mod, IApplicableFailOverride, IApplicableToHealthProcessor, IApplicableToDifficulty
+    public abstract class ModWithExtraLives : Mod, IApplicableHealthFailOverride, IApplicableToHealthProcessor, IApplicableToDifficulty
     {
         public override string Name => "Extra Lives";
         public override string Acronym => "EL";
@@ -20,7 +20,7 @@ namespace osu.Game.Rulesets.Mods
         public override ModType Type => ModType.DifficultyReduction;
         public override double ScoreMultiplier => Math.Sqrt(0.5);
         public override LocalisableString Description => @"More chances before you fail...";
-        public override Type[] IncompatibleMods => new[] { typeof(ModAccuracyChallenge), typeof(ModNoFail), typeof(ModClassic) };
+        public override Type[] IncompatibleMods => new[] { typeof(ModAccuracyChallenge), typeof(ModNoFail)};
 
         [SettingSource("Extra Lives", "Number of extra lives")]
         public Bindable<int> Retries { get; } = new BindableInt(2)
@@ -40,7 +40,7 @@ namespace osu.Game.Rulesets.Mods
             retries = Retries.Value;
         }
 
-        public bool PerformFail()
+        public bool LocalPerformFail()
         {
             if (retries == 0) return true;
 
@@ -49,6 +49,8 @@ namespace osu.Game.Rulesets.Mods
 
             return false;
         }
+
+        public bool GlobalPerformFail() => false;
 
         public bool RestartOnFail => false;
 

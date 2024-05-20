@@ -32,7 +32,7 @@ using osuTK.Graphics;
 namespace osu.Game.Rulesets.Osu.Mods
 {
     public class OsuModTargetPractice : ModWithVisibilityAdjustment, IApplicableToDrawableRuleset<OsuHitObject>,
-                                        IApplicableToHealthProcessor, IApplicableToDifficulty, IApplicableFailOverride, IHasSeed, IHidesApproachCircles
+                                        IApplicableToHealthProcessor, IApplicableToDifficulty, IApplicableConditionFailOverride, IHasSeed, IHidesApproachCircles
     {
         public override string Name => "Target Practice";
         public override string Acronym => "TP";
@@ -97,9 +97,11 @@ namespace osu.Game.Rulesets.Osu.Mods
 
         #endregion
 
-        #region Sudden Death (IApplicableFailOverride)
+        #region Sudden Death (IApplicableConditionFailOverride)
 
-        public bool PerformFail() => true;
+        public bool LocalPerformFail() => true;
+
+        public bool GlobalPerformFail() => false;
 
         public bool RestartOnFail => false;
 

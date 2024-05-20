@@ -9,14 +9,16 @@ using osu.Game.Rulesets.Scoring;
 
 namespace osu.Game.Rulesets.Mods
 {
-    public abstract class ModFailCondition : Mod, IApplicableToHealthProcessor, IApplicableFailOverride
+    public abstract class ModFailCondition : Mod, IApplicableToHealthProcessor, IApplicableConditionFailOverride
     {
         public override Type[] IncompatibleMods => new[] { typeof(ModNoFail), typeof(ModCinema) };
 
         [SettingSource("Restart on fail", "Automatically restarts when failed.")]
         public BindableBool Restart { get; } = new BindableBool();
 
-        public virtual bool PerformFail() => true;
+        public virtual bool LocalPerformFail() => true;
+
+        public virtual bool GlobalPerformFail() => false;
 
         public virtual bool RestartOnFail => Restart.Value;
 

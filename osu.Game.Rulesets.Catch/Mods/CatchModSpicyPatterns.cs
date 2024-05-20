@@ -6,8 +6,6 @@ using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Catch.Beatmaps;
 using osu.Framework.Localisation;
 using osu.Framework.Graphics.Sprites;
-using System.Linq;
-using System;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
@@ -22,8 +20,6 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override IconUsage? Icon => FontAwesome.Solid.FireAlt;
 
         public override ModType Type => ModType.Conversion;
-
-        public override Type[] IncompatibleMods => base.IncompatibleMods.Append(typeof(CatchModClassic)).ToArray();
 
         public override LocalisableString Description => "Adjust the patterns to be unpredictable and harder than usual.";
 

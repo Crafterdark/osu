@@ -7,5 +7,9 @@ namespace osu.Game.Rulesets.Catch.Mods
 {
     public class CatchModSuddenDeath : ModSuddenDeath
     {
+        //Internal Immediate Fail disabled by default
+        public bool ImmediateFailOnCondition { get; set; }
+
+        public override bool GlobalPerformFail() => ImmediateFailOnCondition;
     }
 }

@@ -23,7 +23,7 @@ namespace osu.Game.Rulesets.Mods
         }
     }
 
-    public class ModCinema : ModAutoplay, IApplicableToHUD, IApplicableToPlayer, IApplicableFailOverride
+    public class ModCinema : ModAutoplay, IApplicableToHUD, IApplicableToPlayer, IApplicableHealthFailOverride
     {
         public override string Name => "Cinema";
         public override string Acronym => "CN";
@@ -46,7 +46,9 @@ namespace osu.Game.Rulesets.Mods
             player.BreakOverlay.Hide();
         }
 
-        public bool PerformFail() => false;
+        public bool LocalPerformFail() => false;
+
+        public bool GlobalPerformFail() => false;
 
         public bool RestartOnFail => false;
     }

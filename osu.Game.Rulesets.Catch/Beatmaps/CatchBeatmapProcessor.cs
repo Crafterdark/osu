@@ -28,7 +28,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         public bool ClassicSpicyPatterns { get; set; }
 
-        public bool ClassicLegacyRandom { get; set; }
+        public bool UsesOldLegacyRandom { get; set; }
 
 
         private CatchBeatmap catchBeatmap = null!;
@@ -76,7 +76,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             }
         }
 
-        public LegacyRandom CreateNewRandom() => !ClassicLegacyRandom ? new LegacyRandomExtension(RNG_SEED) : new LegacyRandom(RNG_SEED);
+        public LegacyRandom CreateNewRandom() => !UsesOldLegacyRandom ? new LegacyRandomExtension(RNG_SEED) : new LegacyRandom(RNG_SEED);
 
         public void ApplyPositionOffsets(IBeatmap beatmap)
         {
@@ -310,14 +310,14 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
                 catchBeatmap.LimitedCatchPlayfieldContainer?.UnconvertPair(currentObject, nextObject);
 
-                int thisOriginalDirection = calculateDirection(currentObject, nextObject, originalLastDirection, catchBeatmap.IsProcessingSymmetricalHyperDash.Value);
+                int thisOriginalDirection = calculateDirection(currentObject, nextObject, originalLastDirection, catchBeatmap.IsHyperDashGenerationSymmetrical.Value);
 
                 if (catchBeatmap.OriginalHyperDashGeneration.Value)
                     originalLastExcess = processHyperDash(catchBeatmap, currentObject, nextObject, originalHalfCatcherWidth, originalLastExcess, originalLastDirection, thisOriginalDirection, true);
 
                 catchBeatmap.LimitedCatchPlayfieldContainer?.ConvertPair(currentObject, nextObject);
 
-                int thisModifiedDirection = calculateDirection(currentObject, nextObject, modifiedLastDirection, catchBeatmap.IsProcessingSymmetricalHyperDash.Value);
+                int thisModifiedDirection = calculateDirection(currentObject, nextObject, modifiedLastDirection, catchBeatmap.IsHyperDashGenerationSymmetrical.Value);
 
                 if (catchBeatmap.ModifiedHyperDashGeneration.Value)
                     modifiedLastExcess = processHyperDash(catchBeatmap, currentObject, nextObject, modifiedHalfCatcherWidth, modifiedLastExcess, modifiedLastDirection, thisModifiedDirection, false);

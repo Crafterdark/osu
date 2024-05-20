@@ -7,16 +7,24 @@ using osu.Framework.Localisation;
 using osu.Game.Beatmaps;
 using osu.Game.Configuration;
 using osu.Game.Rulesets.Mods;
+using osu.Game.Rulesets.Scoring;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
-    public class CatchModEasy : ModEasy
+    public class CatchModEasy : ModEasy, IApplicableToHealthProcessor, IApplicableHealthFailOverride
     {
         public override double ScoreMultiplier => Math.Sqrt(0.5);
         public override LocalisableString Description => @"Larger fruits, more forgiving HP drain and less accuracy required!";
 
+        //Internal Extra Lives disabled by default
+        public bool ExtraLivesOnGameplay { get; set; }
+
+        private CatchModExtraLives internalModExtraLives = new CatchModExtraLives();
+
         [SettingSource("Affects approach rate")]
         public BindableBool AffectsApproach { get; } = new BindableBool(true);
+
+        public bool RestartOnFail => false;
 
         public override void ApplyToDifficulty(BeatmapDifficulty difficulty)
         {
@@ -24,8 +32,27 @@ namespace osu.Game.Rulesets.Catch.Mods
 
             const float ratio = 0.5f;
 
+            if (ExtraLivesOnGameplay)
+                internalModExtraLives.ApplyToDifficulty(difficulty);
+
             if (AffectsApproach.Value)
                 difficulty.ApproachRate *= ratio;
         }
+
+        public void ApplyToHealthProcessor(HealthProcessor healthProcessor)
+        {
+            if (ExtraLivesOnGameplay)
+                internalModExtraLives.ApplyToHealthProcessor(healthProcessor);
+        }
+
+        public bool LocalPerformFail()
+        {
+            if (ExtraLivesOnGameplay)
+                return internalModExtraLives.LocalPerformFail();
+
+            return true;
+        }
+
+        public bool GlobalPerformFail() => false;
     }
 }

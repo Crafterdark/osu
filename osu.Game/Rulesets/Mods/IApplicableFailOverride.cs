@@ -12,10 +12,16 @@ namespace osu.Game.Rulesets.Mods
         /// Whether we should allow failing at the current point in time.
         /// </summary>
         /// <returns>Whether the fail should be allowed to proceed. Return false to block.</returns>
-        bool PerformFail();
+        bool LocalPerformFail();
 
         /// <summary>
-        /// Whether we want to restart on fail. Only used if <see cref="PerformFail"/> returns true.
+        /// Whether we should allow failing at the current point in time. Ignores every other condition.
+        /// </summary>
+        /// <returns>Whether the fail should be allowed to proceed. Cannot be blocked by other mods. Return false to block.</returns>
+        bool GlobalPerformFail();
+
+        /// <summary>
+        /// Whether we want to restart on fail. Only used if <see cref="LocalPerformFail"/> returns true.
         /// </summary>
         bool RestartOnFail { get; }
     }

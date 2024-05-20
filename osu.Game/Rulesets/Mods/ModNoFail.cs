@@ -11,7 +11,7 @@ using osu.Game.Screens.Play;
 
 namespace osu.Game.Rulesets.Mods
 {
-    public abstract class ModNoFail : Mod, IApplicableFailOverride, IApplicableToHUD, IReadFromConfig
+    public abstract class ModNoFail : Mod, IApplicableHealthFailOverride, IApplicableToHUD, IReadFromConfig
     {
         public override string Name => "No Fail";
         public override string Acronym => "NF";
@@ -27,7 +27,9 @@ namespace osu.Game.Rulesets.Mods
         /// <summary>
         /// We never fail, 'yo.
         /// </summary>
-        public bool PerformFail() => false;
+        public bool LocalPerformFail() => false;
+
+        public bool GlobalPerformFail() => false;
 
         public bool RestartOnFail => false;
 
