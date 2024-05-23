@@ -151,6 +151,7 @@ namespace osu.Game.Rulesets.Taiko
                         new TaikoModMirror(),
                         new TaikoModSwap(),
                         new TaikoModSingleTap(),
+                        new TaikoModConstantSpeed(),
                     };
 
                 case ModType.Automation:
