@@ -3,9 +3,9 @@
 
 using osu.Game.Rulesets.Mods;
 
-namespace osu.Game.Rulesets.Mania.Mods
+namespace osu.Game.Rulesets.Taiko.Mods
 {
-    public class ManiaModExtraLives : ModExtraLives
+    public class TaikoModMaximumDamage : ModMaximumDamage
     {
     }
 }

@@ -168,7 +168,7 @@ namespace osu.Game.Tests.Gameplay
             var beatmap = createBeatmap(0, 1000);
             createProcessor(beatmap);
 
-            AddStep("setup fail conditions", () => processor.FailConditions += ((_, result) => result.Type == HitResult.Miss));
+            AddStep("setup fail conditions", () => processor.GlobalFailConditions += ((_, result) => result.Type == HitResult.Miss));
 
             AddStep("apply perfect hit result", () => processor.ApplyResult(new JudgementResult(beatmap.HitObjects[0], new Judgement()) { Type = HitResult.Perfect }));
             AddAssert("not failed", () => !processor.HasFailed);
@@ -185,8 +185,8 @@ namespace osu.Game.Tests.Gameplay
 
             AddStep("setup multiple fail conditions", () =>
             {
-                processor.FailConditions += ((_, result) => result.Type == HitResult.Miss);
-                processor.FailConditions += ((_, result) => result.Type == HitResult.Meh);
+                processor.GlobalFailConditions += ((_, result) => result.Type == HitResult.Miss);
+                processor.GlobalFailConditions += ((_, result) => result.Type == HitResult.Meh);
             });
 
             AddStep("apply perfect hit result", () => processor.ApplyResult(new JudgementResult(beatmap.HitObjects[0], new Judgement()) { Type = HitResult.Perfect }));

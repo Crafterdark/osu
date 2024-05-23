@@ -4,7 +4,6 @@
 using System;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Beatmaps;
-using osu.Game.Rulesets.Catch.Beatmaps;
 using osu.Framework.Bindables;
 using osu.Game.Configuration;
 
@@ -37,9 +36,6 @@ namespace osu.Game.Rulesets.Catch.Mods
 
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
         {
-            var catchBeatmapProcessor = (CatchBeatmapProcessor)beatmapProcessor;
-            catchBeatmapProcessor.HardRockOffsets = true;
-
             if (SpicyPatternsOnGeneration)
                 internalModSpicyPatterns.ApplyToBeatmapProcessor(beatmapProcessor);
         }

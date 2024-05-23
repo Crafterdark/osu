@@ -16,17 +16,17 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
     {
         public const int RNG_SEED = 1337;
 
-        public bool SpicyPatterns { get; set; }
+        public int? CustomSeed { get; set; } = null!;
 
-        public bool HardRockOffsets { get; set; }
+        public bool RandomPatterns { get; set; }
+
+        public bool SpicyPatterns { get; set; }
 
         public bool NewTinyGeneration { get; set; } = true;
 
         public bool IsDropletStabilized { get; set; }
 
         public int StabilizedOffset { get; set; }
-
-        public bool ClassicSpicyPatterns { get; set; }
 
         public bool UsesOldLegacyRandom { get; set; }
 
@@ -76,7 +76,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             }
         }
 
-        public LegacyRandom CreateNewRandom() => !UsesOldLegacyRandom ? new LegacyRandomExtension(RNG_SEED) : new LegacyRandom(RNG_SEED);
+        public LegacyRandom CreateNewRandom() => !UsesOldLegacyRandom ? new LegacyRandomExtension(CustomSeed ?? RNG_SEED) : new LegacyRandom(CustomSeed ?? RNG_SEED);
 
         public void ApplyPositionOffsets(IBeatmap beatmap)
         {
@@ -87,6 +87,8 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
             float? lastPosition = null;
             double lastStartTime = 0;
+
+            float? newLastPosition = null;
 
             if (catchBeatmap.UsesLimitedCatchPlayfield.Value)
             {
@@ -103,10 +105,11 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 switch (obj)
                 {
                     case Fruit fruit:
-                        if (SpicyPatterns || (HardRockOffsets && ClassicSpicyPatterns))
+                        if (SpicyPatterns)
                             applySpicyPatternsOffset(fruit, ref lastPosition, ref lastStartTime, rng);
+                        if (RandomPatterns)
+                            applyRandomPatternsOffset(fruit, ref lastPosition, ref newLastPosition, ref lastStartTime, rng);
                         catchBeatmap.LimitedCatchPlayfieldContainer?.Convert(fruit);
-
                         if (catchBeatmap.HitObjectWithNextTarget.Value)
                         {
                             if (prevObj != null)
@@ -123,8 +126,8 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                             rng.Next(); // osu!stable retrieved a random banana type
                             rng.Next(); // osu!stable retrieved a random banana rotation
                             rng.Next(); // osu!stable retrieved a random banana colour
-                            catchBeatmap.LimitedCatchPlayfieldContainer?.Convert(banana);
 
+                            catchBeatmap.LimitedCatchPlayfieldContainer?.Convert(banana);
                             if (catchBeatmap.HitObjectWithNextTarget.Value)
                             {
                                 if (prevObj != null)
@@ -142,6 +145,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         // Todo: BUG!! Stable attempted to use the end time of the stream, but referenced it too early in execution and used the start time instead.
                         lastStartTime = juiceStream.StartTime;
 
+                        catchBeatmap.LimitedCatchPlayfieldContainer?.Convert(juiceStream);
                         if (catchBeatmap.HitObjectWithNextTarget.Value)
                         {
                             if (prevObj != null)
@@ -162,7 +166,6 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                                 rng.Next(); // osu!stable retrieved a random droplet rotation
 
                             catchBeatmap.LimitedCatchPlayfieldContainer?.Convert(catchObject);
-
                             if (catchBeatmap.HitObjectWithNextTarget.Value)
                             {
                                 if (prevObj != null)
@@ -219,6 +222,39 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 applyOffset(ref offsetPosition, positionDiff);
 
             hitObject.XOffset = offsetPosition - hitObject.OriginalX;
+
+            lastPosition = offsetPosition;
+            lastStartTime = startTime;
+        }
+
+        private static void applyRandomPatternsOffset(CatchHitObject hitObject, ref float? lastPosition, ref float? newLastPosition, ref double lastStartTime, LegacyRandom rng)
+        {
+            float offsetPosition = hitObject.OriginalX;
+            double startTime = hitObject.StartTime;
+
+            if (lastPosition == null)
+            {
+                lastPosition = offsetPosition;
+                lastStartTime = startTime;
+
+                float newStartPosition = rng.NextFloat(CatchPlayfield.WIDTH);
+
+                hitObject.XOffset = newStartPosition - offsetPosition;
+                newLastPosition = hitObject.OriginalX + hitObject.XOffset;
+
+                return;
+            }
+
+            float positionDiff = offsetPosition - lastPosition.Value;
+            double timeDiff = (double)(startTime - lastStartTime);
+
+            if (timeDiff > hitObject.TimePreempt)
+            {
+                float newStartPosition = rng.NextFloat(CatchPlayfield.WIDTH);
+
+                hitObject.XOffset = newStartPosition - offsetPosition;
+                newLastPosition = hitObject.OriginalX + hitObject.XOffset;
+            }
 
             lastPosition = offsetPosition;
             lastStartTime = startTime;

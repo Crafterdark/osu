@@ -5,7 +5,7 @@ using osu.Game.Rulesets.Mods;
 
 namespace osu.Game.Rulesets.Osu.Mods
 {
-    public class OsuModExtraLives : ModWithExtraLives
+    public class OsuModExtraLives : ModExtraLives
     {
     }
 }

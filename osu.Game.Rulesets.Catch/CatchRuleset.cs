@@ -120,7 +120,7 @@ namespace osu.Game.Rulesets.Catch
                     return new Mod[]
                     {
                         new CatchModHardRock(),
-                        new MultiMod(new CatchModSuddenDeath(), new CatchModPerfect()),
+                        new MultiMod(new CatchModMaximumDamage(), new CatchModSuddenDeath(), new CatchModPerfect()),
                         new MultiMod(new CatchModDoubleTime(), new CatchModNightcore()),
                         new MultiMod(new CatchModHidden(), new CatchModFadeIn()),
                         new MultiMod(new CatchModFlashlight(), new CatchModBlinds()),
@@ -132,7 +132,9 @@ namespace osu.Game.Rulesets.Catch
                     return new Mod[]
                     {
                         new CatchModDifficultyAdjust(),
+                        new CatchModExtremeCustomize(),
                         new CatchModClassic(),
+                        new CatchModRandom(),
                         new CatchModMirror(),
                         new CatchModSpicyPatterns(),
                         new CatchModDropletStabilizer(),

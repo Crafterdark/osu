@@ -21,7 +21,7 @@ namespace osu.Game.Rulesets.Mods
         bool GlobalPerformFail();
 
         /// <summary>
-        /// Whether we want to restart on fail. Only used if <see cref="LocalPerformFail"/> returns true.
+        /// Whether we want to restart on fail. Only used if one <see cref="GlobalPerformFail"/> returns true or all <see cref="LocalPerformFail"/> return true.
         /// </summary>
         bool RestartOnFail { get; }
     }

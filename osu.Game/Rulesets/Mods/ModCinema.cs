@@ -23,7 +23,7 @@ namespace osu.Game.Rulesets.Mods
         }
     }
 
-    public class ModCinema : ModAutoplay, IApplicableToHUD, IApplicableToPlayer, IApplicableHealthFailOverride
+    public class ModCinema : ModAutoplay, IApplicableToHUD, IApplicableToPlayer, IApplicableFailOverride
     {
         public override string Name => "Cinema";
         public override string Acronym => "CN";

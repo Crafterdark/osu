@@ -44,6 +44,8 @@ namespace osu.Game.Configuration
         /// </remarks>
         public Type? SettingControlType { get; set; }
 
+        public object?[]? SettingControlArguments { get; set; }
+
         public SettingSourceAttribute(Type declaringType, string label, string? description = null)
         {
             Label = getLocalisableStringFromMember(label) ?? string.Empty;
@@ -121,7 +123,7 @@ namespace osu.Game.Configuration
                     if (controlType.EnumerateBaseTypes().All(t => !t.IsGenericType || t.GetGenericTypeDefinition() != typeof(SettingsItem<>)))
                         throw new InvalidOperationException($"{nameof(SettingSourceAttribute)} had an unsupported custom control type ({controlType.ReadableName()})");
 
-                    var control = (Drawable)Activator.CreateInstance(controlType)!;
+                    var control = attr.SettingControlArguments == null ? (Drawable)Activator.CreateInstance(controlType)! : (Drawable)Activator.CreateInstance(controlType, attr.SettingControlArguments)!;
                     controlType.GetProperty(nameof(SettingsItem<object>.SettingSourceObject))?.SetValue(control, obj);
                     controlType.GetProperty(nameof(SettingsItem<object>.LabelText))?.SetValue(control, attr.Label);
                     controlType.GetProperty(nameof(SettingsItem<object>.TooltipText))?.SetValue(control, attr.Description);

@@ -27,7 +27,7 @@ namespace osu.Game.Rulesets.Mods
 
         public override double ScoreMultiplier => 1.0;
 
-        public override Type[] IncompatibleMods => base.IncompatibleMods.Concat(new[] { typeof(ModWithExtraLives), typeof(ModPerfect) }).ToArray();
+        public override Type[] IncompatibleMods => base.IncompatibleMods.Concat(new[] { typeof(ModPerfect) }).ToArray();
 
         public override bool RequiresConfiguration => false;
 
@@ -74,7 +74,13 @@ namespace osu.Game.Rulesets.Mods
 
         public ScoreRank AdjustRank(ScoreRank rank, double accuracy) => rank;
 
-        protected override bool FailCondition(HealthProcessor healthProcessor, JudgementResult result) => false;
+        protected override bool GlobalFailCondition(HealthProcessor healthProcessor, JudgementResult result) => false;
+
+        protected override bool LocalFailCondition(HealthProcessor healthProcessor, JudgementResult result) => false;
+
+        public override bool LocalPerformFail() => false;
+
+        public override bool GlobalPerformFail() => true;
 
         public enum AccuracyMode
         {

@@ -32,7 +32,7 @@ using osuTK.Graphics;
 namespace osu.Game.Rulesets.Osu.Mods
 {
     public class OsuModTargetPractice : ModWithVisibilityAdjustment, IApplicableToDrawableRuleset<OsuHitObject>,
-                                        IApplicableToHealthProcessor, IApplicableToDifficulty, IApplicableConditionFailOverride, IHasSeed, IHidesApproachCircles
+                                        IApplicableToHealthProcessor, IApplicableToDifficulty, IApplicableFailOverride, IHasSeed, IHidesApproachCircles
     {
         public override string Name => "Target Practice";
         public override string Acronym => "TP";
@@ -108,7 +108,7 @@ namespace osu.Game.Rulesets.Osu.Mods
         public void ApplyToHealthProcessor(HealthProcessor healthProcessor)
         {
             // Sudden death
-            healthProcessor.FailConditions += (_, result)
+            healthProcessor.GlobalFailConditions += (_, result)
                 => result.Type.AffectsCombo()
                    && !result.IsHit;
         }

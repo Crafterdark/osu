@@ -20,9 +20,6 @@ namespace osu.Game.Rulesets.Catch.Mods
         [SettingSource("Classic Hard Rock", "Always include spicy patterns and remove mirror on fruits when using Hard Rock.")]
         public BindableBool UsesClassicHardRock { get; } = new BindableBool(true);
 
-        [SettingSource("Classic Immediate Fail", "Ignore all extra lives when failing with Sudden Death or Perfect.")]
-        public BindableBool UsesClassicImmediateFail { get; } = new BindableBool(true);
-
         [SettingSource("Old Legacy Random", "Legacy random couldn't generate upper bounds correctly.")]
         public BindableBool OldLegacyRandom { get; } = new BindableBool(true);
 
@@ -71,14 +68,6 @@ namespace osu.Game.Rulesets.Catch.Mods
                             modHardRock.MirrorFruitsOnGeneration = false;
                             modHardRock.SpicyPatternsOnGeneration = true;
                         }
-                        break;
-                    case CatchModSuddenDeath modSuddenDeath:
-                        if (UsesClassicImmediateFail.Value)
-                            modSuddenDeath.ImmediateFailOnCondition = true;
-                        break;
-                    case CatchModPerfect modPerfect:
-                        if (UsesClassicImmediateFail.Value)
-                            modPerfect.ImmediateFailOnCondition = true;
                         break;
                 }
             }

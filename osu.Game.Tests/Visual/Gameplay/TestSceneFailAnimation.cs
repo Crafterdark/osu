@@ -51,7 +51,7 @@ namespace osu.Game.Tests.Visual.Gameplay
             protected override void LoadComplete()
             {
                 base.LoadComplete();
-                HealthProcessor.FailConditions += (_, _) => true;
+                HealthProcessor.GlobalFailConditions += (_, _) => true;
             }
 
             private double lastFrequency = double.MaxValue;

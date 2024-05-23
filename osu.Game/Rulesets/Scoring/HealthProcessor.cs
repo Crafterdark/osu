@@ -17,14 +17,24 @@ namespace osu.Game.Rulesets.Scoring
         public event Func<bool>? Failed;
 
         /// <summary>
-        /// Additional conditions on top of <see cref="CheckDefaultFailCondition"/> that cause a failing state.
+        /// Additional local conditions on top of <see cref="CheckDefaultFailCondition"/> that cause a failing state.
         /// </summary>
-        public event Func<HealthProcessor, JudgementResult, bool>? FailConditions;
+        public event Func<HealthProcessor, JudgementResult, bool>? LocalFailConditions;
+
+        /// <summary>
+        /// Additional global conditions on top of <see cref="CheckDefaultFailCondition"/> that cause a failing state.
+        /// </summary>
+        public event Func<HealthProcessor, JudgementResult, bool>? GlobalFailConditions;
 
         /// <summary>
         /// The current health.
         /// </summary>
         public readonly BindableDouble Health = new BindableDouble(1) { MinValue = 0, MaxValue = 1 };
+
+        /// <summary>
+        /// The current lives.
+        /// </summary>
+        public readonly BindableInt Lives = new BindableInt { MinValue = 0, MaxValue = int.MaxValue };
 
         /// <summary>
         /// Whether this ScoreProcessor has already triggered the failed state.
@@ -80,12 +90,33 @@ namespace osu.Game.Rulesets.Scoring
         /// <param name="result">The judgement result.</param>
         private bool meetsAnyFailCondition(JudgementResult result)
         {
+            //Trigger: Health is *basically* MinValue
             if (CheckDefaultFailCondition(result))
-                return true;
-
-            if (FailConditions != null)
             {
-                foreach (var condition in FailConditions.GetInvocationList())
+                //Check remaining Lives 
+                if (FailStatusAfterLivesUpdate())
+                    return true;
+            }
+
+            //Trigger: LocalFailConditions
+            if (LocalFailConditions != null)
+            {
+                foreach (var condition in LocalFailConditions.GetInvocationList())
+                {
+                    bool conditionResult = (bool)condition.Method.Invoke(condition.Target, new object[] { this, result })!;
+                    if (conditionResult)
+                    {
+                        //Check remaining Lives 
+                        if (FailStatusAfterLivesUpdate())
+                            return true;
+                    }
+                }
+            }
+
+            //Trigger: GlobalFailConditions
+            if (GlobalFailConditions != null)
+            {
+                foreach (var condition in GlobalFailConditions.GetInvocationList())
                 {
                     bool conditionResult = (bool)condition.Method.Invoke(condition.Target, new object[] { this, result })!;
                     if (conditionResult)
@@ -96,11 +127,28 @@ namespace osu.Game.Rulesets.Scoring
             return false;
         }
 
+        public bool FailStatusAfterLivesUpdate()
+        {
+            Lives.Value--;
+
+            if (Lives.Value == 0)
+            {
+                Health.Value = Health.MinValue;
+                return true;
+            }
+            else
+            {
+                Health.Value = Health.MaxValue;
+                return false;
+            }
+        }
+
         protected override void Reset(bool storeResults)
         {
             base.Reset(storeResults);
 
             Health.Value = 1;
+            Lives.Value = 1;
             HasFailed = false;
         }
     }

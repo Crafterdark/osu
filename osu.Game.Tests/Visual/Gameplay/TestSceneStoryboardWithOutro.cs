@@ -240,7 +240,7 @@ namespace osu.Game.Tests.Visual.Gameplay
             protected override void LoadComplete()
             {
                 base.LoadComplete();
-                HealthProcessor.FailConditions += failConditions;
+                HealthProcessor.GlobalFailConditions += failConditions;
             }
 
             protected override Task ImportScore(Score score)

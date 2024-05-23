@@ -5,7 +5,7 @@ using osu.Game.Rulesets.Mods;
 
 namespace osu.Game.Rulesets.Mania.Mods
 {
-    public class ManiaModExtraLives : ModExtraLives
+    public class ManiaModMaximumDamage : ModMaximumDamage
     {
     }
 }

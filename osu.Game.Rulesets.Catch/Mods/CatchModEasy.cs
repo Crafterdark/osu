@@ -11,7 +11,7 @@ using osu.Game.Rulesets.Scoring;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
-    public class CatchModEasy : ModEasy, IApplicableToHealthProcessor, IApplicableHealthFailOverride
+    public class CatchModEasy : ModEasy, IApplicableToHealthProcessor
     {
         public override double ScoreMultiplier => Math.Sqrt(0.5);
         public override LocalisableString Description => @"Larger fruits, more forgiving HP drain and less accuracy required!";
@@ -24,16 +24,11 @@ namespace osu.Game.Rulesets.Catch.Mods
         [SettingSource("Affects approach rate")]
         public BindableBool AffectsApproach { get; } = new BindableBool(true);
 
-        public bool RestartOnFail => false;
-
         public override void ApplyToDifficulty(BeatmapDifficulty difficulty)
         {
             base.ApplyToDifficulty(difficulty);
 
             const float ratio = 0.5f;
-
-            if (ExtraLivesOnGameplay)
-                internalModExtraLives.ApplyToDifficulty(difficulty);
 
             if (AffectsApproach.Value)
                 difficulty.ApproachRate *= ratio;
@@ -44,15 +39,5 @@ namespace osu.Game.Rulesets.Catch.Mods
             if (ExtraLivesOnGameplay)
                 internalModExtraLives.ApplyToHealthProcessor(healthProcessor);
         }
-
-        public bool LocalPerformFail()
-        {
-            if (ExtraLivesOnGameplay)
-                return internalModExtraLives.LocalPerformFail();
-
-            return true;
-        }
-
-        public bool GlobalPerformFail() => false;
     }
 }

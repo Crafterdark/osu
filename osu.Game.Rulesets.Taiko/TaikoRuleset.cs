@@ -135,7 +135,7 @@ namespace osu.Game.Rulesets.Taiko
                     return new Mod[]
                     {
                         new TaikoModHardRock(),
-                        new MultiMod(new TaikoModSuddenDeath(), new TaikoModPerfect()),
+                        new MultiMod(new TaikoModMaximumDamage(), new TaikoModSuddenDeath(), new TaikoModPerfect()),
                         new MultiMod(new TaikoModDoubleTime(), new TaikoModNightcore()),
                         new TaikoModHidden(),
                         new MultiMod(new TaikoModFlashlight(), new TaikoModBlinds()),

@@ -11,7 +11,7 @@ using osu.Game.Screens.Play;
 
 namespace osu.Game.Rulesets.Mods
 {
-    public abstract class ModNoFail : Mod, IApplicableHealthFailOverride, IApplicableToHUD, IReadFromConfig
+    public abstract class ModNoFail : Mod, IApplicableFailOverride, IApplicableToHUD, IReadFromConfig
     {
         public override string Name => "No Fail";
         public override string Acronym => "NF";
@@ -19,7 +19,7 @@ namespace osu.Game.Rulesets.Mods
         public override ModType Type => ModType.DifficultyReduction;
         public override LocalisableString Description => "You can't fail, no matter what.";
         public override double ScoreMultiplier => 0.5;
-        public override Type[] IncompatibleMods => new[] { typeof(ModFailCondition), typeof(ModCinema), typeof(ModWithExtraLives) };
+        public override Type[] IncompatibleMods => new[] { typeof(ModSuddenDeath), typeof(ModPerfect), typeof(ModAccuracyChallenge), typeof(ModCinema) };
         public override bool Ranked => UsesDefaultConfiguration;
 
         private readonly Bindable<bool> showHealthBar = new Bindable<bool>();

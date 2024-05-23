@@ -21,10 +21,16 @@ namespace osu.Game.Rulesets.Mods
         public override double ScoreMultiplier => 1;
         public override bool Ranked => true;
 
-        public override Type[] IncompatibleMods => base.IncompatibleMods.Append(typeof(ModPerfect)).ToArray();
+        public override Type[] IncompatibleMods => base.IncompatibleMods.Concat(new[] { typeof(ModPerfect), typeof(ModMaximumDamage), typeof(ModExtraLives), typeof(ModNoFail), typeof(ModExtremeCustomize) }).ToArray();
 
-        protected override bool FailCondition(HealthProcessor healthProcessor, JudgementResult result)
+        protected override bool GlobalFailCondition(HealthProcessor healthProcessor, JudgementResult result)
             => result.Type.AffectsCombo()
                && !result.IsHit;
+
+        protected override bool LocalFailCondition(HealthProcessor healthProcessor, JudgementResult result) => false;
+
+        public override bool LocalPerformFail() => false;
+
+        public override bool GlobalPerformFail() => true;
     }
 }
