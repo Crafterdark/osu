@@ -215,7 +215,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                                               .Where(h => h is Fruit || (h is Droplet && h is not TinyDroplet))
                                               .ToArray();
 
-            double halfCatcherWidth = Catcher.CalculateCatchWidth(beatmap.Difficulty) / 2;
+            var difficulty = ((CatchBeatmap)beatmap).GetDifficulty();
+
+            double halfCatcherWidth = Catcher.CalculateCatchWidth(difficulty) / 2;
 
             // Todo: This is wrong. osu!stable calculated hyperdashes using the full catcher size, excluding the margins.
             // This should theoretically cause impossible scenarios, but practically, likely due to the size of the playfield, it doesn't seem possible.

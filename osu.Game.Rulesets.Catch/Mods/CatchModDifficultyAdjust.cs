@@ -10,7 +10,7 @@ using osu.Game.Rulesets.Mods;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
-    public class CatchModDifficultyAdjust : ModDifficultyAdjust, IApplicableToBeatmapProcessor
+    public class CatchModDifficultyAdjust : ModDifficultyAdjust, IApplicableToBeatmapProcessor, IApplicableAfterBeatmapConversion
     {
         [SettingSource("Circle Size", "Override a beatmap's set CS.", FIRST_SETTING_ORDER - 1, SettingControlType = typeof(DifficultyAdjustSettingsControl))]
         public DifficultyBindable CircleSize { get; } = new DifficultyBindable
@@ -35,6 +35,9 @@ namespace osu.Game.Rulesets.Catch.Mods
         [SettingSource("Spicy Patterns", "Adjust the patterns as if Hard Rock is enabled.")]
         public BindableBool HardRockOffsets { get; } = new BindableBool();
 
+        [SettingSource("Keep Hyperdashes", "Do not remove hyperdashes when using a lower CS.")]
+        public BindableBool KeepHyperDashes { get; } = new BindableBool();
+
         public override string SettingDescription
         {
             get
@@ -42,6 +45,7 @@ namespace osu.Game.Rulesets.Catch.Mods
                 string circleSize = CircleSize.IsDefault ? string.Empty : $"CS {CircleSize.Value:N1}";
                 string approachRate = ApproachRate.IsDefault ? string.Empty : $"AR {ApproachRate.Value:N1}";
                 string spicyPatterns = HardRockOffsets.IsDefault ? string.Empty : "Spicy patterns";
+                string keepHyperDashes = KeepHyperDashes.IsDefault ? string.Empty : "Keep hyperdashes";
 
                 return string.Join(", ", new[]
                 {
@@ -49,6 +53,7 @@ namespace osu.Game.Rulesets.Catch.Mods
                     base.SettingDescription,
                     approachRate,
                     spicyPatterns,
+                    keepHyperDashes,
                 }.Where(s => !string.IsNullOrEmpty(s)));
             }
         }
@@ -65,6 +70,12 @@ namespace osu.Game.Rulesets.Catch.Mods
         {
             var catchProcessor = (CatchBeatmapProcessor)beatmapProcessor;
             catchProcessor.HardRockOffsets = HardRockOffsets.Value;
+        }
+
+        public void ApplyToBeatmap(IBeatmap beatmap)
+        {
+            var catchBeatmap = (CatchBeatmap)beatmap;
+            catchBeatmap.KeepHyperDashes = KeepHyperDashes.Value;
         }
     }
 }

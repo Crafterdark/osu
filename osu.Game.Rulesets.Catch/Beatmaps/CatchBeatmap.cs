@@ -11,6 +11,24 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 {
     public class CatchBeatmap : Beatmap<CatchHitObject>
     {
+        /// <summary>
+        /// Whether this <see cref="CatchBeatmap"/> allows hyperdashes to persist after beatmap processing.
+        /// </summary>
+        public bool KeepHyperDashes;
+
+        /// <summary>
+        /// Get the <see cref="BeatmapDifficulty"/> of this <see cref="CatchBeatmap"/>.
+        /// </summary>
+        public BeatmapDifficulty GetDifficulty()
+        {
+            var originalDifficulty = BeatmapInfo.Difficulty;
+
+            if (KeepHyperDashes && Difficulty.CircleSize < originalDifficulty.CircleSize)
+                return originalDifficulty;
+
+            return Difficulty;
+        }
+
         public override IEnumerable<BeatmapStatistic> GetStatistics()
         {
             int fruits = HitObjects.Count(s => s is Fruit);
