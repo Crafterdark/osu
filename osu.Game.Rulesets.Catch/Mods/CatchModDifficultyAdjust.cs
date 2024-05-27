@@ -10,7 +10,7 @@ using osu.Game.Rulesets.Mods;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
-    public class CatchModDifficultyAdjust : ModDifficultyAdjust, IApplicableToBeatmapProcessor, IApplicableAfterBeatmapConversion
+    public class CatchModDifficultyAdjust : ModDifficultyAdjust, IApplicableToBeatmapProcessor
     {
         [SettingSource("Circle Size", "Override a beatmap's set CS.", FIRST_SETTING_ORDER - 1, SettingControlType = typeof(DifficultyAdjustSettingsControl))]
         public DifficultyBindable CircleSize { get; } = new DifficultyBindable
@@ -70,12 +70,9 @@ namespace osu.Game.Rulesets.Catch.Mods
         {
             var catchProcessor = (CatchBeatmapProcessor)beatmapProcessor;
             catchProcessor.HardRockOffsets = HardRockOffsets.Value;
-        }
 
-        public void ApplyToBeatmap(IBeatmap beatmap)
-        {
-            var catchBeatmap = (CatchBeatmap)beatmap;
-            catchBeatmap.KeepHyperDashes = KeepHyperDashes.Value;
+            if (KeepHyperDashes.Value)
+                catchProcessor.InitHyperDashOptions.InitMode = CatchBeatmapProcessor.HyperDashGenMode.Keep;
         }
     }
 }

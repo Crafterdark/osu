@@ -15,6 +15,10 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
     {
         public const int RNG_SEED = 1337;
 
+        public HyperDashGenOptions InitHyperDashOptions = new HyperDashGenOptions(
+            mode: HyperDashGenMode.Overwrite
+        );
+
         public bool HardRockOffsets { get; set; }
 
         public CatchBeatmapProcessor(IBeatmap beatmap)
@@ -110,7 +114,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 }
             }
 
-            initialiseHyperDash(beatmap);
+            HyperDashGenerator hyperDashGenerator = new HyperDashGenerator(InitHyperDashOptions, beatmap);
+
+            initialiseHyperDash(beatmap, hyperDashGenerator);
         }
 
         private static void applyHardRockOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime, LegacyRandom rng)
@@ -209,53 +215,145 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             }
         }
 
-        private static void initialiseHyperDash(IBeatmap beatmap)
+        private static void initialiseHyperDash(IBeatmap beatmap, HyperDashGenerator hyperDashGenerator)
         {
             var palpableObjects = CatchBeatmap.GetPalpableObjects(beatmap.HitObjects)
                                               .Where(h => h is Fruit || (h is Droplet && h is not TinyDroplet))
                                               .ToArray();
-
-            var difficulty = ((CatchBeatmap)beatmap).GetDifficulty();
-
-            double halfCatcherWidth = Catcher.CalculateCatchWidth(difficulty) / 2;
-
-            // Todo: This is wrong. osu!stable calculated hyperdashes using the full catcher size, excluding the margins.
-            // This should theoretically cause impossible scenarios, but practically, likely due to the size of the playfield, it doesn't seem possible.
-            // For now, to bring gameplay (and diffcalc!) completely in-line with stable, this code also uses the full catcher size.
-            halfCatcherWidth /= Catcher.ALLOWED_CATCH_RANGE;
-
-            int lastDirection = 0;
-            double lastExcess = halfCatcherWidth;
 
             for (int i = 0; i < palpableObjects.Length - 1; i++)
             {
                 var currentObject = palpableObjects[i];
                 var nextObject = palpableObjects[i + 1];
 
-                // Reset variables in-case values have changed (e.g. after applying HR)
+                hyperDashGenerator.Reset(currentObject);
+                hyperDashGenerator.Process(currentObject, nextObject);
+            }
+        }
+
+        public class HyperDashGenerator
+        {
+            /// <summary>
+            ///Initialization mode of this hyperdash generator
+            /// </summary>
+            public HyperDashGenMode InitMode;
+
+            public class HyperDashBeatmapParams
+            {
+                public double HalfCatcherWidth;
+                public int ThisDirection;
+                public int LastDirection;
+                public double LastExcess;
+            }
+
+            /// <summary>
+            /// Catcher hyperdash parameters of the current beatmap.
+            /// </summary>
+            public HyperDashBeatmapParams CurrentBeatmapParams;
+
+            /// <summary>
+            /// Catcher hyperdash parameters of the original beatmap.
+            /// </summary>
+            public HyperDashBeatmapParams? OriginalBeatmapParams;
+
+            public HyperDashGenerator(HyperDashGenOptions options, IBeatmap beatmap)
+            {
+                InitMode = options.InitMode;
+
+                initialiseParams(CurrentBeatmapParams = new HyperDashBeatmapParams(), beatmap.Difficulty);
+
+                if (options.InitMode == HyperDashGenMode.Keep)
+                    initialiseParams(OriginalBeatmapParams = new HyperDashBeatmapParams(), beatmap.BeatmapInfo.Difficulty);
+            }
+
+            private void initialiseParams(HyperDashBeatmapParams beatmapParams, BeatmapDifficulty difficulty)
+            {
+                beatmapParams.HalfCatcherWidth = Catcher.CalculateCatchWidth(difficulty) / 2;
+
+                // Todo: This is wrong. osu!stable calculated hyperdashes using the full catcher size, excluding the margins.
+                // This should theoretically cause impossible scenarios, but practically, likely due to the size of the playfield, it doesn't seem possible.
+                // For now, to bring gameplay (and diffcalc!) completely in-line with stable, this code also uses the full catcher size.
+                beatmapParams.HalfCatcherWidth /= Catcher.ALLOWED_CATCH_RANGE;
+
+                beatmapParams.LastDirection = 0;
+                beatmapParams.LastExcess = beatmapParams.HalfCatcherWidth;
+            }
+
+            /// <summary>
+            /// Reset variables in-case values have changed (e.g. after applying HR)
+            /// </summary>
+            public void Reset(PalpableCatchHitObject currentObject)
+            {
                 currentObject.HyperDashTarget = null;
                 currentObject.DistanceToHyperDash = 0;
+            }
 
-                int thisDirection = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
+            public void Process(PalpableCatchHitObject currentObject, PalpableCatchHitObject nextObject)
+            {
+                switch (InitMode)
+                {
+                    case HyperDashGenMode.Overwrite:
+                        Process(currentObject, nextObject, forceHyperDash: false, canPlaceHyperDash: true, canSetDistance: true, beatmapParams: ref CurrentBeatmapParams);
+                        break;
+                    case HyperDashGenMode.Keep:
+                        if (OriginalBeatmapParams != null)
+                        {
+                            bool keepOriginalHyperDash = Process(currentObject, nextObject, forceHyperDash: false, canPlaceHyperDash: false, canSetDistance: false, beatmapParams: ref OriginalBeatmapParams);
+                            Process(currentObject, nextObject, forceHyperDash: keepOriginalHyperDash, canPlaceHyperDash: true, canSetDistance: true, beatmapParams: ref CurrentBeatmapParams);
+                        }
+                        break;
+                }
+            }
+
+            public bool Process(PalpableCatchHitObject currentObject, PalpableCatchHitObject nextObject, bool forceHyperDash, bool canPlaceHyperDash, bool canSetDistance, ref HyperDashBeatmapParams beatmapParams)
+            {
+                beatmapParams.ThisDirection = nextObject.EffectiveX > currentObject.EffectiveX ? 1 : -1;
 
                 // Int truncation added to match osu!stable.
                 double timeToNext = (int)nextObject.StartTime - (int)currentObject.StartTime - 1000f / 60f / 4; // 1/4th of a frame of grace time, taken from osu-stable
-                double distanceToNext = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcess : halfCatcherWidth);
+                double distanceToNext = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (beatmapParams.LastDirection == beatmapParams.ThisDirection ? beatmapParams.LastExcess : beatmapParams.HalfCatcherWidth);
                 float distanceToHyper = (float)(timeToNext * Catcher.BASE_DASH_SPEED - distanceToNext);
 
-                if (distanceToHyper < 0)
+                bool generated = false;
+
+                if (distanceToHyper < 0 || forceHyperDash)
                 {
-                    currentObject.HyperDashTarget = nextObject;
-                    lastExcess = halfCatcherWidth;
+                    if (canPlaceHyperDash)
+                        currentObject.HyperDashTarget = nextObject;
+
+                    generated = true;
+                    beatmapParams.LastExcess = beatmapParams.HalfCatcherWidth;
                 }
                 else
                 {
-                    currentObject.DistanceToHyperDash = distanceToHyper;
-                    lastExcess = Math.Clamp(distanceToHyper, 0, halfCatcherWidth);
+                    if (canSetDistance)
+                        currentObject.DistanceToHyperDash = distanceToHyper;
+
+                    beatmapParams.LastExcess = Math.Clamp(distanceToHyper, 0, beatmapParams.HalfCatcherWidth);
                 }
 
-                lastDirection = thisDirection;
+                beatmapParams.LastDirection = beatmapParams.ThisDirection;
+
+                return generated;
             }
+        }
+
+        public class HyperDashGenOptions(HyperDashGenMode mode)
+        {
+            public HyperDashGenMode InitMode = mode;
+        }
+
+        public enum HyperDashGenMode
+        {
+            /// <summary>
+            /// Generate hyperdashes only from the current beatmap.
+            /// </summary>
+            Overwrite,
+
+            /// <summary>
+            /// Generate hyperdashes from the original to the current beatmap.
+            /// </summary>
+            Keep
         }
     }
 }
