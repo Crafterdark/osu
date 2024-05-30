@@ -22,8 +22,12 @@ namespace osu.Game.Rulesets.Mods
 
         private Action? triggerFailureDelegate;
 
+        public readonly Bindable<HealthProcessor> CurrentHealthProcessor = new Bindable<HealthProcessor>();
+
         public void ApplyToHealthProcessor(HealthProcessor healthProcessor)
         {
+            CurrentHealthProcessor.Value = healthProcessor;
+
             triggerFailureDelegate = healthProcessor.TriggerFailure;
             healthProcessor.FailConditions += FailCondition;
         }

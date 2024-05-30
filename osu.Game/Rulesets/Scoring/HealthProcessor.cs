@@ -27,6 +27,11 @@ namespace osu.Game.Rulesets.Scoring
         public readonly BindableDouble Health = new BindableDouble(1) { MinValue = 0, MaxValue = 1 };
 
         /// <summary>
+        /// The current lives.
+        /// </summary>
+        public readonly BindableInt Lives = new BindableInt(1) { MinValue = 0, MaxValue = int.MaxValue };
+
+        /// <summary>
         /// Whether this ScoreProcessor has already triggered the failed state.
         /// </summary>
         public bool HasFailed { get; private set; }
@@ -71,8 +76,14 @@ namespace osu.Game.Rulesets.Scoring
         /// <summary>
         /// Checks whether the default conditions for failing are met.
         /// </summary>
-        /// <returns><see langword="true"/> if failure should be invoked.</returns>
+        /// <returns><see langword="true"/> if one life should be removed.</returns>
         protected virtual bool CheckDefaultFailCondition(JudgementResult result) => Precision.AlmostBigger(Health.MinValue, Health.Value);
+
+        /// <summary>
+        /// Checks if there are no remaining lives before triggering a failure.
+        /// </summary>
+        /// <returns><see langword="true"/> if failure should be invoked.</returns>
+        protected virtual bool CheckNoRemainingLives() => Lives.Value == 0;
 
         /// <summary>
         /// Whether the current state of <see cref="HealthProcessor"/> or the provided <paramref name="result"/> meets any fail condition.
@@ -81,7 +92,21 @@ namespace osu.Game.Rulesets.Scoring
         private bool meetsAnyFailCondition(JudgementResult result)
         {
             if (CheckDefaultFailCondition(result))
-                return true;
+            {
+                Lives.Value--;
+
+                if (CheckNoRemainingLives())
+                {
+                    //Set the health value to the minimum.
+                    Health.Value = Health.MinValue;
+                    return true;
+                }
+                else
+                {
+                    //Set the health value to the maximum.
+                    Health.Value = Health.MaxValue;
+                }
+            }
 
             if (FailConditions != null)
             {
@@ -101,6 +126,7 @@ namespace osu.Game.Rulesets.Scoring
             base.Reset(storeResults);
 
             Health.Value = 1;
+            Lives.Value = 1;
             HasFailed = false;
         }
     }

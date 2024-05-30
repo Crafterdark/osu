@@ -67,7 +67,8 @@ namespace osu.Game.Rulesets.Mods
             {
                 if (s.NewValue < MinimumAccuracy.Value)
                 {
-                    TriggerFailure();
+                    if (!CurrentHealthProcessor.Value.HasFailed)
+                        TriggerFailure();
                 }
             });
         }
