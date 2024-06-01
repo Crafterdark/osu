@@ -32,6 +32,9 @@ using osu.Game.Rulesets.UI;
 using osu.Game.Graphics.Containers;
 using osu.Game.Resources.Localisation.Web;
 using osu.Game.Utils;
+using System.Threading.Tasks;
+using osu.Game.Scoring;
+using osu.Game.Rulesets.Scoring;
 
 namespace osu.Game.Screens.Select
 {
@@ -163,6 +166,7 @@ namespace osu.Game.Screens.Select
             private FillFlowContainer infoLabelContainer;
             private Container bpmLabelContainer;
             private Container lengthLabelContainer;
+            private Container ppContainer;
 
             private readonly WorkingBeatmap working;
             private readonly RulesetInfo ruleset;
@@ -344,9 +348,11 @@ namespace osu.Game.Screens.Select
                     settingChangeTracker?.Dispose();
 
                     refreshBPMAndLengthLabel();
+                    refreshPPLabel();
 
                     settingChangeTracker = new ModSettingChangeTracker(m.NewValue);
                     settingChangeTracker.SettingChanged += _ => refreshBPMAndLengthLabel();
+                    settingChangeTracker.SettingChanged += _ => refreshPPLabel();
                 }, true);
             }
 
@@ -380,6 +386,10 @@ namespace osu.Game.Screens.Select
                         {
                             AutoSizeAxes = Axes.Both,
                         },
+                        ppContainer = new Container
+                        {
+                            AutoSizeAxes = Axes.Both,
+                        },
                         new FillFlowContainer
                         {
                             AutoSizeAxes = Axes.Both,
@@ -387,6 +397,98 @@ namespace osu.Game.Screens.Select
                             Children = playableBeatmap.GetStatistics().Select(s => new InfoLabel(s)).ToArray()
                         }
                     };
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e, "Could not load beatmap successfully!");
+                }
+            }
+
+            private void refreshPPLabel()
+            {
+                var beatmap = working.Beatmap;
+
+                if (beatmap == null || ppContainer == null)
+                    return;
+
+                if (working.Beatmap.HitObjects.Any() != true)
+                    return;
+
+                IBeatmap playableBeatmap;
+
+                try
+                {
+                    var localRuleset = ruleset;
+
+                    try
+                    {
+                        // Try to get the beatmap with the user's ruleset
+                        playableBeatmap = working.GetPlayableBeatmap(localRuleset, mods.Value.ToArray());
+                    }
+                    catch (BeatmapInvalidForRulesetException)
+                    {
+                        // Can't be converted to the user's ruleset, so use the beatmap's own ruleset
+                        playableBeatmap = working.GetPlayableBeatmap(working.BeatmapInfo.Ruleset, mods.Value.ToArray());
+
+                        localRuleset = working.BeatmapInfo.Ruleset;
+                    }
+
+                    Dictionary<HitResult, int> statistics = new Dictionary<HitResult, int>();
+
+                    foreach (var statistic in localRuleset.CreateInstance().GetHitResults())
+                        statistics.Add(statistic.result, 0);
+
+                    foreach (var hitObject in playableBeatmap.HitObjects)
+                    {
+                        var maxResult = hitObject.Judgement.MaxResult;
+
+                        if (hitObject.NestedHitObjects.Count == 0)
+                        {
+                            if (statistics.ContainsKey(maxResult))
+                                statistics[maxResult]++;
+                        }
+                        else
+                        {
+                            if (statistics.ContainsKey(maxResult))
+                                statistics[maxResult]++;
+
+                            foreach (var nestedObject in hitObject.NestedHitObjects)
+                            {
+                                var maxResultNested = nestedObject.Judgement.MaxResult;
+                                if (statistics.ContainsKey(maxResultNested))
+                                    statistics[maxResultNested]++;
+                            }
+                        }
+                    }
+
+                    ScoreInfo score = new ScoreInfo(playableBeatmap.BeatmapInfo, localRuleset)
+                    {
+                        Combo = playableBeatmap.GetMaxCombo(),
+                        MaxCombo = playableBeatmap.GetMaxCombo(),
+                        Accuracy = 1,
+                        Statistics = statistics,
+                        Mods = mods.Value.ToArray(),
+                    };
+
+                    Task.Run(async () =>
+                    {
+                        var attributes = await difficultyCache.GetDifficultyAsync(score.BeatmapInfo!, score.Ruleset, score.Mods, default).ConfigureAwait(false);
+
+                        var performanceCalculator = score.Ruleset.CreateInstance().CreatePerformanceCalculator();
+
+                        // Performance calculation requires the beatmap and ruleset to be locally available. If not, return a default value.
+                        if (attributes?.Attributes == null || performanceCalculator == null)
+                            return;
+
+                        string labelText = (int)Math.Round(performanceCalculator?.Calculate(score, attributes.Value.Attributes).Total ?? 0, MidpointRounding.AwayFromZero) + "pp";
+
+                        Schedule(() => ppContainer.Child = new InfoLabel(new BeatmapStatistic
+                        {
+                            Name = "Performance Points",
+                            CreateIcon = () => new BeatmapStatisticIcon(BeatmapStatisticsIconType.PerformancePoints),
+                            Content = labelText
+                        }));
+                    }, default);
                 }
                 catch (Exception e)
                 {
