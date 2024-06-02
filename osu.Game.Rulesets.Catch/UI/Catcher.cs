@@ -13,7 +13,6 @@ using osu.Framework.Utils;
 using osu.Game.Beatmaps;
 using osu.Game.Configuration;
 using osu.Game.Rulesets.Catch.Judgements;
-using osu.Game.Rulesets.Catch.Mods;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.Objects.Drawables;
 using osu.Game.Rulesets.Catch.Skinning;
@@ -64,11 +63,6 @@ namespace osu.Game.Rulesets.Catch.UI
         /// Whether <see cref="DrawablePalpableCatchHitObject"/> fruit should appear on the plate.
         /// </summary>
         public bool CatchFruitOnPlate { get; set; } = true;
-
-        /// <summary>
-        /// Whether <see cref="DrawablePalpableCatchHitObject"/> fruit should have variable judgement line.
-        /// </summary>
-        public bool LowPrecisionJudgementOnPlate { get; set; }
 
         /// <summary>
         /// The speed of the catcher when the catcher is dashing.
@@ -207,13 +201,8 @@ namespace osu.Game.Rulesets.Catch.UI
 
             float halfCatchWidth = CatchWidth * 0.5f;
 
-            if (LowPrecisionJudgementOnPlate)
-            {
-                double extendedCollisionDistance = CatchModLowPrecision.CalculateHalfExtendedCollisionDistanceForHitObject(hitObject);
-
-                return fruit.EffectiveX >= X - (halfCatchWidth + extendedCollisionDistance) &&
-                       fruit.EffectiveX <= X + (halfCatchWidth + extendedCollisionDistance);
-            }
+            foreach (var updateFunc in hitObject.CatchableRangeUpdates)
+                halfCatchWidth += updateFunc.Invoke(hitObject);
 
             return fruit.EffectiveX >= X - halfCatchWidth &&
                    fruit.EffectiveX <= X + halfCatchWidth;
@@ -232,12 +221,7 @@ namespace osu.Game.Rulesets.Catch.UI
 
             if (result.IsHit)
             {
-                float directionalDistanceFromTarget = palpableObject.X - X;
-
-                if (LowPrecisionJudgementOnPlate)
-                    directionalDistanceFromTarget = Math.Clamp(directionalDistanceFromTarget, -CatchWidth / 2, CatchWidth / 2);
-
-                var positionInStack = computePositionInStack(new Vector2(directionalDistanceFromTarget, 0), palpableObject.DisplaySize.X);
+                var positionInStack = computePositionInStack(new Vector2(Math.Clamp(palpableObject.X - X, -CatchWidth / 2, CatchWidth / 2), 0), palpableObject.DisplaySize.X);
 
                 if (CatchFruitOnPlate)
                     placeCaughtObject(palpableObject, positionInStack);

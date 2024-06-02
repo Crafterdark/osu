@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using osu.Framework.Bindables;
 using osu.Game.Beatmaps;
@@ -145,6 +146,11 @@ namespace osu.Game.Rulesets.Catch.Objects
         /// The value is <see cref="HitObject.StartTime"/> truncated to an integer.
         /// </summary>
         public int RandomSeed => (int)StartTime;
+
+        /// <summary>
+        /// Updates the catching range"/>.
+        /// </summary>
+        public List<Func<CatchHitObject, float>> CatchableRangeUpdates = new List<Func<CatchHitObject, float>>();
 
         protected override void ApplyDefaultsToSelf(ControlPointInfo controlPointInfo, IBeatmapDifficultyInfo difficulty)
         {
