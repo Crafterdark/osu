@@ -28,6 +28,11 @@ namespace osu.Game.Rulesets.Catch.UI
             set => catcherContainer.Child = catcher = value;
         }
 
+        /// <summary>
+        /// Whether to hold dashing indefinitely.
+        /// </summary>
+        public bool IsHoldDashing { get; set; }
+
         private readonly Container<Catcher> catcherContainer;
 
         private readonly CatchComboDisplay comboDisplay;
@@ -132,6 +137,8 @@ namespace osu.Game.Rulesets.Catch.UI
                 Catcher.VisualDirection = Direction.Left;
         }
 
+        public void SetCatcherDashing(bool newValue) => Catcher.Dashing = newValue || IsHoldDashing;
+
         public bool OnPressed(KeyBindingPressEvent<CatchAction> e)
         {
             switch (e.Action)
@@ -145,7 +152,7 @@ namespace osu.Game.Rulesets.Catch.UI
                     return true;
 
                 case CatchAction.Dash:
-                    Catcher.Dashing = true;
+                    SetCatcherDashing(true);
                     return true;
             }
 
@@ -165,7 +172,7 @@ namespace osu.Game.Rulesets.Catch.UI
                     break;
 
                 case CatchAction.Dash:
-                    Catcher.Dashing = false;
+                    SetCatcherDashing(false);
                     break;
             }
         }
