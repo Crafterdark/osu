@@ -17,6 +17,8 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         public bool HardRockOffsets { get; set; }
 
+        public bool NoHyperdashOffsets { get; set; }
+
         public CatchBeatmapProcessor(IBeatmap beatmap)
             : base(beatmap)
         {
@@ -75,6 +77,8 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                     case Fruit fruit:
                         if (HardRockOffsets)
                             applyHardRockOffset(fruit, ref lastPosition, ref lastStartTime, rng);
+                        if (NoHyperdashOffsets)
+                            applyNoHyperdashOffset(fruit, ref lastPosition, ref lastStartTime);
                         break;
 
                     case BananaShower bananaShower:
@@ -89,11 +93,14 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         break;
 
                     case JuiceStream juiceStream:
-                        // Todo: BUG!! Stable used the last control point as the final position of the path, but it should use the computed path instead.
-                        lastPosition = juiceStream.OriginalX + juiceStream.Path.ControlPoints[^1].Position.X;
+                        if (!NoHyperdashOffsets)
+                        {
+                            // Todo: BUG!! Stable used the last control point as the final position of the path, but it should use the computed path instead.
+                            lastPosition = juiceStream.OriginalX + juiceStream.Path.ControlPoints[^1].Position.X;
 
-                        // Todo: BUG!! Stable attempted to use the end time of the stream, but referenced it too early in execution and used the start time instead.
-                        lastStartTime = juiceStream.StartTime;
+                            // Todo: BUG!! Stable attempted to use the end time of the stream, but referenced it too early in execution and used the start time instead.
+                            lastStartTime = juiceStream.StartTime;
+                        }
 
                         foreach (var nested in juiceStream.NestedHitObjects)
                         {
@@ -104,6 +111,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                                 catchObject.XOffset = Math.Clamp(rng.Next(-20, 20), -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
                             else if (catchObject is Droplet)
                                 rng.Next(); // osu!stable retrieved a random droplet rotation
+
+                            if (NoHyperdashOffsets)
+                                applyNoHyperdashOffset(catchObject, ref lastPosition, ref lastStartTime);
                         }
 
                         break;
@@ -152,6 +162,34 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             // ReSharper disable once PossibleLossOfFraction
             if (Math.Abs(positionDiff) < timeDiff / 3)
                 applyOffset(ref offsetPosition, positionDiff);
+
+            hitObject.XOffset = offsetPosition - hitObject.OriginalX;
+
+            lastPosition = offsetPosition;
+            lastStartTime = startTime;
+        }
+
+        private static void applyNoHyperdashOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime)
+        {
+            float offsetPosition = hitObject.OriginalX;
+            double startTime = hitObject.StartTime;
+
+            if (lastPosition == null)
+            {
+                lastPosition = offsetPosition;
+                lastStartTime = startTime;
+
+                return;
+            }
+
+            float positionDiff = offsetPosition - lastPosition.Value;
+            double timeDiff = startTime - lastStartTime;
+
+            float distanceToHyper = (float)(timeDiff * Catcher.BASE_DASH_SPEED - Math.Abs(positionDiff));
+
+            //Adjust the fruit to be closer to the previous one if it cannot be caught in its center by dashing.
+            if (distanceToHyper < 0)
+                applyOffset(ref offsetPosition, -Math.Sign(positionDiff) * Math.Abs(distanceToHyper));
 
             hitObject.XOffset = offsetPosition - hitObject.OriginalX;
 
