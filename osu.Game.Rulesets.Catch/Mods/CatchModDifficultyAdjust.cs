@@ -64,7 +64,9 @@ namespace osu.Game.Rulesets.Catch.Mods
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
         {
             var catchProcessor = (CatchBeatmapProcessor)beatmapProcessor;
-            catchProcessor.ModOffsets.Add(ModOffsetType.HardRock);
+
+            if (HardRockOffsets.Value)
+                catchProcessor.ModOffsets.Add(ModOffsetType.HardRock);
         }
     }
 }
