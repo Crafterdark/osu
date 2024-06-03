@@ -2,8 +2,10 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using osu.Game.Beatmaps;
+using osu.Game.Rulesets.Catch.Beatmaps.HyperDashGeneration;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Objects.Types;
@@ -14,6 +16,11 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
     public class CatchBeatmapProcessor : BeatmapProcessor
     {
         public const int RNG_SEED = 1337;
+
+        public HyperDashGenerator HyperDashGenerator = new HyperDashGenerator(
+            mode: HyperDashGeneratorMode.Overwrite,
+            options: new List<HyperDashGeneratorOptions>()
+        );
 
         public bool HardRockOffsets { get; set; }
 
@@ -110,7 +117,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 }
             }
 
-            initialiseHyperDash(beatmap);
+            initialiseHyperDash(beatmap, HyperDashGenerator);
         }
 
         private static void applyHardRockOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime, LegacyRandom rng)
@@ -209,7 +216,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             }
         }
 
-        private static void initialiseHyperDash(IBeatmap beatmap)
+        private static void initialiseHyperDash(IBeatmap beatmap, HyperDashGenerator hyperDashGenerator)
         {
             var palpableObjects = CatchBeatmap.GetPalpableObjects(beatmap.HitObjects)
                                               .Where(h => h is Fruit || (h is Droplet && h is not TinyDroplet))
@@ -241,7 +248,19 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 double distanceToNext = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX) - (lastDirection == thisDirection ? lastExcess : halfCatcherWidth);
                 float distanceToHyper = (float)(timeToNext * Catcher.BASE_DASH_SPEED - distanceToNext);
 
-                if (distanceToHyper < 0)
+                bool forceHyperDash = false;
+
+                // Force the generation of hyperdashes when the center of the next note cannot be reached from the previous center.
+                if (hyperDashGenerator.Options.Contains(HyperDashGeneratorOptions.Center))
+                {
+                    double timeToNextCenter = nextObject.StartTime - currentObject.StartTime;
+                    double distanceToNextCenter = Math.Abs(nextObject.EffectiveX - currentObject.EffectiveX);
+
+                    if (timeToNextCenter * Catcher.BASE_DASH_SPEED - distanceToNextCenter < 0)
+                        forceHyperDash = true;
+                }
+
+                if (distanceToHyper < 0 || forceHyperDash)
                 {
                     currentObject.HyperDashTarget = nextObject;
                     lastExcess = halfCatcherWidth;
