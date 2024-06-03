@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Catch.Objects;
@@ -15,9 +16,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
     {
         public const int RNG_SEED = 1337;
 
-        public bool HardRockOffsets { get; set; }
-
-        public bool NoHyperdashOffsets { get; set; }
+        public List<ModOffsetType> ModOffsets { get; set; } = new List<ModOffsetType>();
 
         public CatchBeatmapProcessor(IBeatmap beatmap)
             : base(beatmap)
@@ -75,10 +74,8 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 switch (obj)
                 {
                     case Fruit fruit:
-                        if (HardRockOffsets)
-                            applyHardRockOffset(fruit, ref lastPosition, ref lastStartTime, rng);
-                        if (NoHyperdashOffsets)
-                            applyNoHyperdashOffset(fruit, ref lastPosition, ref lastStartTime);
+                        applyExistingModOffsets(ModOffsets, fruit, ref lastPosition, ref lastStartTime, rng);
+
                         break;
 
                     case BananaShower bananaShower:
@@ -93,7 +90,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         break;
 
                     case JuiceStream juiceStream:
-                        if (!NoHyperdashOffsets)
+                        if (!ModOffsets.Contains(ModOffsetType.NoHyperdash))
                         {
                             // Todo: BUG!! Stable used the last control point as the final position of the path, but it should use the computed path instead.
                             lastPosition = juiceStream.OriginalX + juiceStream.Path.ControlPoints[^1].Position.X;
@@ -112,7 +109,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                             else if (catchObject is Droplet)
                                 rng.Next(); // osu!stable retrieved a random droplet rotation
 
-                            if (NoHyperdashOffsets)
+                            if (ModOffsets.Contains(ModOffsetType.NoHyperdash))
                                 applyNoHyperdashOffset(catchObject, ref lastPosition, ref lastStartTime);
                         }
 
@@ -121,6 +118,25 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             }
 
             initialiseHyperDash(beatmap);
+        }
+
+        private static void applyExistingModOffsets(List<ModOffsetType> modOffsets, CatchHitObject catchHitObject, ref float? lastPosition, ref double lastStartTime, LegacyRandom rng)
+        {
+            float? savePosition = lastPosition;
+            double saveStartTime = lastStartTime;
+
+            if (modOffsets.Contains(ModOffsetType.HardRock))
+            {
+                lastPosition = savePosition;
+                lastStartTime = saveStartTime;
+                applyHardRockOffset(catchHitObject, ref lastPosition, ref lastStartTime, rng);
+            }
+            if (modOffsets.Contains(ModOffsetType.NoHyperdash))
+            {
+                lastPosition = savePosition;
+                lastStartTime = saveStartTime;
+                applyNoHyperdashOffset(catchHitObject, ref lastPosition, ref lastStartTime);
+            }
         }
 
         private static void applyHardRockOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime, LegacyRandom rng)
@@ -171,19 +187,21 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
 
         private static void applyNoHyperdashOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime)
         {
-            float offsetPosition = hitObject.OriginalX;
+            //XOffset might be different than zero. (Hard Rock, Juice Streams, ...)
+            float offsetPosition = hitObject.OriginalX + hitObject.XOffset;
+
             double startTime = hitObject.StartTime;
 
             if (lastPosition == null)
             {
                 lastPosition = offsetPosition;
                 lastStartTime = startTime;
-
                 return;
             }
 
-            float positionDiff = offsetPosition - lastPosition.Value;
-            double timeDiff = startTime - lastStartTime;
+            //The same time difference from the hyperdash generation code is used to prevent very rare edge cases where a hyperdash can still generate.
+            double timeDiff = (int)startTime - (int)lastStartTime - 1000f / 60f / 4; // 1/4th of a frame of grace time, taken from osu-stable;
+            double positionDiff = offsetPosition - lastPosition.Value;
 
             float distanceToHyper = (float)(timeDiff * Catcher.BASE_DASH_SPEED - Math.Abs(positionDiff));
 
@@ -191,7 +209,8 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             if (distanceToHyper < 0)
                 applyOffset(ref offsetPosition, -Math.Sign(positionDiff) * Math.Abs(distanceToHyper));
 
-            hitObject.XOffset = offsetPosition - hitObject.OriginalX;
+            //XOffset might be different than zero. (Hard Rock, Juice Streams, ...)
+            hitObject.XOffset = offsetPosition - (hitObject.OriginalX + hitObject.XOffset);
 
             lastPosition = offsetPosition;
             lastStartTime = startTime;
@@ -293,5 +312,11 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 lastDirection = thisDirection;
             }
         }
+    }
+
+    public enum ModOffsetType
+    {
+        HardRock,
+        NoHyperdash
     }
 }

@@ -15,7 +15,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
         {
             var catchProcessor = (CatchBeatmapProcessor)beatmapProcessor;
-            catchProcessor.HardRockOffsets = true;
+            catchProcessor.ModOffsets.Add(ModOffsetType.HardRock);
         }
 
         public override void ApplyToDifficulty(BeatmapDifficulty difficulty)

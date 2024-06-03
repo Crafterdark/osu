@@ -18,8 +18,8 @@ namespace osu.Game.Rulesets.Catch.Mods
 
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
         {
-            var catchBeatmapProcessor = (CatchBeatmapProcessor)beatmapProcessor;
-            catchBeatmapProcessor.NoHyperdashOffsets = true;
+            var catchProcessor = (CatchBeatmapProcessor)beatmapProcessor;
+            catchProcessor.ModOffsets.Add(ModOffsetType.NoHyperdash);
         }
     }
 }
