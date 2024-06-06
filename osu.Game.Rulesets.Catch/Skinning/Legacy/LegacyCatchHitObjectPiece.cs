@@ -33,6 +33,11 @@ namespace osu.Game.Rulesets.Catch.Skinning.Legacy
         [Resolved]
         protected IHasCatchObjectState ObjectState { get; private set; } = null!;
 
+        /// <summary>
+        /// Animation time obtained from comparison with osu!stable.
+        /// </summary>
+        private const double legacy_hyperdash_animation_time = 500;
+
         protected LegacyCatchHitObjectPiece()
         {
             RelativeSizeAxes = Axes.Both;
@@ -91,17 +96,26 @@ namespace osu.Game.Rulesets.Catch.Skinning.Legacy
             if (!ObjectState.HyperDash.Value)
                 return;
 
+            double animationCurrentTime = Time.Current;
+
+            double animationStartTime = ObjectState.HitObject.StartTime - ObjectState.HitObject.TimePreempt; // ObjectState.DisplayStartTime is intentionally not used.
+            double animationEndTime = animationStartTime + legacy_hyperdash_animation_time;
+
+            //Cycle back the animation when needed.
+            while (animationCurrentTime > animationEndTime)
+                animationCurrentTime -= legacy_hyperdash_animation_time;
+
             hyperSprite.Alpha = Interpolation.ValueAt(
-                    Time.Current, 1f, 0.5f,
-                    ObjectState.DisplayStartTime,
-                    ObjectState.HitObject.StartTime,
+                    animationCurrentTime, 1f, 0.5f,
+                    animationStartTime,
+                    animationEndTime,
                     Easing.None
             );
 
             hyperSprite.Scale = Interpolation.ValueAt(
-                    Time.Current, new Vector2(1.2f), new Vector2(1.3f),
-                    ObjectState.DisplayStartTime,
-                    ObjectState.HitObject.StartTime,
+                    animationCurrentTime, new Vector2(1.2f), new Vector2(1.3f),
+                    animationStartTime,
+                    animationEndTime,
                     Easing.None
             );
         }
