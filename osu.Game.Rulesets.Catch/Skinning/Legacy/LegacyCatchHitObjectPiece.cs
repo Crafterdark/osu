@@ -7,6 +7,7 @@ using osu.Framework.Graphics;
 using osu.Framework.Graphics.Pooling;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Graphics.Textures;
+using osu.Framework.Utils;
 using osu.Game.Rulesets.Catch.Objects.Drawables;
 using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Skinning;
@@ -79,8 +80,30 @@ namespace osu.Game.Rulesets.Catch.Skinning.Legacy
 
             hyperDash.BindValueChanged(hyper =>
             {
-                hyperSprite.Alpha = hyper.NewValue ? 0.7f : 0;
+                hyperSprite.Alpha = hyper.NewValue ? 1f : 0;
             }, true);
+        }
+
+        protected override void Update()
+        {
+            base.Update();
+
+            if (!ObjectState.HyperDash.Value)
+                return;
+
+            hyperSprite.Alpha = Interpolation.ValueAt(
+                    Time.Current, 1f, 0.5f,
+                    ObjectState.DisplayStartTime,
+                    ObjectState.HitObject.StartTime,
+                    Easing.None
+            );
+
+            hyperSprite.Scale = Interpolation.ValueAt(
+                    Time.Current, new Vector2(1.2f), new Vector2(1.3f),
+                    ObjectState.DisplayStartTime,
+                    ObjectState.HitObject.StartTime,
+                    Easing.None
+            );
         }
 
         protected void SetTexture(Texture? texture, Texture? overlayTexture)
