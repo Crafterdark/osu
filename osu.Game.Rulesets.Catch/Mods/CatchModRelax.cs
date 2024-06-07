@@ -20,7 +20,7 @@ namespace osu.Game.Rulesets.Catch.Mods
     public partial class CatchModRelax : ModRelax, IApplicableToDrawableRuleset<CatchHitObject>, IApplicableToPlayer
     {
         public override LocalisableString Description => @"Use the mouse to control the catcher.";
-        public override Type[] IncompatibleMods => base.IncompatibleMods.Concat(new[] { typeof(CatchModCenter) }).ToArray();
+        public override Type[] IncompatibleMods => base.IncompatibleMods.Concat(new[] { typeof(CatchModBalance) }).ToArray();
 
         private DrawableCatchRuleset drawableRuleset = null!;
 
