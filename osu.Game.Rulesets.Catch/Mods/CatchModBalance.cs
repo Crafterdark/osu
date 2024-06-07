@@ -84,14 +84,14 @@ namespace osu.Game.Rulesets.Catch.Mods
                 if (prevObject != null)
                 {
                     // Note: This is a good approximation of what could be considered a stackable pattern.
-                    double stackableCenter = (currentObject.EffectiveX + nextObject.EffectiveX) / 2;
+                    float stackableCenter = (currentObject.EffectiveX + nextObject.EffectiveX) / 2;
 
                     // Calculate if the stackable pattern can be caught in time. (It's still possible that the catcher cannot reach this position)
                     double timeToStackablePattern = currentObject.StartTime - prevObject.StartTime;
                     double distanceToNextStackablePattern = Math.Abs(stackableCenter - prevObject.EffectiveX);
                     double distanceToStackable = timeToStackablePattern * Catcher.BASE_DASH_SPEED - distanceToNextStackablePattern;
 
-                    isStackablePattern = distanceToStackable >= 0 && isStackablePatternInRange((currentObject.EffectiveX + nextObject.EffectiveX) / 2, halfCatcherWidth, currentObject.EffectiveX, nextObject.EffectiveX);
+                    isStackablePattern = distanceToStackable >= 0 && isStackablePatternInRange(stackableCenter, halfCatcherWidth, currentObject.EffectiveX, nextObject.EffectiveX);
                 }
 
                 if (distanceToEdge < 0 && !isStackablePattern)
