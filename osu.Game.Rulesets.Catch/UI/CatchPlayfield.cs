@@ -1,6 +1,7 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System;
 using osu.Framework.Allocation;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
@@ -43,6 +44,10 @@ namespace osu.Game.Rulesets.Catch.UI
         internal CatcherArea CatcherArea { get; private set; } = null!;
 
         public Container UnderlayElements { get; private set; } = null!;
+
+        public event Func<CatchHitObject, float>? OnReplayJudgement;
+
+        public float CanCatchPosition { get; set; }
 
         private readonly IBeatmapDifficultyInfo difficulty;
 
@@ -105,7 +110,11 @@ namespace osu.Game.Rulesets.Catch.UI
             ((DrawableCatchHitObject)d).CheckPosition = checkIfWeCanCatch;
         }
 
-        private bool checkIfWeCanCatch(CatchHitObject obj) => Catcher.CanCatch(obj);
+        private bool checkIfWeCanCatch(CatchHitObject obj)
+        {
+            CanCatchPosition = OnReplayJudgement?.Invoke(obj) ?? Catcher.X;
+            return Catcher.CanCatch(obj, CanCatchPosition);
+        }
 
         private void onNewResult(DrawableHitObject judgedObject, JudgementResult result)
             => CatcherArea.OnNewResult((DrawableCatchHitObject)judgedObject, result);

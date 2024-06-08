@@ -3,11 +3,11 @@
 
 namespace osu.Game.Rulesets.UI
 {
-    public class FrameRecordHandlerUtils
+    public class FrameRecordTypeUtils
     {
-        public static bool IsRecordHandlerValidForJudgement(FrameRecordType recordHandler)
+        public static bool IsFrameRecordTypeValidForJudgement(FrameRecordType frameRecordType)
         {
-            switch (recordHandler)
+            switch (frameRecordType)
             {
                 default:
                     return false;
@@ -18,9 +18,9 @@ namespace osu.Game.Rulesets.UI
             }
         }
 
-        public static bool IsRecordHandlerValidForInput(FrameRecordType recordHandler)
+        public static bool IsFrameRecordTypeValidForInput(FrameRecordType frameRecordType)
         {
-            switch (recordHandler)
+            switch (frameRecordType)
             {
                 default:
                     return false;

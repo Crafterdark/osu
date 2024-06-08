@@ -194,14 +194,14 @@ namespace osu.Game.Rulesets.Catch.UI
         /// <summary>
         /// Determine if this catcher can catch a <see cref="CatchHitObject"/> in the current position.
         /// </summary>
-        public bool CanCatch(CatchHitObject hitObject)
+        public bool CanCatch(CatchHitObject hitObject, float canCatchPosition)
         {
             if (!(hitObject is PalpableCatchHitObject fruit))
                 return false;
 
             float halfCatchWidth = CatchWidth * 0.5f;
-            return fruit.EffectiveX >= X - halfCatchWidth &&
-                   fruit.EffectiveX <= X + halfCatchWidth;
+            return fruit.EffectiveX >= canCatchPosition - halfCatchWidth &&
+                   fruit.EffectiveX <= canCatchPosition + halfCatchWidth;
         }
 
         public void OnNewResult(DrawableCatchHitObject drawableObject, JudgementResult result)
