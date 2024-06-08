@@ -8,6 +8,7 @@ using osu.Game.Replays.Legacy;
 using osu.Game.Rulesets.Mania.Beatmaps;
 using osu.Game.Rulesets.Replays;
 using osu.Game.Rulesets.Replays.Types;
+using osu.Game.Rulesets.UI;
 
 namespace osu.Game.Rulesets.Mania.Replays
 {
@@ -95,7 +96,7 @@ namespace osu.Game.Rulesets.Mania.Replays
                 }
             }
 
-            return new LegacyReplayFrame(Time, keys, null, ReplayButtonState.None);
+            return new LegacyReplayFrame(Time, keys, null, ReplayButtonState.None, 0, FrameRecordType.Update);
         }
 
         /// <summary>

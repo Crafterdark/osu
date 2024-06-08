@@ -5,6 +5,7 @@ using MessagePack;
 using Newtonsoft.Json;
 using osu.Framework.Extensions.EnumExtensions;
 using osu.Game.Rulesets.Replays;
+using osu.Game.Rulesets.UI;
 using osuTK;
 
 namespace osu.Game.Replays.Legacy
@@ -53,17 +54,27 @@ namespace osu.Game.Replays.Legacy
         [Key(3)]
         public ReplayButtonState ButtonState;
 
-        public LegacyReplayFrame(double time, float? mouseX, float? mouseY, ReplayButtonState buttonState)
+        [JsonIgnore]
+        [IgnoreMember]
+        public int Direction;
+
+        [JsonIgnore]
+        [IgnoreMember]
+        public FrameRecordType FrameRecordType;
+
+        public LegacyReplayFrame(double time, float? mouseX, float? mouseY, ReplayButtonState buttonState, int direction, FrameRecordType frameRecordType)
             : base(time)
         {
             MouseX = mouseX;
             MouseY = mouseY;
             ButtonState = buttonState;
+            Direction = direction;
+            FrameRecordType = frameRecordType;
         }
 
         public override string ToString()
         {
-            return $"{Time}\t({MouseX},{MouseY})\t{MouseLeft}\t{MouseRight}\t{MouseLeft1}\t{MouseRight1}\t{MouseLeft2}\t{MouseRight2}\t{ButtonState}";
+            return $"{Time}\t({MouseX},{MouseY})\t{MouseLeft}\t{MouseRight}\t{MouseLeft1}\t{MouseRight1}\t{MouseLeft2}\t{MouseRight2}\t{ButtonState}\t{Direction}\t{FrameRecordType}";
         }
     }
 }

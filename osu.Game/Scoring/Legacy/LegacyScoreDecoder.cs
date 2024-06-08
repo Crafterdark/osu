@@ -21,6 +21,7 @@ using osu.Game.Rulesets;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Replays;
 using osu.Game.Rulesets.Scoring;
+using osu.Game.Rulesets.UI;
 using osuTK;
 using SharpCompress.Compressors.LZMA;
 
@@ -289,7 +290,9 @@ namespace osu.Game.Scoring.Legacy
                 legacyFrames.Add(new LegacyReplayFrame(lastTime,
                     mouseX,
                     mouseY,
-                    (ReplayButtonState)Parsing.ParseInt(split[3])));
+                    (ReplayButtonState)Parsing.ParseInt(split[3]),
+                    split.Length < 5 ? 0 : Parsing.ParseInt(split[4]),
+                    split.Length < 6 ? FrameRecordType.Update : (FrameRecordType)Parsing.ParseInt(split[5])));
             }
 
             // https://github.com/peppy/osu-stable-reference/blob/e53980dd76857ee899f66ce519ba1597e7874f28/osu!/GameModes/Play/ReplayWatcher.cs#L62-L67

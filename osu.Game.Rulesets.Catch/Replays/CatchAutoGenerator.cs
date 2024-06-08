@@ -9,6 +9,7 @@ using osu.Game.Rulesets.Catch.Beatmaps;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Replays;
+using osu.Game.Rulesets.UI;
 
 namespace osu.Game.Rulesets.Catch.Replays
 {
@@ -112,7 +113,7 @@ namespace osu.Game.Rulesets.Catch.Replays
 
         private void addFrame(double time, float? position = null, bool dashing = false)
         {
-            Frames.Add(new CatchReplayFrame(time, position, dashing, LastFrame));
+            Frames.Add(new CatchReplayFrame(time, position, dashing, CatcherDirection.None, FrameRecordType.Update, LastFrame));
         }
     }
 }

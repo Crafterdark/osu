@@ -364,12 +364,12 @@ namespace osu.Game.Tests.Visual.Gameplay
         {
             public List<ReplayFrame> SentFrames = new List<ReplayFrame>();
 
-            public TestReplayRecorder(Score score)
-                : base(score)
+            public TestReplayRecorder(Score score, Playfield playfield)
+                : base(score, playfield)
             {
             }
 
-            protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<TestAction> actions, ReplayFrame previousFrame)
+            protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<TestAction> actions, FrameRecordType frameRecordType, ReplayFrame previousFrame)
             {
                 var testReplayFrame = new TestReplayFrame(Time.Current, mousePosition, actions.ToArray());
                 SentFrames.Add(testReplayFrame);

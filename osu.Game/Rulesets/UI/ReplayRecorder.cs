@@ -32,13 +32,18 @@ namespace osu.Game.Rulesets.UI
         [Resolved]
         private SpectatorClient spectatorClient { get; set; }
 
-        protected ReplayRecorder(Score target)
+        protected ReplayRecorder(Score target, Playfield playfield)
         {
             this.target = target;
 
             RelativeSizeAxes = Axes.Both;
 
             Depth = float.MinValue;
+
+            playfield.NewResult += (d, r) =>
+            {
+                recordFrame(true, FrameRecordType.Judgement);
+            };
         }
 
         protected override void LoadComplete()
@@ -50,38 +55,38 @@ namespace osu.Game.Rulesets.UI
         protected override void Update()
         {
             base.Update();
-            recordFrame(false);
+            recordFrame(false, FrameRecordType.Update);
         }
 
         protected override bool OnMouseMove(MouseMoveEvent e)
         {
-            recordFrame(false);
+            recordFrame(false, FrameRecordType.Mouse);
             return base.OnMouseMove(e);
         }
 
         public bool OnPressed(KeyBindingPressEvent<T> e)
         {
             pressedActions.Add(e.Action);
-            recordFrame(true);
+            recordFrame(true, FrameRecordType.Input);
             return false;
         }
 
         public void OnReleased(KeyBindingReleaseEvent<T> e)
         {
             pressedActions.Remove(e.Action);
-            recordFrame(true);
+            recordFrame(true, FrameRecordType.Input);
         }
 
-        private void recordFrame(bool important)
+        private void recordFrame(bool important, FrameRecordType frameRecordType)
         {
-            var last = target.Replay.Frames.LastOrDefault();
+            var last = GetLastFrameRecordType(frameRecordType, target.Replay.Frames);
 
             if (!important && last != null && Time.Current - last.Time < (1000d / RecordFrameRate))
                 return;
 
             var position = ScreenSpaceToGamefield?.Invoke(inputManager.CurrentState.Mouse.Position) ?? inputManager.CurrentState.Mouse.Position;
 
-            var frame = HandleFrame(position, pressedActions, last);
+            var frame = HandleFrame(position, pressedActions, frameRecordType, last);
 
             if (frame != null)
             {
@@ -91,7 +96,9 @@ namespace osu.Game.Rulesets.UI
             }
         }
 
-        protected abstract ReplayFrame HandleFrame(Vector2 mousePosition, List<T> actions, ReplayFrame previousFrame);
+        protected virtual ReplayFrame GetLastFrameRecordType(FrameRecordType frameRecordType, List<ReplayFrame> replayFrames) => replayFrames.LastOrDefault();
+
+        protected abstract ReplayFrame HandleFrame(Vector2 mousePosition, List<T> actions, FrameRecordType frameRecordType, ReplayFrame previousFrame);
     }
 
     public abstract partial class ReplayRecorder : Component
