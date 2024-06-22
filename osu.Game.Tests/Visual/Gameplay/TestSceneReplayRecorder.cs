@@ -301,12 +301,12 @@ namespace osu.Game.Tests.Visual.Gameplay
 
         internal partial class TestReplayRecorder : ReplayRecorder<TestAction>
         {
-            public TestReplayRecorder(Score target)
-                : base(target)
+            public TestReplayRecorder(Score target, Playfield playfield)
+                : base(target, playfield)
             {
             }
 
-            protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<TestAction> actions, ReplayFrame previousFrame)
+            protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<TestAction> actions, FrameRecordType frameRecordType, ReplayFrame previousFrame)
                 => new TestReplayFrame(Time.Current, mousePosition, actions.ToArray());
         }
     }

@@ -12,12 +12,12 @@ namespace osu.Game.Rulesets.Taiko.UI
 {
     public partial class TaikoReplayRecorder : ReplayRecorder<TaikoAction>
     {
-        public TaikoReplayRecorder(Score score)
-            : base(score)
+        public TaikoReplayRecorder(Score score, Playfield playfield)
+            : base(score, playfield)
         {
         }
 
-        protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<TaikoAction> actions, ReplayFrame previousFrame) =>
+        protected override ReplayFrame HandleFrame(Vector2 mousePosition, List<TaikoAction> actions, FrameRecordType frameRecordType, ReplayFrame previousFrame) =>
             new TaikoReplayFrame(Time.Current, actions.ToArray());
     }
 }

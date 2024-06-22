@@ -6,6 +6,7 @@ using osu.Game.Beatmaps;
 using osu.Game.Replays.Legacy;
 using osu.Game.Rulesets.Replays;
 using osu.Game.Rulesets.Replays.Types;
+using osu.Game.Rulesets.UI;
 
 namespace osu.Game.Rulesets.Taiko.Replays
 {
@@ -40,7 +41,7 @@ namespace osu.Game.Rulesets.Taiko.Replays
             if (Actions.Contains(TaikoAction.LeftCentre)) state |= ReplayButtonState.Left1;
             if (Actions.Contains(TaikoAction.RightCentre)) state |= ReplayButtonState.Left2;
 
-            return new LegacyReplayFrame(Time, null, null, state);
+            return new LegacyReplayFrame(Time, null, null, state, 0, FrameRecordType.Update);
         }
     }
 }

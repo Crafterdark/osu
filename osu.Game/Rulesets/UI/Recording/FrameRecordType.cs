@@ -1,0 +1,15 @@
+﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
+// See the LICENCE file in the repository root for full licence text.
+
+namespace osu.Game.Rulesets.UI
+{
+    public enum FrameRecordType
+    {
+        Update = 0,
+        Input = 1,
+        Judgement = 2,
+        Mouse = 3,
+        LegacyUpdateOrJudgement = 4,
+        LegacyInputOrJudgement = 5,
+    }
+}

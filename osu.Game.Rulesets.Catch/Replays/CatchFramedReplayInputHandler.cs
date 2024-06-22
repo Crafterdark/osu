@@ -6,15 +6,28 @@ using System.Linq;
 using osu.Framework.Input.StateChanges;
 using osu.Framework.Utils;
 using osu.Game.Replays;
+using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Replays;
+using osu.Game.Rulesets.UI;
 
 namespace osu.Game.Rulesets.Catch.Replays
 {
     public class CatchFramedReplayInputHandler : FramedReplayInputHandler<CatchReplayFrame>
     {
-        public CatchFramedReplayInputHandler(Replay replay)
+        public CatchFramedReplayInputHandler(Replay replay, CatchPlayfield catchPlayfield)
             : base(replay)
         {
+            catchPlayfield.OnReplayJudgement += (o) =>
+            {
+                CatchReplayFrame? syncFrame;
+
+                syncFrame = (CatchReplayFrame?)Frames?.Find(x => x.Time >= (int)o.StartTime && FrameRecordTypeUtils.IsFrameRecordTypeValidForJudgement(((CatchReplayFrame)x).FrameRecordType));
+
+                if (syncFrame != null)
+                    return syncFrame.Position;
+                else
+                    return catchPlayfield.Catcher.X;
+            };
         }
 
         protected override bool IsImportant(CatchReplayFrame frame) => frame.Actions.Any();

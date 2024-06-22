@@ -6,6 +6,7 @@ using osu.Game.Beatmaps;
 using osu.Game.Replays.Legacy;
 using osu.Game.Rulesets.Replays;
 using osu.Game.Rulesets.Replays.Types;
+using osu.Game.Rulesets.UI;
 using osuTK;
 
 namespace osu.Game.Rulesets.Osu.Replays
@@ -45,7 +46,7 @@ namespace osu.Game.Rulesets.Osu.Replays
             if (Actions.Contains(OsuAction.Smoke))
                 state |= ReplayButtonState.Smoke;
 
-            return new LegacyReplayFrame(Time, Position.X, Position.Y, state);
+            return new LegacyReplayFrame(Time, Position.X, Position.Y, state, 0, FrameRecordType.Update);
         }
     }
 }
