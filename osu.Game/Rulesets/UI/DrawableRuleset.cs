@@ -27,11 +27,13 @@ using osu.Game.Rulesets.Judgements;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Objects;
 using osu.Game.Rulesets.Objects.Drawables;
+using osu.Game.Rulesets.Replays;
 using osu.Game.Rulesets.Scoring;
 using osu.Game.Scoring;
 using osu.Game.Screens.Play;
 using osu.Game.Screens.Play.HUD;
 using osu.Game.Screens.Play.HUD.ClicksPerSecond;
+using osu.Game.Screens.Play.ReplayAnalysis;
 using osuTK;
 
 namespace osu.Game.Rulesets.UI
@@ -527,6 +529,8 @@ namespace osu.Game.Rulesets.UI
         /// An optional overlay used when resuming gameplay from a paused state.
         /// </summary>
         public ResumeOverlay ResumeOverlay { get; protected set; }
+
+        public virtual ReplayAnalysisSettings CreateReplayAnalysisSettings(MasterGameplayClockContainer clock, List<ReplayFrame> frames) => null;
 
         /// <summary>
         /// Whether a <see cref="ResumeOverlay"/> should be displayed on resuming after a pause.

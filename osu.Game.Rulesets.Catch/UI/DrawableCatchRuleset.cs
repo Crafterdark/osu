@@ -13,10 +13,12 @@ using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.Replays;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Objects.Drawables;
+using osu.Game.Rulesets.Replays;
 using osu.Game.Rulesets.UI;
 using osu.Game.Rulesets.UI.Scrolling;
 using osu.Game.Scoring;
 using osu.Game.Screens.Play;
+using osu.Game.Screens.Play.ReplayAnalysis;
 using osuTK;
 
 namespace osu.Game.Rulesets.Catch.UI
@@ -48,6 +50,8 @@ namespace osu.Game.Rulesets.Catch.UI
         protected override ReplayRecorder CreateReplayRecorder(Score score) => new CatchReplayRecorder(score, (CatchPlayfield)Playfield);
 
         protected override Playfield CreatePlayfield() => new CatchPlayfield(Beatmap.Difficulty);
+
+        public override ReplayAnalysisSettings CreateReplayAnalysisSettings(MasterGameplayClockContainer clock, List<ReplayFrame> frames) => new CatchReplayAnalysisSettings(clock, frames, (CatchPlayfield)Playfield);
 
         public override PlayfieldAdjustmentContainer CreatePlayfieldAdjustmentContainer() => new CatchPlayfieldAdjustmentContainer();
 

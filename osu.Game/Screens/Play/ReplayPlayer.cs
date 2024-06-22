@@ -18,6 +18,7 @@ using osu.Game.Rulesets.Mods;
 using osu.Game.Scoring;
 using osu.Game.Screens.Play.HUD;
 using osu.Game.Screens.Play.PlayerSettings;
+using osu.Game.Screens.Play.ReplayAnalysis;
 using osu.Game.Screens.Ranking;
 using osu.Game.Users;
 
@@ -31,6 +32,8 @@ namespace osu.Game.Screens.Play
         private readonly Func<IBeatmap, IReadOnlyList<Mod>, Score> createScore;
 
         private readonly bool replayIsFailedScore;
+
+        public ReplayAnalysisSettings ReplayAnalysis;
 
         protected override UserActivity InitialActivity => new UserActivity.WatchingReplay(Score.ScoreInfo);
 
@@ -70,7 +73,10 @@ namespace osu.Game.Screens.Play
             if (GameplayClockContainer is MasterGameplayClockContainer master)
                 playbackSettings.UserPlaybackRate.BindTo(master.UserPlaybackRate);
 
+            ReplayAnalysis = DrawableRuleset.CreateReplayAnalysisSettings((MasterGameplayClockContainer)GameplayClockContainer, GameplayState.Score.Replay.Frames);
+
             HUDOverlay.PlayerSettingsOverlay.AddAtStart(playbackSettings);
+            HUDOverlay.PlayerSettingsOverlay.AddAtStart(ReplayAnalysis);
         }
 
         protected override void PrepareReplay()

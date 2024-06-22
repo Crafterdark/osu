@@ -55,18 +55,18 @@ namespace osu.Game.Rulesets.Catch.Replays
                 {
                     // we are already in the correct range.
                     lastTime = h.StartTime;
-                    addFrame(h.StartTime, lastPosition);
+                    addFrame(h.StartTime, lastPosition, type: FrameRecordType.Judgement);
                     return;
                 }
 
                 if (impossibleJump)
                 {
-                    addFrame(h.StartTime, h.EffectiveX);
+                    addFrame(h.StartTime, h.EffectiveX, type: FrameRecordType.Judgement);
                 }
                 else if (h.HyperDash)
                 {
                     addFrame(h.StartTime - timeAvailable, lastPosition);
-                    addFrame(h.StartTime, h.EffectiveX);
+                    addFrame(h.StartTime, h.EffectiveX, type: FrameRecordType.Judgement);
                 }
                 else if (dashRequired)
                 {
@@ -80,14 +80,14 @@ namespace osu.Game.Rulesets.Catch.Replays
                     // dash movement
                     addFrame(h.StartTime - timeAvailable + 1, lastPosition, true);
                     addFrame(h.StartTime - timeAvailable + timeAtDashSpeed, midPosition);
-                    addFrame(h.StartTime, h.EffectiveX);
+                    addFrame(h.StartTime, h.EffectiveX, type: FrameRecordType.Judgement);
                 }
                 else
                 {
                     double timeBefore = positionChange / Catcher.BASE_WALK_SPEED;
 
                     addFrame(h.StartTime - timeBefore, lastPosition);
-                    addFrame(h.StartTime, h.EffectiveX);
+                    addFrame(h.StartTime, h.EffectiveX, type: FrameRecordType.Judgement);
                 }
 
                 lastTime = h.StartTime;
@@ -111,9 +111,9 @@ namespace osu.Game.Rulesets.Catch.Replays
             }
         }
 
-        private void addFrame(double time, float? position = null, bool dashing = false)
+        private void addFrame(double time, float? position = null, bool dashing = false, FrameRecordType type = FrameRecordType.Update)
         {
-            Frames.Add(new CatchReplayFrame(time, position, dashing, CatcherDirection.None, FrameRecordType.Update, LastFrame));
+            Frames.Add(new CatchReplayFrame(time, position, dashing, CatcherDirection.None, type, LastFrame));
         }
     }
 }
