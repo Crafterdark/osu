@@ -30,6 +30,13 @@ namespace osu.Game.Rulesets.Mods
             Precision = 0.01,
         };
 
+        public override BindableNumber<double> EndOfRamp { get; } = new BindableDouble(0.75)
+        {
+            MinValue = 0.5,
+            MaxValue = 1.0,
+            Precision = 0.01,
+        };
+
         public override BindableBool AdjustPitch { get; } = new BindableBool(true);
 
         public override Type[] IncompatibleMods => base.IncompatibleMods.Append(typeof(ModWindDown)).ToArray();

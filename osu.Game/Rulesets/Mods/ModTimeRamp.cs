@@ -14,11 +14,6 @@ namespace osu.Game.Rulesets.Mods
 {
     public abstract class ModTimeRamp : Mod, IUpdatableByPlayfield, IApplicableToBeatmap, IApplicableToRate
     {
-        /// <summary>
-        /// The point in the beatmap at which the final ramping rate should be reached.
-        /// </summary>
-        public const double FINAL_RATE_PROGRESS = 0.75f;
-
         public override double ScoreMultiplier => 0.5;
 
         [SettingSource("Initial rate", "The starting speed of the track", SettingControlType = typeof(MultiplierSettingsSlider))]
@@ -26,6 +21,13 @@ namespace osu.Game.Rulesets.Mods
 
         [SettingSource("Final rate", "The final speed to ramp to", SettingControlType = typeof(MultiplierSettingsSlider))]
         public abstract BindableNumber<double> FinalRate { get; }
+
+        /// <summary>
+        /// The point in the beatmap at which the final ramping rate should be reached.
+        /// </summary>
+
+        [SettingSource("End of ramp", "The point in the beatmap at which the final ramping rate should be reached", SettingControlType = typeof(SettingsPercentageSlider<double>))]
+        public abstract BindableNumber<double> EndOfRamp { get; }
 
         [SettingSource("Adjust pitch", "Should pitch be adjusted with speed")]
         public abstract BindableBool AdjustPitch { get; }
@@ -74,7 +76,7 @@ namespace osu.Game.Rulesets.Mods
             double lastObjectEnd = beatmap.HitObjects.Any() ? beatmap.GetLastObjectTime() : 0;
 
             beginRampTime = firstObjectStart;
-            finalRateTime = firstObjectStart + FINAL_RATE_PROGRESS * (lastObjectEnd - firstObjectStart);
+            finalRateTime = firstObjectStart + EndOfRamp.Value * (lastObjectEnd - firstObjectStart);
         }
 
         public double ApplyToRate(double time, double rate = 1)
