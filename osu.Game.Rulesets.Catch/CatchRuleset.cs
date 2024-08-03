@@ -131,7 +131,6 @@ namespace osu.Game.Rulesets.Catch
                         new CatchModDifficultyAdjust(),
                         new CatchModClassic(),
                         new CatchModMirror(),
-                        new CatchModHoldDash(),
                     };
 
                 case ModType.Automation:
@@ -139,6 +138,7 @@ namespace osu.Game.Rulesets.Catch
                     {
                         new MultiMod(new CatchModAutoplay(), new CatchModCinema()),
                         new CatchModRelax(),
+                        new CatchModHoldDash(),
                     };
 
                 case ModType.Fun:

@@ -17,7 +17,7 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override LocalisableString Description => @"The catcher is always dashing!";
         public override double ScoreMultiplier => 1.0;
         public override Type[] IncompatibleMods => new[] { typeof(ModAutoplay), typeof(ModRelax), typeof(CatchModCinema) };
-        public override ModType Type => ModType.Conversion;
+        public override ModType Type => ModType.Automation;
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {
