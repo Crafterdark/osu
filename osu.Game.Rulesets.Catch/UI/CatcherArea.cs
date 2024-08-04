@@ -28,6 +28,11 @@ namespace osu.Game.Rulesets.Catch.UI
             set => catcherContainer.Child = catcher = value;
         }
 
+        /// <summary>
+        /// Whether the catcher should immediately change to the new direction, instead of blocking.
+        /// </summary>
+        public bool ImmediateDirectionChange { get; set; }
+
         private readonly Container<Catcher> catcherContainer;
 
         private readonly CatchComboDisplay comboDisplay;
@@ -36,12 +41,21 @@ namespace osu.Game.Rulesets.Catch.UI
 
         private Catcher catcher = null!;
 
+        private int directionLeft, directionRight;
+
         /// <summary>
-        /// <c>-1</c> when only left button is pressed.
-        /// <c>1</c> when only right button is pressed.
-        /// <c>0</c> when none or both left and right buttons are pressed.
+        /// <c>Direction.Left</c> when only left button is pressed.
+        /// <c>Direction.Right</c> when only right button is pressed.
+        /// <c>Direction.None</c> when none or both left and right buttons are pressed. (Last case: only if FlowOnDirectionChange is false)
         /// </summary>
-        private int currentDirection;
+        private Direction currentDirection = Direction.None;
+
+        /// <summary>
+        /// <c>Direction.Left</c> when only left button is pressed.
+        /// <c>Direction.Right</c> when only right button is pressed.
+        /// <c>Direction.None</c> when none or both left and right buttons are pressed. (Last case: only if FlowOnDirectionChange is false)
+        /// </summary>
+        private Direction previousDirection = Direction.None;
 
         // TODO: support replay rewind
         private bool lastHyperDashState;
@@ -88,7 +102,7 @@ namespace osu.Game.Rulesets.Catch.UI
 
             SetCatcherPosition(
                 replayState?.CatcherX ??
-                (float)(Catcher.X + Catcher.Speed * currentDirection * Clock.ElapsedFrameTime));
+                (float)(Catcher.X + Catcher.Speed * (int)currentDirection * Clock.ElapsedFrameTime));
         }
 
         protected override void UpdateAfterChildren()
@@ -132,16 +146,42 @@ namespace osu.Game.Rulesets.Catch.UI
                 Catcher.VisualDirection = Direction.Left;
         }
 
+        public void SetCatcherDirection()
+        {
+            int finalDirection = directionLeft + directionRight;
+            bool shouldBlock = (Math.Abs(directionLeft) + directionRight) == 2;
+
+            switch ((Direction)finalDirection)
+            {
+                case Direction.None:
+                    if (shouldBlock && ImmediateDirectionChange)
+                        currentDirection = (Direction)(-1 * (int)previousDirection);
+                    else
+                        currentDirection = Direction.None;
+                    break;
+                case Direction.Left:
+                    currentDirection = Direction.Left;
+                    break;
+                case Direction.Right:
+                    currentDirection = Direction.Right;
+                    break;
+            }
+
+            previousDirection = currentDirection;
+        }
+
         public bool OnPressed(KeyBindingPressEvent<CatchAction> e)
         {
             switch (e.Action)
             {
                 case CatchAction.MoveLeft:
-                    currentDirection--;
+                    directionLeft--;
+                    SetCatcherDirection();
                     return true;
 
                 case CatchAction.MoveRight:
-                    currentDirection++;
+                    directionRight++;
+                    SetCatcherDirection();
                     return true;
 
                 case CatchAction.Dash:
@@ -157,11 +197,13 @@ namespace osu.Game.Rulesets.Catch.UI
             switch (e.Action)
             {
                 case CatchAction.MoveLeft:
-                    currentDirection++;
+                    directionLeft++;
+                    SetCatcherDirection();
                     break;
 
                 case CatchAction.MoveRight:
-                    currentDirection--;
+                    directionRight--;
+                    SetCatcherDirection();
                     break;
 
                 case CatchAction.Dash:
