@@ -4,18 +4,26 @@
 using System;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Beatmaps;
-using osu.Game.Rulesets.Catch.Beatmaps;
+using System.Linq;
+using osu.Framework.Bindables;
+using osu.Game.Configuration;
 
 namespace osu.Game.Rulesets.Catch.Mods
 {
     public class CatchModHardRock : ModHardRock, IApplicableToBeatmapProcessor
     {
-        public override double ScoreMultiplier => UsesDefaultConfiguration ? 1.12 : 1;
+        public override Type[] IncompatibleMods => base.IncompatibleMods.Concat(new[] { typeof(CatchModSpicyPatterns) }).ToArray();
+        public override double ScoreMultiplier => UsesDefaultConfiguration ? 1.12 : 1.06;
+
+        private CatchModSpicyPatterns internalCatchModSpicyPatterns = new CatchModSpicyPatterns();
+
+        [SettingSource("Spicy patterns", "Adjust the patterns to be slightly more unpredictable.")]
+        public BindableBool SpicyPatterns { get; } = new BindableBool(true);
 
         public void ApplyToBeatmapProcessor(IBeatmapProcessor beatmapProcessor)
         {
-            var catchProcessor = (CatchBeatmapProcessor)beatmapProcessor;
-            catchProcessor.HardRockOffsets = true;
+            if (SpicyPatterns.Value)
+                internalCatchModSpicyPatterns.ApplyToBeatmapProcessor(beatmapProcessor);
         }
 
         public override void ApplyToDifficulty(BeatmapDifficulty difficulty)

@@ -15,7 +15,9 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
     {
         public const int RNG_SEED = 1337;
 
-        public bool HardRockOffsets { get; set; }
+        public bool FruitSpicyPatternsOffsets { get; set; }
+
+        public bool JuiceStreamSpicyPatternsOffsets { get; set; }
 
         public CatchBeatmapProcessor(IBeatmap beatmap)
             : base(beatmap)
@@ -73,8 +75,8 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                 switch (obj)
                 {
                     case Fruit fruit:
-                        if (HardRockOffsets)
-                            applyHardRockOffset(fruit, ref lastPosition, ref lastStartTime, rng);
+                        if (FruitSpicyPatternsOffsets)
+                            applySpicyPatternsOffset(fruit, ref lastPosition, ref lastStartTime, rng);
                         break;
 
                     case BananaShower bananaShower:
@@ -89,11 +91,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                         break;
 
                     case JuiceStream juiceStream:
-                        // Todo: BUG!! Stable used the last control point as the final position of the path, but it should use the computed path instead.
-                        lastPosition = juiceStream.OriginalX + juiceStream.Path.ControlPoints[^1].Position.X;
-
-                        // Todo: BUG!! Stable attempted to use the end time of the stream, but referenced it too early in execution and used the start time instead.
-                        lastStartTime = juiceStream.StartTime;
+                        bool canComboPair = false;
 
                         foreach (var nested in juiceStream.NestedHitObjects)
                         {
@@ -104,7 +102,30 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
                                 catchObject.XOffset = Math.Clamp(rng.Next(-20, 20), -catchObject.OriginalX, CatchPlayfield.WIDTH - catchObject.OriginalX);
                             else if (catchObject is Droplet)
                                 rng.Next(); // osu!stable retrieved a random droplet rotation
+
+                            if (JuiceStreamSpicyPatternsOffsets)
+                            {
+                                if (catchObject is not TinyDroplet)
+                                {
+                                    if (canComboPair)
+                                        applySpicyPatternsOffset(catchObject, ref lastPosition, ref lastStartTime, rng);
+                                    else
+                                    {
+                                        lastPosition = catchObject.OriginalX;
+                                        lastStartTime = catchObject.StartTime;
+                                        canComboPair = true;
+                                    }
+                                }
+                                else
+                                    canComboPair = false;
+                            }
                         }
+
+                        // Todo: BUG!! Stable used the last control point as the final position of the path, but it should use the computed path instead.
+                        lastPosition = juiceStream.OriginalX + juiceStream.Path.ControlPoints[^1].Position.X;
+
+                        // Todo: BUG!! Stable attempted to use the end time of the stream, but referenced it too early in execution and used the start time instead.
+                        lastStartTime = juiceStream.StartTime;
 
                         break;
                 }
@@ -113,7 +134,7 @@ namespace osu.Game.Rulesets.Catch.Beatmaps
             initialiseHyperDash(beatmap);
         }
 
-        private static void applyHardRockOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime, LegacyRandom rng)
+        private static void applySpicyPatternsOffset(CatchHitObject hitObject, ref float? lastPosition, ref double lastStartTime, LegacyRandom rng)
         {
             float offsetPosition = hitObject.OriginalX;
             double startTime = hitObject.StartTime;
