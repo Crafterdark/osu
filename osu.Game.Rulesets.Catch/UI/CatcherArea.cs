@@ -33,6 +33,11 @@ namespace osu.Game.Rulesets.Catch.UI
         /// </summary>
         public bool IsHoldDashing { get; set; }
 
+        /// <summary>
+        /// Whether reverse dashing should be applied.
+        /// </summary>
+        public bool IsReverseDashing { get; set; }
+
         private readonly Container<Catcher> catcherContainer;
 
         private readonly CatchComboDisplay comboDisplay;
@@ -137,7 +142,13 @@ namespace osu.Game.Rulesets.Catch.UI
                 Catcher.VisualDirection = Direction.Left;
         }
 
-        public void SetCatcherDashing(bool newValue) => Catcher.Dashing = newValue || IsHoldDashing;
+        public void SetCatcherDashing(bool newValue)
+        {
+            if (IsHoldDashing)
+                Catcher.Dashing = IsReverseDashing ? !newValue : true;
+            else
+                Catcher.Dashing = newValue;
+        }
 
         public bool OnPressed(KeyBindingPressEvent<CatchAction> e)
         {

@@ -2,7 +2,9 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
+using osu.Framework.Bindables;
 using osu.Framework.Localisation;
+using osu.Game.Configuration;
 using osu.Game.Rulesets.Catch.Objects;
 using osu.Game.Rulesets.Catch.UI;
 using osu.Game.Rulesets.Mods;
@@ -19,12 +21,16 @@ namespace osu.Game.Rulesets.Catch.Mods
         public override Type[] IncompatibleMods => new[] { typeof(ModAutoplay), typeof(ModRelax), typeof(CatchModCinema) };
         public override ModType Type => ModType.Automation;
 
+        [SettingSource("Reverse dashing", "Don't hold dash when the dash key is pressed.")]
+        public BindableBool ReverseDashing { get; } = new BindableBool();
+
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
         {
             var drawableCatchRuleset = (DrawableCatchRuleset)drawableRuleset;
             var catchPlayfield = (CatchPlayfield)drawableCatchRuleset.Playfield;
 
             catchPlayfield.CatcherArea.IsHoldDashing = true;
+            catchPlayfield.CatcherArea.IsReverseDashing = ReverseDashing.Value;
             catchPlayfield.Catcher.Dashing = true;
         }
     }
