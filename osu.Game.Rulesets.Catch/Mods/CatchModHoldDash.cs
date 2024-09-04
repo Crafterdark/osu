@@ -16,12 +16,12 @@ namespace osu.Game.Rulesets.Catch.Mods
     {
         public override string Name => @"Hold Dash";
         public override string Acronym => @"HO";
-        public override LocalisableString Description => @"The catcher is always dashing!";
+        public override LocalisableString Description => @"Dashing will be automatically held.";
         public override double ScoreMultiplier => 1.0;
         public override Type[] IncompatibleMods => new[] { typeof(ModAutoplay), typeof(ModRelax), typeof(CatchModCinema) };
         public override ModType Type => ModType.Automation;
 
-        [SettingSource("Reverse dashing", "Don't hold dash when the dash key is pressed.")]
+        [SettingSource("Reverse dashing", "Don't hold dash when the dashing key is pressed.")]
         public BindableBool ReverseDashing { get; } = new BindableBool();
 
         public void ApplyToDrawableRuleset(DrawableRuleset<CatchHitObject> drawableRuleset)
