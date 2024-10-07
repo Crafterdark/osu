@@ -27,8 +27,10 @@ using osu.Game.Rulesets.Judgements;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Objects;
 using osu.Game.Rulesets.Objects.Drawables;
+using osu.Game.Rulesets.Objects.Types;
 using osu.Game.Rulesets.Scoring;
 using osu.Game.Scoring;
+using osu.Game.Screens.Edit;
 using osu.Game.Screens.Play;
 using osu.Game.Screens.Play.HUD;
 using osu.Game.Screens.Play.HUD.ClicksPerSecond;
@@ -224,7 +226,16 @@ namespace osu.Game.Rulesets.UI
             foreach (TObject h in Beatmap.HitObjects)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                AddHitObject(h);
+
+                // When not using the editor, gameplay performance can be improved for containers with available empty copy.
+                if (Clock is not EditorClock && h is IHasEmptyCopy hitObjectWithEmptyCopy)
+                {
+                    AddHitObject((TObject)hitObjectWithEmptyCopy.EmptyCopy);
+                    foreach (var nested in h.NestedHitObjects)
+                        AddHitObject((TObject)nested);
+                }
+                else
+                    AddHitObject(h);
             }
 
             cancellationToken.ThrowIfCancellationRequested();

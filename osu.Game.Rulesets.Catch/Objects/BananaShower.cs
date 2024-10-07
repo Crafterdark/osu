@@ -5,11 +5,12 @@ using System.Collections.Generic;
 using System.Threading;
 using osu.Game.Audio;
 using osu.Game.Rulesets.Judgements;
+using osu.Game.Rulesets.Objects;
 using osu.Game.Rulesets.Objects.Types;
 
 namespace osu.Game.Rulesets.Catch.Objects
 {
-    public class BananaShower : CatchHitObject, IHasDuration
+    public class BananaShower : CatchHitObject, IHasDuration, IHasEmptyCopy
     {
         public override bool LastInCombo => true;
 
@@ -57,5 +58,12 @@ namespace osu.Game.Rulesets.Catch.Objects
         }
 
         public double Duration { get; set; }
+
+        public HitObject EmptyCopy => new BananaShower()
+        {
+            StartTime = StartTime,
+            EndTime = EndTime,
+            Duration = Duration,
+        };
     }
 }

@@ -17,7 +17,7 @@ using osu.Game.Rulesets.Objects.Types;
 
 namespace osu.Game.Rulesets.Catch.Objects
 {
-    public class JuiceStream : CatchHitObject, IHasPathWithRepeats, IHasSliderVelocity
+    public class JuiceStream : CatchHitObject, IHasPathWithRepeats, IHasSliderVelocity, IHasEmptyCopy
     {
         /// <summary>
         /// Positional distance that results in a duration of one second, before any speed adjustments.
@@ -165,5 +165,17 @@ namespace osu.Game.Rulesets.Catch.Objects
         public double Distance => Path.Distance;
 
         public IList<IList<HitSampleInfo>> NodeSamples { get; set; } = new List<IList<HitSampleInfo>>();
+
+        public HitObject EmptyCopy => new JuiceStream()
+        {
+            StartTime = StartTime,
+            RepeatCount = RepeatCount,
+            SliderVelocityMultiplier = SliderVelocityMultiplier,
+            TickDistanceMultiplier = TickDistanceMultiplier,
+            Velocity = Velocity,
+            TickDistance = TickDistance,
+            Path = Path,
+            NodeSamples = NodeSamples,
+        };
     }
 }
