@@ -169,13 +169,19 @@ namespace osu.Game.Rulesets.Catch.Objects
         public HitObject EmptyCopy => new JuiceStream()
         {
             StartTime = StartTime,
+            OriginalX = OriginalX,
+            XOffset = XOffset,
             RepeatCount = RepeatCount,
             SliderVelocityMultiplier = SliderVelocityMultiplier,
             TickDistanceMultiplier = TickDistanceMultiplier,
-            Velocity = Velocity,
-            TickDistance = TickDistance,
             Path = Path,
             NodeSamples = NodeSamples,
+            Samples = Samples,
+            NewCombo = NewCombo ,
+            ComboOffset = ComboOffset,
+            LegacyConvertedY = LegacyConvertedY,
+            Velocity = Velocity,
+            TickDistance = TickDistance,
         };
     }
 }

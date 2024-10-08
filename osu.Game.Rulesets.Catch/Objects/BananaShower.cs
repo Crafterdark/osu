@@ -62,8 +62,13 @@ namespace osu.Game.Rulesets.Catch.Objects
         public HitObject EmptyCopy => new BananaShower()
         {
             StartTime = StartTime,
+            OriginalX = OriginalX,
+            XOffset = XOffset,
             EndTime = EndTime,
             Duration = Duration,
+            Samples = Samples,
+            NewCombo = NewCombo,
+            ComboOffset = ComboOffset,
         };
     }
 }
